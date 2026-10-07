@@ -53,6 +53,8 @@ export interface PersonOptions {
   marital?: Marital;
   /** Restrict the clan (Meitei yumnak) to this list. */
   clans?: readonly string[];
+  /** Pin the home district (a key of DISTRICTS). The random draw still happens (determinism). */
+  district?: string;
   /** Age on the application date, in completed years. */
   age: number;
   applicationDate: string;
@@ -135,7 +137,11 @@ export function makePerson(rng: Rng, opts: PersonOptions): Person {
   }
   let relGiven: string = rng.pick(names.male);
   while (relGiven === given) relGiven = rng.pick(names.male);
-  const district = rng.weighted(COMMUNITY_DISTRICTS[community]);
+  const drawnDistrict = rng.weighted(COMMUNITY_DISTRICTS[community]);
+  if (opts.district !== undefined && !DISTRICTS[opts.district]) {
+    throw new Error(`Unknown district "${opts.district}"`);
+  }
+  const district = opts.district ?? drawnDistrict;
   const bankDef = BANKS[pickBankIndex(rng)]!;
   const accountLength = bankDef.prefix === 'SBIN' ? 11 : rng.pick([13, 14, 15]);
   return {

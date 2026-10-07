@@ -5,33 +5,33 @@
   "set": "demo",
   "screening_day": "2026-10-09",
   "summary": {
-    "packets": 6,
+    "packets": 7,
     "byScenario": {
       "ambiguous_initials": 1,
       "clean": 2,
       "dob_mismatch": 1,
       "duplicate": 1,
-      "name_variant": 1
+      "name_variant": 2
     },
     "byExpectedStatus": {
       "NEEDS_CITIZEN_CORRECTION": 1,
       "OFFICER_ATTENTION": 2,
-      "READY": 3
+      "READY": 4
     },
     "byCommunity": {
       "Kuki-Zo": 1,
-      "Meitei": 4,
+      "Meitei": 5,
       "Naga": 1
     },
     "byDistrict": {
       "Imphal East": 3,
-      "Imphal West": 1,
+      "Imphal West": 2,
       "Kangpokpi": 1,
       "Ukhrul": 1
     },
     "byCapture": {
-      "phone": 15,
-      "scan": 5
+      "phone": 16,
+      "scan": 7
     },
     "withEpic": 2,
     "displaced": 0,
@@ -39,7 +39,7 @@
       "DOB_MISMATCH": 1,
       "DUPLICATE_SUSPECTED": 1,
       "NAME_AMBIGUOUS": 2,
-      "OPTIONAL_DOCUMENT_NOT_PROVIDED": 4
+      "OPTIONAL_DOCUMENT_NOT_PROVIDED": 5
     }
   },
   "packets": [
@@ -67,7 +67,7 @@
       "duplicate_of": null
     },
     {
-      "id": "demo-04-kh-ambiguous",
+      "id": "demo-04-kh-loken-ambiguous",
       "scenario": "ambiguous_initials",
       "plants": [
         "ambiguous_initials"
@@ -92,6 +92,15 @@
       ],
       "expected_status": "OFFICER_ATTENTION",
       "duplicate_of": "demo-01-clean"
+    },
+    {
+      "id": "demo-07-thomas-o-resolved-by-father",
+      "scenario": "name_variant",
+      "plants": [
+        "name_variant:abbreviation_resolved_by_relative"
+      ],
+      "expected_status": "READY",
+      "duplicate_of": null
     }
   ]
 }

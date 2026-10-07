@@ -3,7 +3,7 @@
  * and what the screening outcome is INTENDED to be. `expect.ts` checks the intent against the
  * real rules engine; packets that do not behave as intended are re-rolled.
  */
-import { ambiguousAbbreviations, surnamesFor, uniqueAbbreviations } from './data.js';
+import { abbrDisplay, ambiguousAbbreviations, surnamesFor, uniqueAbbreviations } from './data.js';
 import {
   ageOnDate,
   category,
@@ -194,6 +194,9 @@ interface BaseOptions {
   aadhaarNameStyle?: NameStyle;
   passbookNameStyle?: NameStyle;
   abbr?: string;
+  /** With formNameStyle "abbrev": write the father's/husband's yumnak in FULL (it then
+   *  disambiguates the abbreviation via the engine's knownYumnaks). */
+  fullRelativeName?: boolean;
   epic?: boolean;
   income?: number;
 }
@@ -220,7 +223,10 @@ export function basePacket(
   const caps = (s: string) => (writer.caps ? s.toUpperCase() : s);
   const income =
     o.income ?? (rng.chance(0.1) ? 0 : rng.pick([6, 9, 12, 15, 18, 20, 24, 30, 36, 42, 48]) * 1000);
-  const relative = relativeName(p, o.formNameStyle === 'abbrev' ? o.abbr : undefined);
+  const relative = relativeName(
+    p,
+    o.formNameStyle === 'abbrev' && !o.fullRelativeName ? o.abbr : undefined,
+  );
   const yearOnly = rng.chance(age >= 75 ? 0.25 : 0.08);
   const [y] = p.dob.split('-');
   const maritalWord =
@@ -303,17 +309,45 @@ export const NAME_VARIANT_KINDS = [
   'maiden_name_on_passbook',
   'pangal_md',
 ] as const;
-export type NameVariantKind = (typeof NAME_VARIANT_KINDS)[number];
+/**
+ * Name variants that are only built on request (`overrides.nameVariant`), never drawn at random —
+ * so adding one does not change any randomly generated set.
+ */
+export const PINNED_ONLY_NAME_VARIANTS = ['abbreviation_resolved_by_relative'] as const;
+export type NameVariantKind =
+  (typeof NAME_VARIANT_KINDS)[number] | (typeof PINNED_ONLY_NAME_VARIANTS)[number];
 
-/** Pins parts of a packet (used for the hand-picked demo set). */
+/** Exact names written on the documents (demo set). `relative: null` = left blank on the form. */
+export interface PinnedNames {
+  /** Form: applicant name. */
+  applicant?: string;
+  /** Form: father's / husband's name. */
+  relative?: string | null;
+  aadhaar?: string;
+  /** Passbook: account holder. */
+  passbook?: string;
+}
+
+/** Pins parts of a packet (used for the hand-picked demo set). Pinned values win. */
 export interface BuildOverrides {
   person?: Partial<Omit<PersonOptions, 'age' | 'applicationDate'>>;
   nameVariant?: NameVariantKind;
-  /** Abbreviation for ambiguous_initials, e.g. "kh". */
+  /** Abbreviation for ambiguous_initials / abbreviation_resolved_by_relative, e.g. "kh". */
   abbr?: string;
   epic?: boolean;
   /** Never add a relief-camp address unless the scenario is "displaced". */
   noDisplacedOverlay?: boolean;
+  /** Exact document names; not drawn at random. EPIC names are not pinned (use epic: false). */
+  names?: PinnedNames;
+}
+
+function pinNames(b: BaseDocs, names: PinnedNames | undefined): BaseDocs {
+  if (!names) return b;
+  if (names.applicant !== undefined) b.form.fields.applicant_name = names.applicant;
+  if (names.relative !== undefined) b.form.fields.father_or_husband_name = names.relative;
+  if (names.aadhaar !== undefined) b.aadhaar.name = names.aadhaar;
+  if (names.passbook !== undefined) b.passbook.holder = names.passbook;
+  return b;
 }
 
 export interface BuildContext {
@@ -337,9 +371,10 @@ export function buildPacket(rng: Rng, scenario: Scenario, ctx: BuildContext): Pa
     makePerson(rng.fork('person'), {
       age: eligibleAge(rng),
       applicationDate: appDate,
-      ...ov.person,
       ...o,
+      ...ov.person,
     });
+  const base: typeof basePacket = (...args) => pinNames(basePacket(...args), ov.names);
   const finish = (
     b: Docs,
     plants: string[],
@@ -357,12 +392,12 @@ export function buildPacket(rng: Rng, scenario: Scenario, ctx: BuildContext): Pa
     switch (scenario) {
       case 'clean': {
         const p = maybeDisplaced(person());
-        const b = basePacket(rng, p, writer, appDate, { epic: ov.epic });
+        const b = base(rng, p, writer, appDate, { epic: ov.epic });
         return finish(b, p.reliefCamp ? ['displaced'] : [], `Clean packet: ${describe(p)}.`);
       }
       case 'displaced': {
         const p = makeDisplaced(rng, person());
-        const b = basePacket(rng, p, writer, appDate);
+        const b = base(rng, p, writer, appDate);
         return finish(
           b,
           ['displaced'],
@@ -370,13 +405,13 @@ export function buildPacket(rng: Rng, scenario: Scenario, ctx: BuildContext): Pa
         );
       }
       case 'name_variant':
-        return nameVariant(rng, writer, appDate, person, ov);
+        return nameVariant(rng, writer, appDate, person, ov, base);
       case 'ambiguous_initials': {
         const amb = ambiguousAbbreviations();
         const abbr = ov.abbr ?? rng.pick([...amb.keys()].filter((a) => a.length <= 2));
         if (!amb.has(abbr)) throw new Error(`"${abbr}" is not an ambiguous abbreviation`);
         const p = person({ community: 'Meitei', clans: amb.get(abbr)! });
-        const b = basePacket(rng, p, writer, appDate, {
+        const b = base(rng, p, writer, appDate, {
           formNameStyle: 'abbrev',
           abbr,
           epic: false,
@@ -390,7 +425,7 @@ export function buildPacket(rng: Rng, scenario: Scenario, ctx: BuildContext): Pa
       }
       case 'age_ineligible': {
         const p = maybeDisplaced(person({ age: rng.int(50, 58) }));
-        const b = basePacket(rng, p, writer, appDate);
+        const b = base(rng, p, writer, appDate);
         return finish(
           b,
           ['age_below_minimum'],
@@ -400,7 +435,7 @@ export function buildPacket(rng: Rng, scenario: Scenario, ctx: BuildContext): Pa
       case 'income_ineligible': {
         const p = maybeDisplaced(person());
         const income = rng.pick([72, 84, 96, 120, 150, 180]) * 1000;
-        const b = basePacket(rng, p, writer, appDate, { income });
+        const b = base(rng, p, writer, appDate, { income });
         return finish(
           b,
           ['income_above_ceiling'],
@@ -409,7 +444,7 @@ export function buildPacket(rng: Rng, scenario: Scenario, ctx: BuildContext): Pa
       }
       case 'missing_document': {
         const p = maybeDisplaced(person());
-        const b = basePacket(rng, p, writer, appDate);
+        const b = base(rng, p, writer, appDate);
         const which = rng.chance(0.6) ? 'passbook' : 'aadhaar';
         const out: Docs = which === 'passbook' ? { ...b, passbook: null } : { ...b, aadhaar: null };
         return finish(
@@ -420,7 +455,7 @@ export function buildPacket(rng: Rng, scenario: Scenario, ctx: BuildContext): Pa
       }
       case 'blank_field': {
         const p = maybeDisplaced(person());
-        const b = basePacket(rng, p, writer, appDate);
+        const b = base(rng, p, writer, appDate);
         const field = rng.pick([
           'address',
           'annual_income',
@@ -438,7 +473,7 @@ export function buildPacket(rng: Rng, scenario: Scenario, ctx: BuildContext): Pa
       }
       case 'missing_signature': {
         const p = maybeDisplaced(person());
-        const b = basePacket(rng, p, writer, appDate);
+        const b = base(rng, p, writer, appDate);
         b.form.fields.signature_present = 'no';
         b.form.signature = null;
         return finish(
@@ -449,7 +484,7 @@ export function buildPacket(rng: Rng, scenario: Scenario, ctx: BuildContext): Pa
       }
       case 'bank_holder_mismatch': {
         const p = maybeDisplaced(person());
-        const b = basePacket(rng, p, writer, appDate);
+        const b = base(rng, p, writer, appDate);
         b.passbook.holder = sonName(rng, p).toUpperCase();
         return finish(
           b,
@@ -460,7 +495,7 @@ export function buildPacket(rng: Rng, scenario: Scenario, ctx: BuildContext): Pa
       }
       case 'dob_mismatch': {
         const p = maybeDisplaced(person());
-        const b = basePacket(rng, p, writer, appDate, { epic: ov.epic });
+        const b = base(rng, p, writer, appDate, { epic: ov.epic });
         const [y, m, d] = p.dob.split('-').map(Number) as [number, number, number];
         if (b.aadhaar.dobLabel === 'Year of Birth' || rng.chance(0.5)) {
           const ny = y + rng.pick([-3, -2, -1, 1, 2]);
@@ -479,7 +514,7 @@ export function buildPacket(rng: Rng, scenario: Scenario, ctx: BuildContext): Pa
       }
       case 'aadhaar_last4_mismatch': {
         const p = maybeDisplaced(person());
-        const b = basePacket(rng, p, writer, appDate);
+        const b = base(rng, p, writer, appDate);
         const wrong = miswrittenAadhaar(p.aadhaar);
         b.form.fields.aadhaar_number = spacedAadhaar(wrong);
         return finish(
@@ -491,7 +526,7 @@ export function buildPacket(rng: Rng, scenario: Scenario, ctx: BuildContext): Pa
       case 'aadhaar_checksum_invalid': {
         const p0 = maybeDisplaced(person());
         const p = { ...p0, aadhaar: invalidateAadhaar(p0.aadhaar) };
-        const b = basePacket(rng, p, writer, appDate);
+        const b = base(rng, p, writer, appDate);
         return finish(
           b,
           ['aadhaar_checksum_invalid'],
@@ -502,7 +537,7 @@ export function buildPacket(rng: Rng, scenario: Scenario, ctx: BuildContext): Pa
         if (!ctx.original) throw new Error('duplicate scenario needs an original packet');
         const orig = ctx.original.spec;
         const p = orig.person;
-        const b = basePacket(rng, p, writer, appDate, {
+        const b = base(rng, p, writer, appDate, {
           epic: orig.epic !== null && rng.chance(0.5),
         });
         return {
@@ -526,12 +561,18 @@ function nameVariant(
   appDate: string,
   person: (o?: Partial<PersonOptions>) => Person,
   ov: BuildOverrides,
+  base: typeof basePacket,
 ): Built {
-  const finish = (b: BaseDocs, plant: string, description: string): Built => ({
+  const finish = (
+    b: BaseDocs,
+    plant: string,
+    description: string,
+    nameIntent = intentsFor(b),
+  ): Built => ({
     ...b,
     plants: [`name_variant:${plant}`],
     description,
-    nameIntent: intentsFor(b),
+    nameIntent,
     duplicateOf: null,
   });
   const kind: NameVariantKind =
@@ -545,13 +586,34 @@ function nameVariant(
       pangal_md: 0.1,
     });
   switch (kind) {
+    case 'abbreviation_resolved_by_relative': {
+      // An AMBIGUOUS abbreviation ("O." = Okram or Oinam) that the father's/husband's FULL yumnak
+      // on the same form resolves (core: knownYumnaks) → same person, READY.
+      const amb = ambiguousAbbreviations();
+      const abbr = ov.abbr ?? rng.pick([...amb.keys()].filter((a) => a.length <= 2));
+      if (!amb.has(abbr)) throw new Error(`"${abbr}" is not an ambiguous abbreviation`);
+      const p = person({ community: 'Meitei', clans: amb.get(abbr)!, gender: 'male' });
+      const b = base(rng, p, writer, appDate, {
+        formNameStyle: 'abbrev',
+        abbr,
+        fullRelativeName: true,
+        epic: false,
+      });
+      return finish(
+        b,
+        'abbreviation_resolved_by_relative',
+        `"${b.form.fields.applicant_name}" on the form: "${abbrDisplay(abbr)}" alone could be ${amb.get(abbr)!.join(', ')}, but the relative's full yumnak on the form ("${b.form.fields.father_or_husband_name}") narrows it to ${p.clan} → same person.`,
+        // name_checks are scored WITHOUT packet context, where the engine (correctly) says AMBIGUOUS.
+        { aadhaar: 'ambiguous', passbook: 'ambiguous' },
+      );
+    }
     case 'abbreviation': {
       const unique = uniqueAbbreviations();
       const meitei = new Set(surnamesFor('Meitei'));
       const options = [...unique.entries()].filter(([, s]) => meitei.has(s));
       const [abbr, clan] = rng.pick(options);
       const p = person({ community: 'Meitei', clans: [clan], gender: 'male' });
-      const b = basePacket(rng, p, writer, appDate, { formNameStyle: 'abbrev', abbr });
+      const b = base(rng, p, writer, appDate, { formNameStyle: 'abbrev', abbr });
       return finish(
         b,
         'abbreviation',
@@ -561,7 +623,7 @@ function nameVariant(
     case 'order_swap': {
       const community = rng.weighted({ Meitei: 0.4, Naga: 0.3, 'Kuki-Zo': 0.3 });
       const p = person({ community });
-      const b = basePacket(rng, p, writer, appDate, { passbookNameStyle: 'swap' });
+      const b = base(rng, p, writer, appDate, { passbookNameStyle: 'swap' });
       return finish(
         b,
         'order_swap',
@@ -570,7 +632,7 @@ function nameVariant(
     }
     case 'dropped_marker': {
       const p = person({ community: 'Meitei' });
-      const b = basePacket(rng, p, writer, appDate, { passbookNameStyle: 'dropMarker' });
+      const b = base(rng, p, writer, appDate, { passbookNameStyle: 'dropMarker' });
       return finish(
         b,
         'dropped_singh_devi',
@@ -583,7 +645,7 @@ function nameVariant(
         gender: 'female',
         marital: rng.pick(['married', 'widowed'] as const),
       });
-      const b = basePacket(rng, p, writer, appDate, { formNameStyle: 'ongbi', epic: ov.epic });
+      const b = base(rng, p, writer, appDate, { formNameStyle: 'ongbi', epic: ov.epic });
       return finish(
         b,
         'ongbi_married_name',
@@ -596,7 +658,7 @@ function nameVariant(
         gender: 'female',
         marital: rng.pick(['married', 'widowed'] as const),
       });
-      const b = basePacket(rng, p, writer, appDate, {
+      const b = base(rng, p, writer, appDate, {
         formNameStyle: 'ningolOngbi',
         aadhaarNameStyle: 'ongbi',
         passbookNameStyle: 'maiden',
@@ -610,7 +672,7 @@ function nameVariant(
     case 'pangal_md': {
       const p = person({ community: 'Pangal' });
       const style: NameStyle = p.gender === 'female' ? 'dropMarker' : 'mdLong';
-      const b = basePacket(rng, p, writer, appDate, { aadhaarNameStyle: style });
+      const b = base(rng, p, writer, appDate, { aadhaarNameStyle: style });
       return finish(
         b,
         p.gender === 'female' ? 'begum_bibi' : 'md_mohammad',
