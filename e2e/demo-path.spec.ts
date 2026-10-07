@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { screenPacket, signIn, watchConsole } from './helpers';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
+import { E2E_CHAIN_ENV, ROOT, screenPacket, signIn, watchConsole } from './helpers';
 
 /**
  * The full stage demo, in fixtures mode (no API keys): one ordered story on one server.
@@ -157,6 +159,35 @@ test('full demo path', async ({ page, context }) => {
     await expect(holdout).toBeVisible();
     await expect(holdout.getByText('False matches').first()).toBeVisible();
     await expect(page.getByTestId('fairness-dev')).toBeVisible();
+  });
+
+  await test.step('Aadhaar leak scan over DB, logs and live API responses = 0 findings', async () => {
+    await page.goto('/trust');
+    const [res] = await Promise.all([
+      page.waitForResponse((r) => r.url().endsWith('/api/trust/leak-scan')),
+      page.getByRole('button', { name: /leak scan/i }).click(),
+    ]);
+    const scan = (await res.json()) as {
+      clean: boolean;
+      findings: unknown[];
+      scanned: { dbRows: number };
+    };
+    expect(scan.findings).toEqual([]);
+    expect(scan.clean).toBe(true);
+    expect(scan.scanned.dbRows).toBeGreaterThan(100);
+  });
+
+  await test.step('audit hash chain verifies (npm run audit:verify)', async () => {
+    const out = execFileSync(
+      path.join(ROOT, 'node_modules/.bin/tsx'),
+      [path.join(ROOT, 'apps/api/src/security/audit-verify.ts')],
+      {
+        cwd: path.join(ROOT, 'apps/api'),
+        env: { ...process.env, ...E2E_CHAIN_ENV },
+        encoding: 'utf8',
+      },
+    );
+    expect(out).toContain('OK — audit hash chain intact');
   });
 
   await test.step('department dashboard', async () => {

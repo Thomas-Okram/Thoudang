@@ -33,7 +33,8 @@
     "test:synth": "vitest run --root tools/synth",
     "synth": "tsx tools/synth/src/cli.ts",
     "e2e": "playwright test",
-    "demo:record": "DEMO_RECORD=1 playwright test"
+    "demo:record": "DEMO_RECORD=1 playwright test",
+    "build": "npm run build --workspaces --if-present"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

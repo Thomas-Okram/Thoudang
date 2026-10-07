@@ -39,6 +39,9 @@ Technical detail for each command is in [../demo-runbook.md](../demo-runbook.md)
 
 ### Backup video
 
+- [x] A silent, automatic backup already exists: `npm run demo:record` →
+      `demo-recording/thoudang-demo.webm` (1440×900, ~1:50, fixtures mode, "Fixture data (no AI)"
+      labels visible). Regenerate it after any UI change; it plays in Chrome / VLC.
 - [ ] Screen-record one clean run of the full script (QuickTime → New Screen Recording), 1080p, with
       your voice. Save to the desktop **and** a USB stick **and** the phone. Name it
       `thoudang-demo-backup.mov`. Watch it once end to end.
