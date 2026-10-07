@@ -64,21 +64,26 @@ export function authRouter(deps: {
   });
 
   router.get('/auth/login', (req, res) => {
-    res.set('Cache-Control', 'no-store').type('html').send(loginPage(list(), { next: safeNext(req.query.next) }));
+    res
+      .set('Cache-Control', 'no-store')
+      .type('html')
+      .send(loginPage(list(), { next: safeNext(req.query.next) }));
   });
   router.get('/auth/login.css', (_req, res) => {
     res.type('css').set('Cache-Control', 'public, max-age=3600').send(LOGIN_CSS);
   });
 
   router.post('/auth/login', loginLimiter, form, json, (req: Request, res: Response) => {
-    const isForm = req.is('application/x-www-form-urlencoded') === 'application/x-www-form-urlencoded';
+    const isForm =
+      req.is('application/x-www-form-urlencoded') === 'application/x-www-form-urlencoded';
     const body = (req.body ?? {}) as Record<string, unknown>;
     const officerId = typeof body.officerId === 'string' ? body.officerId : '';
     const pin = typeof body.pin === 'string' ? body.pin : String(body.pin ?? '');
     const next = safeNext(body.next);
     const fail = (status: number, error: string) => {
       logger.warn('Sign-in failed', { officerId, reason: error, ip: req.ip });
-      if (isForm) res.status(status).type('html').send(loginPage(list(), { error, officerId, next }));
+      if (isForm)
+        res.status(status).type('html').send(loginPage(list(), { error, officerId, next }));
       else res.status(status).json({ error });
     };
 
@@ -92,7 +97,10 @@ export function authRouter(deps: {
     const result = pins.check(officer.id, pin);
     if (result === 'locked') {
       const until = pins.lockedUntil(officer.id) ?? Date.now();
-      fail(429, `Too many wrong PINs. Try again in ${Math.ceil((until - Date.now()) / 60_000)} minute(s).`);
+      fail(
+        429,
+        `Too many wrong PINs. Try again in ${Math.ceil((until - Date.now()) / 60_000)} minute(s).`,
+      );
       return;
     }
     if (result !== 'ok') {
@@ -100,7 +108,10 @@ export function authRouter(deps: {
       return;
     }
     const { token } = signer.sign(officer.id);
-    res.setHeader('Set-Cookie', sessionCookie(token, { maxAgeMs: sec.sessionTtlMs, secure: req.secure }));
+    res.setHeader(
+      'Set-Cookie',
+      sessionCookie(token, { maxAgeMs: sec.sessionTtlMs, secure: req.secure }),
+    );
     logger.info('Officer signed in', { officerId: officer.id, role: officer.role, ip: req.ip });
     if (isForm) res.redirect(303, next);
     else res.json({ officer: view(officer) });
@@ -125,7 +136,10 @@ function safeNext(raw: unknown): string {
 }
 
 const esc = (s: string) =>
-  s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+  s.replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
+  );
 
 function loginPage(
   list: (typeof officers.$inferSelect)[],

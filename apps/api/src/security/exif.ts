@@ -204,7 +204,7 @@ export function stripGps(input: Buffer): { buffer: Buffer; removed: number } {
   let removed = 0;
   const touchedChunks = new Set<number>();
   for (const r of regionsOf(buf)) {
-    let n = 0;
+    let n: number;
     try {
       if (r.kind === 'tiff') {
         const t = openTiff(buf, r.start, r.end);

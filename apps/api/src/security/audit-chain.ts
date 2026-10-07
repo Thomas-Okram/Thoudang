@@ -76,7 +76,7 @@ export function ensureAuditChain(sqlite: Database.Database): void {
   `);
   sqlite
     .prepare("INSERT OR IGNORE INTO audit_chain_meta (key, value) VALUES ('chain_id', ?)")
-    .run(crypto.randomUUID());
+    .run(crypto.randomBytes(12).toString('base64url')); // not a UUID: no digit runs
 }
 
 export function hashEntry(key: string, prevHash: string, row: RawRow): string {
@@ -199,7 +199,10 @@ export class AuditChain {
     for (const c of chain) {
       sealedIds.add(c.audit_id);
       if (c.prev_hash !== prev)
-        problems.push({ auditId: c.audit_id, problem: 'chain link broken (entry removed or reordered)' });
+        problems.push({
+          auditId: c.audit_id,
+          problem: 'chain link broken (entry removed or reordered)',
+        });
       const row = rows.get(c.audit_id);
       if (!row) {
         problems.push({ auditId: c.audit_id, problem: 'audit entry deleted' });

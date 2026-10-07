@@ -5,6 +5,7 @@ import AdmZip from 'adm-zip';
 import multer from 'multer';
 import type { Request, RequestHandler, Response } from 'express';
 import { stripGps } from '../security/exif.js';
+import { refuseTooLarge } from './auth.js';
 import { KIND_EXTS, KIND_MIME, sniff, sniffFile, type ImageKind } from '../security/magic.js';
 import { isImageName } from '../upload.js';
 
@@ -31,10 +32,18 @@ export interface UploadRoute {
 
 export const PREPARSED_CONTENT_TYPE = 'application/x-thoudang-checked-upload';
 
-export function uploadRoutes(limits: { maxPacketFiles: number; maxBatchFiles: number }): UploadRoute[] {
+export function uploadRoutes(limits: {
+  maxPacketFiles: number;
+  maxBatchFiles: number;
+}): UploadRoute[] {
   return [
     { method: 'POST', pattern: /^\/cases\/?$/, maxFiles: limits.maxPacketFiles, allowZip: false },
-    { method: 'POST', pattern: /^\/cases\/batch\/?$/, maxFiles: limits.maxBatchFiles, allowZip: true },
+    {
+      method: 'POST',
+      pattern: /^\/cases\/batch\/?$/,
+      maxFiles: limits.maxBatchFiles,
+      allowZip: true,
+    },
     {
       method: 'POST',
       pattern: /^\/sessions\/[^/]+\/files\/?$/,
@@ -57,7 +66,10 @@ const isJunkPath = (p: string) =>
   p
     .replace(/\\/g, '/')
     .split('/')
-    .some((seg) => seg.startsWith('.') || seg === '__MACOSX' || /^(thumbs\.db|desktop\.ini)$/i.test(seg));
+    .some(
+      (seg) =>
+        seg.startsWith('.') || seg === '__MACOSX' || /^(thumbs\.db|desktop\.ini)$/i.test(seg),
+    );
 
 /** Same name with the extension that matches the real content ("scan.php" → "scan.php.jpg"). */
 export function withTrueExtension(name: string, kind: ImageKind): string {
@@ -86,7 +98,10 @@ function checkZip(
   }
   const entries = zip.getEntries();
   if (entries.length > limits.maxEntries)
-    throw new UploadRejected(413, `The zip has ${entries.length} entries (limit ${limits.maxEntries})`);
+    throw new UploadRejected(
+      413,
+      `The zip has ${entries.length} entries (limit ${limits.maxEntries})`,
+    );
   const total = entries.reduce((s, e) => s + (e.header.size || 0), 0);
   if (total > limits.maxUncompressed)
     throw new UploadRejected(413, 'The zip is too large when unpacked');
@@ -184,8 +199,7 @@ export function uploadGuard(opts: {
       : route.maxFiles * opts.maxFileBytes + 1024 * 1024;
     const declared = Number(req.headers['content-length'] ?? 0);
     if (declared > budget) {
-      res.status(413).json({ error: 'Upload too large' });
-      req.resume();
+      refuseTooLarge(req, res, 'Upload too large');
       return;
     }
 
@@ -224,9 +238,10 @@ export function uploadGuard(opts: {
               maxFiles: opts.maxBatchFiles,
             });
             zipBytes += f.size;
-            f.originalname = path.extname(f.originalname).toLowerCase() === '.zip'
-              ? f.originalname
-              : `${f.originalname}.zip`;
+            f.originalname =
+              path.extname(f.originalname).toLowerCase() === '.zip'
+                ? f.originalname
+                : `${f.originalname}.zip`;
             f.mimetype = 'application/zip';
             kept.push(f);
             continue;
@@ -234,7 +249,7 @@ export function uploadGuard(opts: {
           if (kind && kind !== 'zip') {
             const removed = scrubFile(f.path);
             if (removed) opts.onEvent?.('gps_stripped', { tags: removed });
-            f.originalname = withTrueExtension(f.originalname.replace(/[\0-\x1f]/g, ''), kind);
+            f.originalname = withTrueExtension(stripControlChars(f.originalname), kind);
             f.mimetype = KIND_MIME[kind];
             kept.push(f);
             continue;
@@ -271,6 +286,9 @@ export function uploadGuard(opts: {
     });
   };
 }
+
+const stripControlChars = (s: string) =>
+  [...s].filter((c) => c.charCodeAt(0) >= 0x20 && c.charCodeAt(0) !== 0x7f).join('');
 
 const listField = (raw: unknown): string[] =>
   Array.isArray(raw) ? raw.map(String) : typeof raw === 'string' ? [raw] : [];

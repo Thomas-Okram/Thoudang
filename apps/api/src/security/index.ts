@@ -41,10 +41,12 @@ export function installSecurity(
   const { db, config, sec, logger } = deps;
   const signer = new SessionSigner(sec.sessionSecret, sec.sessionTtlMs);
   const pins = new PinBook(sec.officerPins, sec.rateLimit.maxFailedPins, sec.rateLimit.lockoutMs);
-  const chain = new AuditChain(sqliteOf(db), sec.auditChainKey, anchorPathFor(config.dbPath));
+  const sqlite = sqliteOf(db);
+  const chain = new AuditChain(sqlite, sec.auditChainKey, anchorPathFor(config.dbPath));
 
   let anchorWarned = false;
   const sealNow = () => {
+    if (!sqlite.open) return 0; // shutting down
     try {
       const { sealed, anchorMismatch } = chain.seal();
       if (anchorMismatch && !anchorWarned) {
@@ -89,7 +91,9 @@ export function installSecurity(
   });
   app.use('/api', originPolicy({ allowedPorts: sec.allowedPorts, extra: sec.corsOrigins }));
   app.use(bodyLimit({ maxBytes: sec.maxJsonBytes, skip: isUpload }));
-  app.use('/api', (req, res, next) => (isUpload(req.path, req.method) ? uploadLimiter(req, res, next) : next()));
+  app.use('/api', (req, res, next) =>
+    isUpload(req.path, req.method) ? uploadLimiter(req, res, next) : next(),
+  );
   app.use('/api', identity({ mode: sec.authMode, signer }));
   app.use(
     '/api',
@@ -123,9 +127,13 @@ export function installSecurity(
       ...(sec.authMode === 'header'
         ? ['AUTH_MODE=header — officer identity is NOT authenticated (legacy demo dropdown).']
         : []),
-      ...(sec.usingDemoPins ? ['OFFICER_PINS not set — using the demo PINs from .env.example.'] : []),
+      ...(sec.usingDemoPins
+        ? ['OFFICER_PINS not set — using the demo PINs from .env.example.']
+        : []),
       ...(sec.sessionSecretEphemeral
-        ? ['SESSION_SECRET not set — random per-process secret; officers sign in again after a restart.']
+        ? [
+            'SESSION_SECRET not set — random per-process secret; officers sign in again after a restart.',
+          ]
         : []),
       ...(sec.auditChainKeyIsDefault
         ? ['AUDIT_CHAIN_KEY not set — audit hash chain uses the public default key.']

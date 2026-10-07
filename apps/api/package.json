@@ -19,7 +19,9 @@
     "dev:fixtures": "tsx src/demo/fixtures.ts",
     "notices:prime": "tsx src/demo/prime-notices.ts",
     "seed:dashboard": "tsx src/demo/seed-dashboard.ts",
-    "fairness": "tsx src/eval/fairness-cli.ts"
+    "fairness": "tsx src/eval/fairness-cli.ts",
+    "audit:verify": "tsx src/security/audit-verify.ts",
+    "retention": "tsx src/security/retention-cli.ts"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",

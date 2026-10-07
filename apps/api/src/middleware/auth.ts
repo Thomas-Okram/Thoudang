@@ -1,6 +1,11 @@
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler, Response } from 'express';
 import type { AuthMode } from '../security/config.js';
-import { readCookie, SESSION_COOKIE, type SessionClaims, type SessionSigner } from '../security/session.js';
+import {
+  readCookie,
+  SESSION_COOKIE,
+  type SessionClaims,
+  type SessionSigner,
+} from '../security/session.js';
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -33,13 +38,40 @@ export function identity(opts: { mode: AuthMode; signer: SessionSigner }): Reque
   };
 }
 
+/**
+ * Answers 413 AFTER discarding the body (replying mid-upload makes clients see a connection
+ * reset instead of the error). Gives up and drops the connection past `hardCapBytes`.
+ */
+export function refuseTooLarge(
+  req: Request,
+  res: Response,
+  error: string,
+  hardCapBytes = 32 * 1024 * 1024,
+): void {
+  let seen = 0;
+  const reply = () => {
+    if (!res.headersSent) res.status(413).json({ error });
+  };
+  req.on('data', (chunk: Buffer) => {
+    seen += chunk.length;
+    if (seen > hardCapBytes) {
+      req.unpipe();
+      req.socket.destroy();
+    }
+  });
+  req.once('end', reply);
+  req.resume();
+}
+
 /** Rejects declared bodies larger than `maxBytes` on non-upload requests (413), before parsing. */
-export function bodyLimit(opts: { maxBytes: number; skip: (path: string, method: string) => boolean }): RequestHandler {
+export function bodyLimit(opts: {
+  maxBytes: number;
+  skip: (path: string, method: string) => boolean;
+}): RequestHandler {
   return (req, res, next) => {
     const declared = Number(req.headers['content-length'] ?? 0);
     if (declared > opts.maxBytes && !opts.skip(req.path, req.method)) {
-      res.status(413).json({ error: 'Request body too large' });
-      req.resume();
+      refuseTooLarge(req, res, 'Request body too large');
       return;
     }
     next();

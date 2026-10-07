@@ -96,7 +96,7 @@ export function loadSecurityConfig(vars: NodeJS.ProcessEnv = process.env): Secur
       lockoutMs: num(vars.PIN_LOCKOUT_MIN, 5) * 60_000,
     },
     upload: {
-      maxFileBytes: num(vars.MAX_UPLOAD_FILE_MB, 20) * MB,
+      maxFileBytes: Math.floor(num(vars.MAX_UPLOAD_FILE_MB, 20) * MB),
       maxPacketFiles: 6,
       maxBatchFiles: num(vars.MAX_BATCH_FILES, 400),
       maxBatchBytes: num(vars.MAX_BATCH_MB, 600) * MB,

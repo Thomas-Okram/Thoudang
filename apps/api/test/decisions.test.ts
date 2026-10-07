@@ -83,7 +83,8 @@ describe('roles and approval', () => {
 
   it('approval is blocked while a critical flag is open or accepted; an override unblocks it', async () => {
     const { id } = await screened({ bank_passbook: { ifsc: 'BAD' } });
-    const detail = (await request(t.app).get(`/api/cases/${id}`).set('Cookie', t.cookie(DSWO))).body;
+    const detail = (await request(t.app).get(`/api/cases/${id}`).set('Cookie', t.cookie(DSWO)))
+      .body;
     expect(detail.actions.canApprove).toBe(false);
     const blocked = await as(DSWO)(request(t.app).post(`/api/cases/${id}/approve`));
     expect(blocked.status).toBe(409);

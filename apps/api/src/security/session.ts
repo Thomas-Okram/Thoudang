@@ -132,10 +132,7 @@ export function readCookie(header: string | undefined, name: string): string | u
   return undefined;
 }
 
-export function sessionCookie(
-  token: string,
-  opts: { maxAgeMs: number; secure: boolean },
-): string {
+export function sessionCookie(token: string, opts: { maxAgeMs: number; secure: boolean }): string {
   return [
     `${SESSION_COOKIE}=${token}`,
     'Path=/',

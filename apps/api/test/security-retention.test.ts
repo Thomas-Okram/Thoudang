@@ -48,15 +48,27 @@ describe('data retention', () => {
     const oldFiles = filesOf(old);
     expect(oldFiles.every((f) => fs.existsSync(f))).toBe(true);
     const before = {
-      extractions: t.handle.db.select().from(extractions).where(eq(extractions.caseId, old)).all().length,
+      extractions: t.handle.db.select().from(extractions).where(eq(extractions.caseId, old)).all()
+        .length,
       flags: t.handle.db.select().from(flags).where(eq(flags.caseId, old)).all().length,
     };
 
-    const dry = runRetention({ db: t.handle.db, uploadsDir: t.config.uploadsDir, days: 30, now: NOW, dryRun: true });
+    const dry = runRetention({
+      db: t.handle.db,
+      uploadsDir: t.config.uploadsDir,
+      days: 30,
+      now: NOW,
+      dryRun: true,
+    });
     expect(dry.cases).toEqual([old]);
     expect(oldFiles.every((f) => fs.existsSync(f))).toBe(true);
 
-    const res = runRetention({ db: t.handle.db, uploadsDir: t.config.uploadsDir, days: 30, now: NOW });
+    const res = runRetention({
+      db: t.handle.db,
+      uploadsDir: t.config.uploadsDir,
+      days: 30,
+      now: NOW,
+    });
     expect(res.cases).toEqual([old]);
     expect(res.filesDeleted).toBe(6); // 3 originals + 3 processed
     expect(oldFiles.some((f) => fs.existsSync(f))).toBe(false);
@@ -65,12 +77,18 @@ describe('data retention', () => {
     for (const id of [recent, open]) expect(filesOf(id).every((f) => fs.existsSync(f))).toBe(true);
 
     // Masked extracted data, flags, the case and the audit trail survive.
-    expect(t.handle.db.select().from(extractions).where(eq(extractions.caseId, old)).all()).toHaveLength(before.extractions);
-    expect(t.handle.db.select().from(flags).where(eq(flags.caseId, old)).all()).toHaveLength(before.flags);
+    expect(
+      t.handle.db.select().from(extractions).where(eq(extractions.caseId, old)).all(),
+    ).toHaveLength(before.extractions);
+    expect(t.handle.db.select().from(flags).where(eq(flags.caseId, old)).all()).toHaveLength(
+      before.flags,
+    );
     const detail = await request(t.app).get(`/api/cases/${old}`);
     expect(detail.status).toBe(200);
     const purge = t.handle.db.select().from(auditLog).where(eq(auditLog.caseId, old)).all();
-    expect(purge.some((a) => (a.action as string) === 'IMAGES_PURGED' && a.actor === 'system:retention')).toBe(true);
+    expect(
+      purge.some((a) => (a.action as string) === 'IMAGES_PURGED' && a.actor === 'system:retention'),
+    ).toBe(true);
     expect(purge.some((a) => a.action === 'CASE_CREATED')).toBe(true);
 
     // The image endpoint degrades to a clean 404, not a crash.
@@ -78,14 +96,18 @@ describe('data retention', () => {
     expect((await request(t.app).get(`/api/documents/${docId}/image`)).status).toBe(404);
 
     // Idempotent: a second run finds nothing to do.
-    expect(runRetention({ db: t.handle.db, uploadsDir: t.config.uploadsDir, days: 30, now: NOW }).cases).toEqual([]);
+    expect(
+      runRetention({ db: t.handle.db, uploadsDir: t.config.uploadsDir, days: 30, now: NOW }).cases,
+    ).toEqual([]);
   });
 
   it('days = 0 disables retention', async () => {
     t = setupApp(packetVision());
     const id = await makeCase('d');
     close(id, 400);
-    expect(runRetention({ db: t.handle.db, uploadsDir: t.config.uploadsDir, days: 0, now: NOW }).cases).toEqual([]);
+    expect(
+      runRetention({ db: t.handle.db, uploadsDir: t.config.uploadsDir, days: 0, now: NOW }).cases,
+    ).toEqual([]);
     expect(filesOf(id).every((f) => fs.existsSync(f))).toBe(true);
   });
 });

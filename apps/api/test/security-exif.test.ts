@@ -15,7 +15,7 @@ async function withGps(format: 'jpeg' | 'png' | 'webp') {
   return sharp({ create: { width: 64, height: 48, channels: 3, background: '#88aacc' } })
     .withExif({ IFD0: { Make: 'SpecimenCam' }, IFD3: GPS })
     .withMetadata({ orientation: 6 })
-    [format]()
+    .toFormat(format)
     .toBuffer();
 }
 
@@ -59,7 +59,10 @@ describe('stripGps', () => {
     const xmp =
       '<x:xmpmeta><rdf:Description exif:GPSLatitude="24,49.2N" exif:GPSLongitude="93,56.0E">' +
       '<exif:GPSAltitude>790/1</exif:GPSAltitude></rdf:Description></x:xmpmeta>';
-    const seg = Buffer.concat([Buffer.from('http://ns.adobe.com/xap/1.0/\0', 'latin1'), Buffer.from(xmp)]);
+    const seg = Buffer.concat([
+      Buffer.from('http://ns.adobe.com/xap/1.0/\0', 'latin1'),
+      Buffer.from(xmp),
+    ]);
     const len = Buffer.alloc(2);
     len.writeUInt16BE(seg.length + 2);
     const jpeg = Buffer.concat([

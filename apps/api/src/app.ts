@@ -20,7 +20,12 @@ import { healthRouter } from './routes/health.js';
 import { NotFound, sessionsRouter } from './routes/sessions.js';
 import type { VisionClient } from './services/claude.js';
 import { SessionStore } from './sessions.js';
-import { installSecurity, loadSecurityConfig, type SecurityBundle, type SecurityConfig } from './security/index.js';
+import {
+  installSecurity,
+  loadSecurityConfig,
+  type SecurityBundle,
+  type SecurityConfig,
+} from './security/index.js';
 
 export interface AppDeps {
   db: Db;
@@ -147,7 +152,8 @@ export function createApp(deps: AppDeps): AppBundle {
       return;
     }
     if (err instanceof HttpError) {
-      const message = err.status === 401 ? security.unauthenticatedMessage(err.message) : err.message;
+      const message =
+        err.status === 401 ? security.unauthenticatedMessage(err.message) : err.message;
       res
         .status(err.status)
         .json({ error: message, ...(err.details ? { details: err.details } : {}) });

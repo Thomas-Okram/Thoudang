@@ -22,9 +22,13 @@ export function verifyAuditCli(opts: {
     if (opts.seal) print(`Sealed ${chain.seal().sealed} new audit entries.`);
     const v = chain.verify();
     print(`Audit log: ${opts.dbPath}`);
-    print(`Verified entries: ${v.verified}   (head ${v.head.slice(0, 16)}…, last sealed #${v.lastSealedId})`);
+    print(
+      `Verified entries: ${v.verified}   (head ${v.head.slice(0, 16)}…, last sealed #${v.lastSealedId})`,
+    );
     if (v.unsealed)
-      print(`Not yet sealed:   ${v.unsealed} newest entr${v.unsealed === 1 ? 'y' : 'ies'} (sealed by the running API within seconds)`);
+      print(
+        `Not yet sealed:   ${v.unsealed} newest entr${v.unsealed === 1 ? 'y' : 'ies'} (sealed by the running API within seconds)`,
+      );
     if (v.ok) {
       print('OK — audit hash chain intact. No entry was edited, deleted or inserted.');
       return 0;
