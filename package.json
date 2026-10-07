@@ -2,7 +2,7 @@
   "name": "thoudang",
   "private": true,
   "version": "0.1.0",
-  "description": "AI scrutiny desk for welfare officers \u2014 Social Welfare Department, Govt of Manipur (AI4SEVA SW-03)",
+  "description": "AI scrutiny desk for welfare officers — Social Welfare Department, Govt of Manipur (AI4SEVA SW-03)",
   "type": "module",
   "engines": {
     "node": ">=20.19.0"
