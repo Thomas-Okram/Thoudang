@@ -20,6 +20,12 @@ import { healthRouter } from './routes/health.js';
 import { NotFound, sessionsRouter } from './routes/sessions.js';
 import type { VisionClient } from './services/claude.js';
 import { SessionStore } from './sessions.js';
+import {
+  installSecurity,
+  loadSecurityConfig,
+  type SecurityBundle,
+  type SecurityConfig,
+} from './security/index.js';
 
 export interface AppDeps {
   db: Db;
@@ -30,6 +36,8 @@ export interface AppDeps {
   tts?: TtsClient | null;
   logger?: Logger;
   today?: () => string;
+  /** Auth, upload, CORS and audit-chain settings. Default: from process.env. */
+  security?: SecurityConfig;
 }
 
 export interface AppBundle {
@@ -38,6 +46,7 @@ export interface AppBundle {
   bus: EventBus;
   sessions: SessionStore;
   extraction: ExtractionService;
+  security: SecurityBundle;
 }
 
 export function createApp(deps: AppDeps): AppBundle {
@@ -66,6 +75,14 @@ export function createApp(deps: AppDeps): AppBundle {
   const sessions = new SessionStore(db, path.join(config.uploadsDir, 'sessions'));
 
   const app = express();
+  // Security first: headers, origin lock, limits, identity, upload guard, /api/auth.
+  const security = installSecurity(app, {
+    db,
+    config,
+    sec: deps.security ?? loadSecurityConfig(),
+    logger,
+    bus,
+  });
   app.use(express.json({ limit: '1mb' }));
   app.use(
     '/api',
@@ -135,9 +152,11 @@ export function createApp(deps: AppDeps): AppBundle {
       return;
     }
     if (err instanceof HttpError) {
+      const message =
+        err.status === 401 ? security.unauthenticatedMessage(err.message) : err.message;
       res
         .status(err.status)
-        .json({ error: err.message, ...(err.details ? { details: err.details } : {}) });
+        .json({ error: message, ...(err.details ? { details: err.details } : {}) });
       return;
     }
     if (err instanceof NotFound) {
@@ -150,5 +169,5 @@ export function createApp(deps: AppDeps): AppBundle {
     res.status(500).json({ error: 'Internal error' });
   };
   app.use(onError);
-  return { app, pipeline, bus, sessions, extraction };
+  return { app, pipeline, bus, sessions, extraction, security };
 }

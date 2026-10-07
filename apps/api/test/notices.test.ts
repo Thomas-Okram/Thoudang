@@ -99,7 +99,7 @@ describe('citizen notice', () => {
     );
     await request(t.app)
       .post(`/api/cases/${id}/flags/${mismatch.id}/resolve`)
-      .set('X-Officer-Id', DA)
+      .set('Cookie', t.cookie(DA))
       .send({ decision: 'accept' })
       .expect(200);
     const n = (await request(t.app).get(`/api/cases/${id}/notice`)).body;
@@ -124,7 +124,7 @@ describe('citizen notice', () => {
     expect(n).toMatchObject({ allowed: false, rendered: null });
     expect(n.blockedReason).toMatch(/duplicate/i);
     expect(
-      (await request(t.app).post(`/api/cases/${second}/notice/sent`).set('X-Officer-Id', DA))
+      (await request(t.app).post(`/api/cases/${second}/notice/sent`).set('Cookie', t.cookie(DA)))
         .status,
     ).toBe(409);
   });
@@ -142,7 +142,7 @@ describe('citizen notice', () => {
     expect((await request(t.app).post(`/api/cases/${id}/notice/sent`)).status).toBe(401);
     const res = await request(t.app)
       .post(`/api/cases/${id}/notice/sent`)
-      .set('X-Officer-Id', DA)
+      .set('Cookie', t.cookie(DA))
       .send({ channel: 'whatsapp' });
     expect(res.status).toBe(200);
     expect(res.body.noticeSentAt).not.toBeNull();
@@ -240,7 +240,7 @@ describe('template review', () => {
     ).toBe(401);
     const res = await request(t.app)
       .patch('/api/templates/template/MISSING_SIGNATURE')
-      .set('X-Officer-Id', DA)
+      .set('Cookie', t.cookie(DA))
       .send({ reviewed: true, mni_mtei: 'ꯑꯔꯖꯤ ꯐꯣꯔꯝꯗꯥ ꯁꯥꯏꯟ ꯇꯧꯗ꯭ꯔꯦ꯫', ignored: 'x' });
     expect(res.status).toBe(200);
     const onDisk = JSON.parse(fs.readFileSync(t.templatesPath, 'utf8'));
@@ -253,7 +253,7 @@ describe('template review', () => {
       (
         await request(t.app)
           .patch('/api/templates/nonsense/X')
-          .set('X-Officer-Id', DA)
+          .set('Cookie', t.cookie(DA))
           .send({ reviewed: true })
       ).status,
     ).toBe(400);
@@ -261,7 +261,7 @@ describe('template review', () => {
       (
         await request(t.app)
           .patch('/api/templates/template/NOPE')
-          .set('X-Officer-Id', DA)
+          .set('Cookie', t.cookie(DA))
           .send({ reviewed: true })
       ).status,
     ).toBe(400);

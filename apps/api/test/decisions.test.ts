@@ -58,7 +58,7 @@ async function screened(
 }
 
 const as = (officer: string | null) => (r: request.Test) =>
-  officer ? r.set('X-Officer-Id', officer) : r;
+  officer ? r.set('Cookie', t.cookie(officer)) : r;
 const flagOf = (detail: { flags: { id: string; code: string }[] }, code: string) =>
   detail.flags.find((f) => f.code === code)!;
 
@@ -83,7 +83,8 @@ describe('roles and approval', () => {
 
   it('approval is blocked while a critical flag is open or accepted; an override unblocks it', async () => {
     const { id } = await screened({ bank_passbook: { ifsc: 'BAD' } });
-    const detail = (await request(t.app).get(`/api/cases/${id}`).set('X-Officer-Id', DSWO)).body;
+    const detail = (await request(t.app).get(`/api/cases/${id}`).set('Cookie', t.cookie(DSWO)))
+      .body;
     expect(detail.actions.canApprove).toBe(false);
     const blocked = await as(DSWO)(request(t.app).post(`/api/cases/${id}/approve`));
     expect(blocked.status).toBe(409);

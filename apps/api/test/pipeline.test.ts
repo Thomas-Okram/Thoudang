@@ -136,10 +136,16 @@ describe('POST /api/cases → full pipeline (mocked Claude)', () => {
     const res = await request(t.app)
       .post('/api/cases')
       .attach('files', await makeImage('#fff'), { filename: 'form.jpg', contentType: 'image/jpeg' })
-      .attach('files', Buffer.from('not really a jpeg'), {
-        filename: 'aadhaar.jpg',
-        contentType: 'image/jpeg',
-      });
+      // Passes the magic-byte check (JPEG SOI marker) but cannot be decoded — e.g. a truncated photo.
+      // (Plain text named .jpg is now refused at the door: see security-upload.test.ts.)
+      .attach(
+        'files',
+        Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.from('not really a jpeg')]),
+        {
+          filename: 'aadhaar.jpg',
+          contentType: 'image/jpeg',
+        },
+      );
     expect(res.status).toBe(202);
     await t.pipeline.whenIdle();
     const detail = await request(t.app).get(`/api/cases/${res.body.caseId}`);

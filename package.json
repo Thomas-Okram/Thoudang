@@ -27,7 +27,9 @@
     "dev:fixtures": "npm run dev:fixtures -w @thoudang/api --",
     "notices:prime": "npm run notices:prime -w @thoudang/api",
     "seed:dashboard": "npm run seed:dashboard -w @thoudang/api --",
-    "fairness": "npm run fairness -w @thoudang/api --"
+    "fairness": "npm run fairness -w @thoudang/api --",
+    "audit:verify": "npm run audit:verify -w @thoudang/api --",
+    "retention": "npm run retention -w @thoudang/api --"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
