@@ -63,6 +63,8 @@ export const FormFieldsSchema = z.object({
   ifsc: field(z.string()),
   /** Last 4 digits of the Aadhaar number written on the form (the full number is never kept). */
   aadhaarLast4: field(z.string().regex(/^\d{4}$/)).optional(),
+  /** Signature or thumb impression present on the form. */
+  signaturePresent: field(z.boolean()).optional(),
   applicationDate: field(isoDate),
 });
 export type FormFields = z.infer<typeof FormFieldsSchema>;

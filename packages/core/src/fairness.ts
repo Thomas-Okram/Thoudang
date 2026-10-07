@@ -1,4 +1,4 @@
-import data from '../data/fairness-pairs.json';
+import data from '../data/fairness-dev.json';
 import { matchNames, type MatchContext, type NameVerdict } from './names/index.js';
 
 export interface FairnessPair {
@@ -39,7 +39,92 @@ export interface FairnessReport {
   details: FairnessDetail[];
 }
 
-export const fairnessPairs: readonly FairnessPair[] = data.pairs;
+/** Development set — written alongside the engine (seen during build; in-sample). */
+export const fairnessDevPairs: readonly FairnessPair[] = data.pairs;
+/** @deprecated use fairnessDevPairs */
+export const fairnessPairs = fairnessDevPairs;
+
+export const COMMUNITIES = ['Meitei', 'Pangal', 'Naga', 'Kuki-Zo'] as const;
+
+const COMMUNITY_ALIASES: Record<string, (typeof COMMUNITIES)[number]> = {
+  meitei: 'Meitei',
+  meetei: 'Meitei',
+  pangal: 'Pangal',
+  naga: 'Naga',
+  'kuki-zo': 'Kuki-Zo',
+  'kuki zo': 'Kuki-Zo',
+  kukizo: 'Kuki-Zo',
+  kuki: 'Kuki-Zo',
+  zo: 'Kuki-Zo',
+};
+const TRUE = new Set(['true', 'yes', 'y', '1', 'same']);
+const FALSE = new Set(['false', 'no', 'n', '0', 'different']);
+
+/** Minimal RFC-4180 CSV: quoted fields, escaped quotes, commas inside quotes, CRLF. */
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = '';
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]!;
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') {
+        cell += '"';
+        i += 1;
+      } else if (c === '"') quoted = false;
+      else cell += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ',') {
+      row.push(cell);
+      cell = '';
+    } else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i += 1;
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = '';
+    } else cell += c;
+  }
+  if (cell !== '' || row.length) {
+    row.push(cell);
+    rows.push(row);
+  }
+  return rows.filter((r) => r.some((x) => x.trim() !== ''));
+}
+
+/**
+ * Held-out pairs from staff: CSV with header name_a,name_b,community,expected_same.
+ * Invalid rows are reported, never guessed.
+ */
+export function parseFairnessCsv(text: string): { pairs: FairnessPair[]; errors: string[] } {
+  const rows = parseCsv(text.replace(/^\uFEFF/, ''));
+  const header = (rows[0] ?? []).map((h) => h.trim().toLowerCase());
+  const col = (name: string) => header.indexOf(name);
+  const need = ['name_a', 'name_b', 'community', 'expected_same'];
+  if (need.some((n) => col(n) < 0)) {
+    return { pairs: [], errors: [`The first row must be the header: ${need.join(',')}`] };
+  }
+  const pairs: FairnessPair[] = [];
+  const errors: string[] = [];
+  rows.slice(1).forEach((r, i) => {
+    const line = i + 2;
+    const a = (r[col('name_a')] ?? '').trim();
+    const b = (r[col('name_b')] ?? '').trim();
+    const rawCommunity = (r[col('community')] ?? '').trim();
+    const rawSame = (r[col('expected_same')] ?? '').trim().toLowerCase();
+    if (!a || !b) return errors.push(`Row ${line}: name_a and name_b are required`);
+    const community = COMMUNITY_ALIASES[rawCommunity.toLowerCase()];
+    if (!community)
+      return errors.push(
+        `Row ${line}: unknown community "${rawCommunity}" (use Meitei, Pangal, Naga or Kuki-Zo)`,
+      );
+    if (!TRUE.has(rawSame) && !FALSE.has(rawSame))
+      return errors.push(`Row ${line}: expected_same must be true/false (got "${rawSame}")`);
+    pairs.push({ a, b, community, samePerson: TRUE.has(rawSame) });
+  });
+  return { pairs: errors.length ? [] : pairs, errors };
+}
 
 const ratio = (n: number, d: number) => (d === 0 ? 1 : n / d);
 

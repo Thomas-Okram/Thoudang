@@ -575,3 +575,21 @@ describe('Phase 5 decisions', () => {
     expect(r.status).toBe('READY');
   });
 });
+
+describe('Phase 7: signature', () => {
+  it('a confidently missing signature/thumb impression → MISSING_SIGNATURE (citizen)', () => {
+    const r = screenCase(makeCase({ form: ok(form({ signaturePresent: f(false) })) }), opts);
+    expect(r.flags.find((x) => x.code === 'MISSING_SIGNATURE')).toMatchObject({
+      severity: 'critical',
+      action: 'citizen',
+    });
+    expect(r.status).toBe('NEEDS_CITIZEN_CORRECTION');
+  });
+
+  it('signature present or unknown → no flag', () => {
+    expect(codes(makeCase({ form: ok(form({ signaturePresent: f(true) })) }))).not.toContain(
+      'MISSING_SIGNATURE',
+    );
+    expect(codes(makeCase())).not.toContain('MISSING_SIGNATURE');
+  });
+});

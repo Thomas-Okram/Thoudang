@@ -146,6 +146,18 @@ describe('toExtractedCase → screenCase', () => {
     );
   });
 
+  it('an empty signature box on the form → MISSING_SIGNATURE for the citizen', () => {
+    const r = screenCase(
+      toExtractedCase('c1', RECEIVED, [
+        extracted('application_form', { signature_present: 'no' }),
+        extracted('aadhaar'),
+        extracted('bank_passbook'),
+      ]),
+      { today: TODAY },
+    );
+    expect(r.flags.find((f) => f.code === 'MISSING_SIGNATURE')?.action).toBe('citizen');
+  });
+
   it('merges two images of the same type (Aadhaar front + back)', () => {
     const front = doc('aadhaar', { address: null });
     const back = doc('aadhaar', {

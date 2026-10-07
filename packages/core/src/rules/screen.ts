@@ -270,6 +270,16 @@ export function screenCase(extracted: ExtractedCase, opts: ScreenOptions = {}): 
     });
   }
 
+  if (form?.signaturePresent && confident(form.signaturePresent) === false) {
+    add({
+      code: 'MISSING_SIGNATURE',
+      severity: 'critical',
+      action: 'citizen',
+      reason: 'The application form is not signed (no signature or thumb impression).',
+      evidence: [ev('form', 'signaturePresent', form.signaturePresent)],
+    });
+  }
+
   // --- 4. Bank details consistency ------------------------------------------------------------
   if (form && passbook) {
     const pairs = [

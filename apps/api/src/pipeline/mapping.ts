@@ -160,6 +160,7 @@ function formFields(d: ExtractedDocument): FormFields {
     internallyDisplaced: inferDisplaced(f.address),
     bankAccountNumber: convert(f.account_number, text),
     ifsc: convert(f.ifsc, text),
+    signaturePresent: convert(f.signature_present, parseYesNo),
     aadhaarLast4: {
       value: d.aadhaar?.last4 ?? null,
       confidence: f.aadhaar_number ? conf(f.aadhaar_number) : 0,

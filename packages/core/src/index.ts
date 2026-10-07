@@ -5,3 +5,5 @@ export * from './names/index.js';
 export * from './fairness.js';
 export * from './rules/index.js';
 export * from './flags.js';
+export * from './notices/meetei-mayek.js';
+export * from './notices/render.js';

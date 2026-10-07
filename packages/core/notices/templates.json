@@ -1,0 +1,242 @@
+{
+  "_note": "Citizen deficiency notice templates. The Manipuri (Bengali script) text was DRAFTED DURING DEVELOPMENT by an AI assistant and is PENDING NATIVE-SPEAKER REVIEW (reviewed:false). The application never generates Manipuri text at runtime: notices are filled from these reviewed templates only. mni_mtei empty = auto-transliterated from mni_beng by packages/core (shown as \"pending review\"); a reviewer may write it by hand. Placeholders: {name} {ref} {date} {office} {district} {days} {helpline} {document} {document_a} {document_b} {field} {value_a} {value_b} {reason}.",
+  "settings": {
+    "days": 30,
+    "helpline": "1800-XXX-XXXX (placeholder)",
+    "office": {
+      "en": "the Office of the District Social Welfare Officer, {district}",
+      "mni_beng": "দিস্ত্রিক্ত সোসিয়েল ৱেলফেয়র অফিসরগী অফিস, {district}"
+    }
+  },
+  "labels": {
+    "documents": {
+      "form": {
+        "en": "application form",
+        "mni_beng": "অর্জি ফোর্ম"
+      },
+      "aadhaar": {
+        "en": "Aadhaar card",
+        "mni_beng": "আধার কার্দ"
+      },
+      "passbook": {
+        "en": "bank passbook",
+        "mni_beng": "বেংক পাসবুক"
+      },
+      "epic": {
+        "en": "voter ID card",
+        "mni_beng": "ভোটর কার্দ"
+      }
+    },
+    "fields": {
+      "applicantName": {
+        "en": "name",
+        "mni_beng": "মমিং"
+      },
+      "name": {
+        "en": "name",
+        "mni_beng": "মমিং"
+      },
+      "fatherOrHusbandName": {
+        "en": "father's or husband's name",
+        "mni_beng": "ইপা নত্ত্রগা মপুরোইবগী মমিং"
+      },
+      "relativeName": {
+        "en": "relative's name",
+        "mni_beng": "ইমুং মনুংগী মীওইগী মমিং"
+      },
+      "dob": {
+        "en": "date of birth",
+        "mni_beng": "পোকপা তাং"
+      },
+      "address": {
+        "en": "address",
+        "mni_beng": "লৈফম"
+      },
+      "district": {
+        "en": "district",
+        "mni_beng": "দিস্ত্রিক্ত"
+      },
+      "annualIncome": {
+        "en": "annual income",
+        "mni_beng": "চহীগী শেন্ফংবা"
+      },
+      "bankAccountNumber": {
+        "en": "bank account number",
+        "mni_beng": "বেংক অকাউন্ত নম্বর"
+      },
+      "accountNumber": {
+        "en": "bank account number",
+        "mni_beng": "বেংক অকাউন্ত নম্বর"
+      },
+      "accountHolderName": {
+        "en": "account holder name",
+        "mni_beng": "অকাউন্ত লৈবা মীওইগী মমিং"
+      },
+      "ifsc": {
+        "en": "IFSC code",
+        "mni_beng": "IFSC কোড"
+      },
+      "applicationDate": {
+        "en": "application date",
+        "mni_beng": "অর্জি পীবা তাং"
+      },
+      "epicNumber": {
+        "en": "voter ID number",
+        "mni_beng": "ভোটর কার্দ নম্বর"
+      },
+      "aadhaarLast4": {
+        "en": "Aadhaar number (last 4 digits)",
+        "mni_beng": "আধার নম্বরগী অরোইবা মরি"
+      },
+      "last4": {
+        "en": "Aadhaar number (last 4 digits)",
+        "mni_beng": "আধার নম্বরগী অরোইবা মরি"
+      },
+      "signaturePresent": {
+        "en": "signature or thumb impression",
+        "mni_beng": "সাইন নত্ত্রগা খুৎনিং"
+      },
+      "document": {
+        "en": "document",
+        "mni_beng": "কাগজ"
+      }
+    }
+  },
+  "blocks": [
+    {
+      "id": "title",
+      "en": "Notice: corrections needed in your Old Age Pension application",
+      "mni_beng": "খঙহন্বা: অদোম্গী অহল পেন্সন অর্জিদা শেমদোক্পা মথৌ তাবা",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "id": "greeting",
+      "en": "Dear {name},",
+      "mni_beng": "{name}, খুরুমজরি।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "id": "intro",
+      "en": "We have received your application ({ref}). Before it can go ahead, the following needs to be corrected:",
+      "mni_beng": "অদোম্গী অর্জি ({ref}) ফংলে। মসিগী থবক মখা চত্থনবগীদমক মখাদা পীরিবা পোৎলমসিং শেমদোক্পা মথৌ তাই:",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "id": "bring",
+      "en": "Please bring these to {office} within {days} days.",
+      "mni_beng": "মসিংসি {days} নুমিৎ মনুংদা {office}দা পুরকপীবীয়ু।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "id": "not_rejection",
+      "en": "This is not a rejection — your application is on hold until these corrections are made.",
+      "mni_beng": "মসি অর্জি থাদোক্পা নত্তে — শেমদোক্পা মসিং লোইবা মতুং অদোম্গী অর্জি লেপ্লি।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "id": "final_decision",
+      "en": "The final decision on your application rests with the Department of Social Welfare.",
+      "mni_beng": "অদোম্গী অর্জিগী মতাংদা অরোইবা ৱারেপ সোসিয়েল ৱেলফেয়র দিপার্তমেন্তনা লৌগনি।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "id": "helpline",
+      "en": "Questions? Call the helpline: {helpline}",
+      "mni_beng": "ৱাহং লৈরবদি হেল্পলাইনদা কোল তৌবীয়ু: {helpline}",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "id": "signoff",
+      "en": "District Social Welfare Officer, {district}",
+      "mni_beng": "দিস্ত্রিক্ত সোসিয়েল ৱেলফেয়র অফিসর, {district}",
+      "mni_mtei": "",
+      "reviewed": false
+    }
+  ],
+  "templates": [
+    {
+      "code": "MISSING_DOCUMENT",
+      "en": "The {document} was not submitted. Please bring your {document}.",
+      "mni_beng": "{document} পীখিদে। অদোম্গী {document} পুরকপীবীয়ু।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "code": "EXTRACTION_FAILED",
+      "en": "We could not read your {document} clearly. Please bring the original {document} or a clear copy.",
+      "mni_beng": "অদোম্গী {document} ফজনা পাবা ঙম্দে। মূল {document} নত্ত্রগা ফজনা উবা কপি অমা পুরকপীবীয়ু।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "code": "MISSING_FIELD",
+      "en": "The {field} is blank on the {document}. Please fill it in.",
+      "mni_beng": "{document}দা {field} ইদ্রে। মসি মপুং ফানা ইবীয়ু।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "code": "MISSING_SIGNATURE",
+      "en": "The application form is not signed. Please sign it or give your thumb impression.",
+      "mni_beng": "অর্জি ফোর্মদা সাইন তৌদ্রে। সাইন তৌবীয়ু নত্ত্রগা খুৎনিং থম্বীয়ু।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "code": "NAME_MISMATCH",
+      "en": "Your name is written differently on the {document_a} (“{value_a}”) and the {document_b} (“{value_b}”). Please bring a document that confirms both names are yours, for example an affidavit.",
+      "mni_beng": "অদোম্গী মমিং {document_a}দা “{value_a}” অমসুং {document_b}দা “{value_b}” হায়না তোঙান্না ইরি। মমিং অনিমক অদোম্গীনি হায়বা উৎপা কাগজ অমা (খুদম ওইনা এফিদেভিত) পুরকপীবীয়ু।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "code": "BANK_HOLDER_NAME_MISMATCH",
+      "en": "The bank account is in the name “{value_b}”, but the applicant is “{value_a}”. The pension can only be paid into the applicant’s own account. Please bring the passbook of an account in your name.",
+      "mni_beng": "বেংক অকাউন্ত অসি “{value_b}”গী মমিংদা লৈ, অর্জি পীবা মীওই “{value_a}”নি। পেন্সন অর্জি পীবা মীওইগী মশাগী অকাউন্ততা খক্তম থাগনি। অদোম্গী মমিংদা লৈবা অকাউন্তকী পাসবুক পুরকপীবীয়ু।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "code": "BANK_DETAILS_MISMATCH",
+      "en": "The {field} on the application form (“{value_a}”) does not match the bank passbook (“{value_b}”). Please correct the form or bring the right passbook.",
+      "mni_beng": "অর্জি ফোর্মদা লৈবা {field} (“{value_a}”) অসি বেংক পাসবুক (“{value_b}”)গা মান্নদে। ফোর্ম শেমদোক্পীবীয়ু নত্ত্রগা চুম্বা পাসবুক পুরকপীবীয়ু।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "code": "IFSC_INVALID",
+      "en": "The IFSC code “{value_a}” on the {document} is not valid. Please check it with your bank.",
+      "mni_beng": "{document}দা লৈবা IFSC কোড “{value_a}” চুম্দে। অদোম্গী বেংকতা হংদোক্পীবীয়ু।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "code": "DOB_MISMATCH",
+      "en": "Your date of birth is different on the {document_a} (“{value_a}”) and the {document_b} (“{value_b}”). Please bring a document that shows your correct date of birth.",
+      "mni_beng": "অদোম্গী পোকপা তাং {document_a}দা “{value_a}” অমসুং {document_b}দা “{value_b}” তোঙান্না লৈ। চুম্বা পোকপা তাং উৎপা কাগজ অমা পুরকপীবীয়ু।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "code": "AADHAAR_FORM_CARD_MISMATCH",
+      "en": "The last four digits of the Aadhaar number on your form ({value_a}) do not match your Aadhaar card ({value_b}). Please check and correct the form.",
+      "mni_beng": "অর্জি ফোর্মদা ইবা আধার নম্বরগী অরোইবা মরি ({value_a}) অসি আধার কার্দকী ({value_b})গা মান্নদে। য়েংশিন্দুনা ফোর্ম শেমদোক্পীবীয়ু।",
+      "mni_mtei": "",
+      "reviewed": false
+    },
+    {
+      "code": "GENERIC",
+      "en": "{reason}",
+      "mni_beng": "{document}দা শেমদোক্পা মথৌ তাবা অমা লৈ। অফিসদা হংদোক্পীবীয়ু।",
+      "mni_mtei": "",
+      "reviewed": false
+    }
+  ]
+}

@@ -4,6 +4,7 @@ export const FLAG_TITLES: Record<string, string> = {
   OPTIONAL_DOCUMENT_NOT_PROVIDED: 'Optional document not provided',
   EXTRACTION_FAILED: 'Could not read document',
   MISSING_FIELD: 'Field left blank',
+  MISSING_SIGNATURE: 'Form not signed',
   LOW_CONFIDENCE: 'Unclear reading',
   AADHAAR_CHECKSUM_INVALID: 'Aadhaar number fails checksum',
   AADHAAR_FORM_CARD_MISMATCH: 'Aadhaar on form ≠ card',
