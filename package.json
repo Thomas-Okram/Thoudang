@@ -13,9 +13,9 @@
   ],
   "scripts": {
     "dev": "concurrently -k -n api,web -c blue,green \"npm run dev -w @thoudang/api\" \"npm run dev -w @thoudang/web\"",
-    "test": "npm run test --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present && npm run test:synth",
     "seed": "npm run seed -w @thoudang/api",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc --noEmit -p tools/synth",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -27,7 +27,9 @@
     "dev:fixtures": "npm run dev:fixtures -w @thoudang/api --",
     "notices:prime": "npm run notices:prime -w @thoudang/api",
     "seed:dashboard": "npm run seed:dashboard -w @thoudang/api --",
-    "fairness": "npm run fairness -w @thoudang/api --"
+    "fairness": "npm run fairness -w @thoudang/api --",
+    "test:synth": "vitest run --root tools/synth",
+    "synth": "tsx tools/synth/src/cli.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
