@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const apiRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const repoRoot = path.resolve(apiRoot, '../..');
 
 export type DemoMode = 'live' | 'cache_first' | 'cache_only';
 export type Effort = 'low' | 'medium' | 'high';
@@ -33,8 +34,23 @@ export interface AppConfig {
     effortClassify: Effort;
     effortExtract: Effort;
   };
-  /** USD per million tokens, for eval cost reporting. */
-  pricing: { inputPerMTok: number; outputPerMTok: number };
+  /** USD per million tokens, for eval cost reporting; usdToInr converts for the Trust Report. */
+  pricing: { inputPerMTok: number; outputPerMTok: number; usdToInr: number };
+  tts: {
+    /** null when GEMINI_API_KEY is not set — audio is then "unavailable", never an error. */
+    apiKey: string | null;
+    model: string;
+    voice: string;
+    timeoutMs: number;
+  };
+  /** Notice templates (edited by reviewers on /admin/templates; versioned in git). */
+  templatesPath: string;
+  audioDir: string;
+  /** Signs citizen status links so references cannot be enumerated. */
+  statusLinkSecret: string;
+  /** Latest `npm run eval` report shown on the Trust Report. */
+  evalReportPath: string;
+  fairnessHoldoutPath: string;
 }
 
 const oneOf = <T extends string>(
@@ -71,7 +87,23 @@ export function loadConfig(vars: NodeJS.ProcessEnv = process.env): AppConfig {
     pricing: {
       inputPerMTok: Number(vars.PRICE_INPUT_PER_MTOK ?? 2),
       outputPerMTok: Number(vars.PRICE_OUTPUT_PER_MTOK ?? 10),
+      // Configurable — set PRICE_USD_INR to the day's rate.
+      usdToInr: Number(vars.PRICE_USD_INR ?? 88),
     },
+    tts: {
+      apiKey: vars.GEMINI_API_KEY || null,
+      model: vars.TTS_MODEL ?? 'gemini-3.8-flash-tts',
+      voice: vars.TTS_VOICE ?? 'Kore',
+      timeoutMs: Number(vars.TTS_TIMEOUT_MS ?? 45_000),
+    },
+    templatesPath: path.resolve(
+      repoRoot,
+      vars.TEMPLATES_PATH ?? 'packages/core/notices/templates.json',
+    ),
+    audioDir: path.resolve(apiRoot, vars.AUDIO_DIR ?? './data/audio'),
+    statusLinkSecret: vars.STATUS_LINK_SECRET ?? 'thoudang-prototype-status-links',
+    evalReportPath: path.resolve(repoRoot, vars.EVAL_REPORT ?? 'eval-report.json'),
+    fairnessHoldoutPath: path.resolve(repoRoot, 'packages/core/data/fairness-holdout.json'),
   };
 }
 

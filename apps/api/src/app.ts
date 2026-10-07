@@ -10,6 +10,9 @@ import { createLogger, type Logger } from './logger.js';
 import { PacketError, Pipeline } from './pipeline/pipeline.js';
 import { casesRouter } from './routes/cases.js';
 import { decisionsRouter } from './routes/decisions.js';
+import { noticesRouter } from './routes/notices.js';
+import { TemplateStore } from './notices.js';
+import { AudioCache, createGeminiTts, type TtsClient } from './services/tts.js';
 import { ensureOfficers, HttpError } from './officers.js';
 import { eventsRouter } from './routes/events.js';
 import { healthRouter } from './routes/health.js';
@@ -22,6 +25,8 @@ export interface AppDeps {
   config: AppConfig;
   /** null when no API key — the pipeline then serves cached results only. */
   vision: VisionClient | null;
+  /** Notice audio. undefined → from config (GEMINI_API_KEY); null → disabled. */
+  tts?: TtsClient | null;
   logger?: Logger;
   today?: () => string;
 }
@@ -70,6 +75,30 @@ export function createApp(deps: AppDeps): AppBundle {
     }),
   );
   app.use('/api', eventsRouter(bus));
+  const tts =
+    deps.tts !== undefined
+      ? deps.tts
+      : config.tts.apiKey
+        ? createGeminiTts({
+            apiKey: config.tts.apiKey,
+            model: config.tts.model,
+            voice: config.tts.voice,
+            timeoutMs: config.tts.timeoutMs,
+          })
+        : null;
+  app.use(
+    '/api',
+    noticesRouter({
+      db,
+      bus,
+      templates: new TemplateStore(config.templatesPath),
+      tts,
+      audio: new AudioCache(config.audioDir),
+      statusLinkSecret: config.statusLinkSecret,
+      ttsModel: config.tts.model,
+      ttsVoice: config.tts.voice,
+    }),
+  );
   app.use('/api', decisionsRouter({ db, bus, today: deps.today }));
   app.use('/api', casesRouter({ db, pipeline, uploadsDir: config.uploadsDir }));
   app.use(

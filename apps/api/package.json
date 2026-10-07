@@ -16,7 +16,8 @@
     "make-specimens": "tsx src/eval/specimens.ts",
     "demo": "DEMO_MODE=cache_first PORT=5173 WEB_PORT=5173 SERVE_WEB=1 tsx src/server.ts",
     "demo:prime": "tsx src/demo/prime.ts",
-    "dev:fixtures": "tsx src/demo/fixtures.ts"
+    "dev:fixtures": "tsx src/demo/fixtures.ts",
+    "notices:prime": "tsx src/demo/prime-notices.ts"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",

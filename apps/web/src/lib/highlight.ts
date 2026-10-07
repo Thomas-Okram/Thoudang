@@ -1,4 +1,5 @@
-import type { CaseDocument, DetectedType, FlagEvidence } from './api';
+import { EVIDENCE_DOC_TYPE, extractionFieldFor } from '@thoudang/core';
+import type { CaseDocument, FlagEvidence } from './api';
 
 /** What the document viewer should outline. `field` is the extraction (wire) field name. */
 export interface Highlight {
@@ -8,59 +9,8 @@ export interface Highlight {
   mode: 'hover' | 'click';
 }
 
-const DOC_OF: Record<FlagEvidence['document'], DetectedType> = {
-  form: 'application_form',
-  aadhaar: 'aadhaar',
-  passbook: 'bank_passbook',
-  epic: 'epic',
-};
-
-/** Rules-engine field names (core) → extraction field names (what has a bbox). */
-const FIELD_OF: Record<FlagEvidence['document'], Record<string, string | null>> = {
-  form: {
-    applicantName: 'applicant_name',
-    fatherOrHusbandName: 'father_or_husband_name',
-    dob: 'date_of_birth',
-    maritalStatus: 'marital_status_if_stated',
-    annualIncome: 'annual_income',
-    address: 'address',
-    district: 'district',
-    disability: 'disability_if_stated',
-    internallyDisplaced: 'address',
-    bankAccountNumber: 'account_number',
-    ifsc: 'ifsc',
-    applicationDate: 'application_date',
-    aadhaarLast4: 'aadhaar_number',
-    gender: null,
-    document: null,
-  },
-  aadhaar: {
-    name: 'name',
-    dob: 'dob_or_yob',
-    gender: 'gender',
-    maskedNumber: 'aadhaar_number',
-    last4: 'aadhaar_number',
-    document: null,
-  },
-  passbook: {
-    accountHolderName: 'account_holder_name',
-    accountNumber: 'account_number',
-    ifsc: 'ifsc',
-    bankName: 'bank_name',
-    branch: 'branch',
-    document: null,
-  },
-  epic: {
-    name: 'name',
-    epicNumber: 'epic_number',
-    relativeName: 'relative_name',
-    dob: 'dob_or_age',
-    document: null,
-  },
-};
-
 export function wireField(e: Pick<FlagEvidence, 'document' | 'field'>): string | null {
-  return FIELD_OF[e.document]?.[e.field] ?? null;
+  return extractionFieldFor(e);
 }
 
 /** The first document of the evidence's type (multi-image types: prefer one that has the field). */
@@ -68,7 +18,7 @@ export function documentFor(
   e: Pick<FlagEvidence, 'document' | 'field'>,
   docs: CaseDocument[],
 ): CaseDocument | null {
-  const type = DOC_OF[e.document];
+  const type = EVIDENCE_DOC_TYPE[e.document];
   const field = wireField(e);
   const ofType = docs.filter((d) => d.detectedType === type);
   return (

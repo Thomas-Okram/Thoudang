@@ -176,6 +176,8 @@ export function rescreenCase(
       aadhaarLast4: result.facts.aadhaarLast4,
       district,
       screenedAt: row.screenedAt ?? new Date(),
+      firstScreenStatus:
+        row.firstScreenStatus ?? (status === 'APPROVED_BY_OFFICER' ? null : status),
       updatedAt: new Date(),
     })
     .where(eq(cases.id, caseId))

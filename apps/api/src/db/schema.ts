@@ -75,6 +75,12 @@ export const cases = sqliteTable(
     forwardedBy: text('forwarded_by'),
     forwardedAt: integer('forwarded_at', { mode: 'timestamp_ms' }),
     correctionRequestedAt: integer('correction_requested_at', { mode: 'timestamp_ms' }),
+    noticeSentAt: integer('notice_sent_at', { mode: 'timestamp_ms' }),
+    noticeSentBy: text('notice_sent_by'),
+    /** Status at the FIRST screening — for "% first-time-right". */
+    firstScreenStatus: text('first_screen_status', { enum: CASE_STATUSES }),
+    /** Synthetic historical record (npm run seed:dashboard) — hidden from the live queue. */
+    historical: integer('historical', { mode: 'boolean' }).notNull().default(false),
     createdAt: createdAt(),
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
       .notNull()
@@ -213,6 +219,9 @@ export const auditLog = sqliteTable(
         'OFFICER_NOTE',
         'SENT_FOR_CORRECTION',
         'FORWARDED_FOR_APPROVAL',
+        'NOTICE_SENT',
+        'TEMPLATE_EDITED',
+        'DEMO_RESET',
       ],
     }).notNull(),
     entityType: text('entity_type').notNull(),

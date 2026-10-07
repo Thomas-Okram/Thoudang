@@ -114,6 +114,12 @@ export function describeAudit(a: AuditRow, ctx: AuditContext): string {
       return `Status changed to ${statusLabel(after.status)}`;
     case 'PIPELINE_ERROR':
       return `Processing error — case sent for manual review`;
+    case 'NOTICE_SENT':
+      return `${who} marked the deficiency notice as sent (${String(after.channel ?? 'print').replace('_', ' ')})`;
+    case 'TEMPLATE_EDITED':
+      return `${who} edited notice template ${String(a.entityId ?? '')}`;
+    case 'DEMO_RESET':
+      return 'Demo reset';
     case 'NOTICE_GENERATED':
       return `${who} generated a deficiency notice`;
     default:

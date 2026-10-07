@@ -17,11 +17,32 @@ export const SEED_OFFICERS: Officer[] = [
 ];
 
 export type Permission =
-  'approve' | 'resolve_flag' | 'edit_field' | 'add_note' | 'send_for_correction' | 'forward';
+  | 'approve'
+  | 'resolve_flag'
+  | 'edit_field'
+  | 'add_note'
+  | 'send_for_correction'
+  | 'forward'
+  | 'edit_templates';
 
 const PERMISSIONS: Record<OfficerRole, readonly Permission[]> = {
-  DSWO: ['approve', 'resolve_flag', 'edit_field', 'add_note', 'send_for_correction', 'forward'],
-  DEALING_ASSISTANT: ['resolve_flag', 'edit_field', 'add_note', 'send_for_correction', 'forward'],
+  DSWO: [
+    'approve',
+    'resolve_flag',
+    'edit_field',
+    'add_note',
+    'send_for_correction',
+    'forward',
+    'edit_templates',
+  ],
+  DEALING_ASSISTANT: [
+    'resolve_flag',
+    'edit_field',
+    'add_note',
+    'send_for_correction',
+    'forward',
+    'edit_templates',
+  ],
 };
 
 export const ROLE_LABEL: Record<OfficerRole, string> = {
