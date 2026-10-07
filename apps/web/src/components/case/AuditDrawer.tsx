@@ -25,7 +25,10 @@ export function AuditDrawer({ entries, onClose }: { entries: AuditEntry[]; onClo
           return (
             <li key={a.id} className="relative flex gap-3 pb-5 pl-9 last:pb-0">
               {i < entries.length - 1 && (
-                <span aria-hidden className="absolute bottom-0 left-[13px] top-7 w-px bg-line-strong" />
+                <span
+                  aria-hidden
+                  className="absolute bottom-0 left-[13px] top-7 w-px bg-line-strong"
+                />
               )}
               <span
                 className={`absolute left-0 top-0 flex h-7 w-7 items-center justify-center rounded-full ${k.tone}`}

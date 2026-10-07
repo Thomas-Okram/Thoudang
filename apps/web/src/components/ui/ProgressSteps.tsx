@@ -40,7 +40,8 @@ export function ProgressSteps({
       style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}
     >
       {steps.map((s, i) => {
-        const state: State = complete || i < current ? 'done' : i === current ? 'active' : 'pending';
+        const state: State =
+          complete || i < current ? 'done' : i === current ? 'active' : 'pending';
         const filled = complete || i < current;
         return (
           <li

@@ -18,7 +18,8 @@ const LABELS = {
 
 function DocChip({ d: raw, reading }: { d: DocProgress; reading: boolean }) {
   // Until the paced stepper reaches "Reading fields", show finished docs as not yet read.
-  const d: DocProgress = !reading && raw.stage === 'extracted' ? { ...raw, stage: 'classified' } : raw;
+  const d: DocProgress =
+    !reading && raw.stage === 'extracted' ? { ...raw, stage: 'classified' } : raw;
   const busy = d.stage === 'classifying' || d.stage === 'extracting';
   const tone =
     d.stage === 'failed'

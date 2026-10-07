@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router';
 import { fetchNotices } from '../lib/api';
 import { EmptyState, Page } from '../components/Page';
 import { StatusBadge } from '../components/StatusBadge';

@@ -12,7 +12,8 @@ export function useOverlay(onClose: () => void, initialFocus = true) {
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     if (initialFocus) {
-      const first = panel.current?.querySelector<HTMLElement>('[data-autofocus]') ??
+      const first =
+        panel.current?.querySelector<HTMLElement>('[data-autofocus]') ??
         panel.current?.querySelector<HTMLElement>(FOCUSABLE);
       (first ?? panel.current)?.focus();
     }

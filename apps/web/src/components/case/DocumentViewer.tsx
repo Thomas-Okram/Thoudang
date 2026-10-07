@@ -268,7 +268,12 @@ export function ImagePane({ doc, highlight }: { doc: CaseDocument; highlight: Hi
 
         {doc.redaction !== 'none' && (
           <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-navy-900/90 px-3 py-1.5 text-xs font-semibold text-white shadow-raised backdrop-blur">
-            <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 text-teal-soft" fill="currentColor" aria-hidden>
+            <svg
+              viewBox="0 0 20 20"
+              className="h-3.5 w-3.5 text-teal-soft"
+              fill="currentColor"
+              aria-hidden
+            >
               <path d="M10 2 4 4.5v4.8c0 4 2.6 7.3 6 8.7 3.4-1.4 6-4.7 6-8.7V4.5L10 2Z" />
             </svg>
             {doc.redaction === 'bbox'

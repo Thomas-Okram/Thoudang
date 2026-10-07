@@ -56,8 +56,16 @@ export function CardHeader({
 }
 
 /** Small uppercase section label. */
-export function Overline({ children, className = '' }: { children: ReactNode; className?: string }) {
+export function Overline({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={`text-overline font-bold uppercase text-ink-muted ${className}`}>{children}</div>
+    <div className={`text-overline font-bold uppercase text-ink-muted ${className}`}>
+      {children}
+    </div>
   );
 }

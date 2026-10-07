@@ -81,7 +81,17 @@ export function NoticeDocument({
       <header className="relative flex items-start justify-between gap-6 border-b-2 border-navy-900 pb-5">
         <div className="flex items-center gap-4">
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-navy-900 text-navy-900">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <svg
+              viewBox="0 0 24 24"
+              width="28"
+              height="28"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
               <path d="M4 21V9l8-5 8 5v12M4 21h16M8 21v-6M12 21v-6M16 21v-6M3 9h18" />
             </svg>
           </span>
@@ -106,7 +116,10 @@ export function NoticeDocument({
       </header>
 
       {all && (
-        <div className="relative mt-4 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-600" aria-hidden>
+        <div
+          className="relative mt-4 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-600"
+          aria-hidden
+        >
           {LANGS.map((l) => (
             <span key={l} className="flex items-center gap-1.5">
               <span className={`h-3.5 border-l-[3px] ${RULE[l]}`} />

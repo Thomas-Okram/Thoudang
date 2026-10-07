@@ -48,19 +48,24 @@ export function SlotBoard({
   const files = session?.files ?? [];
   const full = files.length >= (session?.maxFiles ?? 6);
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5" data-testid="slot-board">
-      {SLOTS.map((slot) => (
-        <Slot
-          key={slot.label}
-          slot={slot}
-          files={files.filter((f) => (f.docType ?? null) === slot.type)}
-          full={full}
-          busy={busy}
-          onUpload={(list) => onUpload(list, slot.type)}
-          onMoveHere={(id) => onMove(id, slot.type)}
-          onRemove={onRemove}
-        />
-      ))}
+    <div className="@container">
+      <div
+        className="grid grid-cols-2 gap-3 @[30rem]:grid-cols-3 @[44rem]:grid-cols-5"
+        data-testid="slot-board"
+      >
+        {SLOTS.map((slot) => (
+          <Slot
+            key={slot.label}
+            slot={slot}
+            files={files.filter((f) => (f.docType ?? null) === slot.type)}
+            full={full}
+            busy={busy}
+            onUpload={(list) => onUpload(list, slot.type)}
+            onMoveHere={(id) => onMove(id, slot.type)}
+            onRemove={onRemove}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -115,30 +120,28 @@ function Slot({
               : 'border-dashed border-navy-200 bg-navy-50/40 hover:border-navy-300'
       }`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <span
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
-            filled ? 'bg-teal-deep text-white' : 'bg-navy-50 text-navy-600'
-          }`}
-        >
-          <Icon name={filled ? 'check' : slot.icon} size={20} strokeWidth={filled ? 2.8 : 1.8} />
-        </span>
-        {slot.required && !filled && (
-          <span className="rounded-full bg-warm-50 px-2 py-0.5 text-[0.66rem] font-bold uppercase tracking-wide text-warm-900 ring-1 ring-inset ring-warm-400/40">
-            Required
-          </span>
-        )}
-        {labelled && filled && (
-          <span
-            className="rounded-full bg-teal-wash px-2 py-0.5 text-[0.66rem] font-bold uppercase tracking-wide text-teal-darker ring-1 ring-inset ring-teal-accent/30"
-            title="Classification skipped — faster"
-          >
-            fast lane
-          </span>
-        )}
-      </div>
+      <span
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
+          filled ? 'bg-teal-deep text-white' : 'bg-navy-50 text-navy-600'
+        }`}
+      >
+        <Icon name={filled ? 'check' : slot.icon} size={20} strokeWidth={filled ? 2.8 : 1.8} />
+      </span>
       <div className="mt-2.5 font-semibold leading-tight text-navy-900">{slot.label}</div>
       <div className="mt-0.5 text-xs leading-snug text-ink-muted">{slot.hint}</div>
+      {slot.required && !filled && (
+        <span className="mt-2 self-start rounded-full bg-warm-50 px-2 py-0.5 text-[0.66rem] font-bold uppercase tracking-wide text-warm-900 ring-1 ring-inset ring-warm-400/40">
+          Required
+        </span>
+      )}
+      {labelled && filled && (
+        <span
+          className="mt-2 self-start rounded-full bg-teal-wash px-2 py-0.5 text-[0.66rem] font-bold uppercase tracking-wide text-teal-darker ring-1 ring-inset ring-teal-accent/30"
+          title="Classification skipped — faster"
+        >
+          fast lane
+        </span>
+      )}
 
       <ul className="mt-2.5 space-y-2">
         {files.map((f) => (

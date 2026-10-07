@@ -6,35 +6,35 @@ import { BrandMark } from './BrandMark';
 import { Icon, type IconName } from './ui/Icon';
 import { PresentationToggle } from '../lib/presentation';
 
-const NAV: { group: string; items: { to: string; label: string; hint: string; icon: IconName }[] }[] =
-  [
-    {
-      group: 'Casework',
-      items: [
-        { to: '/dashboard', label: 'Dashboard', hint: 'Department overview', icon: 'dashboard' },
-        { to: '/intake', label: 'Intake', hint: 'Upload packets', icon: 'upload' },
-        { to: '/queue', label: 'Queue', hint: 'Cases by priority', icon: 'queue' },
-        { to: '/notices', label: 'Notices', hint: 'Citizen corrections', icon: 'notice' },
-      ],
-    },
-    {
-      group: 'Oversight',
-      items: [
-        { to: '/trust', label: 'Trust Report', hint: 'Accuracy & safeguards', icon: 'shield' },
-      ],
-    },
-    {
-      group: 'Administration',
-      items: [
-        {
-          to: '/admin/templates',
-          label: 'Templates',
-          hint: 'Admin · notice wording',
-          icon: 'template',
-        },
-      ],
-    },
-  ];
+const NAV: {
+  group: string;
+  items: { to: string; label: string; hint: string; icon: IconName }[];
+}[] = [
+  {
+    group: 'Casework',
+    items: [
+      { to: '/dashboard', label: 'Dashboard', hint: 'Department overview', icon: 'dashboard' },
+      { to: '/intake', label: 'Intake', hint: 'Upload packets', icon: 'upload' },
+      { to: '/queue', label: 'Queue', hint: 'Cases by priority', icon: 'queue' },
+      { to: '/notices', label: 'Notices', hint: 'Citizen corrections', icon: 'notice' },
+    ],
+  },
+  {
+    group: 'Oversight',
+    items: [{ to: '/trust', label: 'Trust Report', hint: 'Accuracy & safeguards', icon: 'shield' }],
+  },
+  {
+    group: 'Administration',
+    items: [
+      {
+        to: '/admin/templates',
+        label: 'Templates',
+        hint: 'Admin · notice wording',
+        icon: 'template',
+      },
+    ],
+  },
+];
 
 export function Layout() {
   return (
@@ -45,10 +45,10 @@ export function Layout() {
       >
         Skip to content
       </a>
-      <aside className="no-print sticky top-0 flex h-screen w-[16.5rem] shrink-0 flex-col bg-navy-900 bg-[radial-gradient(120%_60%_at_0%_0%,#163a66_0%,transparent_60%)] text-white">
-        <div className="flex items-center gap-3 px-5 pb-5 pt-6">
+      <aside className="no-print sticky top-0 flex h-screen w-[16.5rem] shrink-0 flex-col max-[1400px]:w-[4.75rem] bg-navy-900 bg-[radial-gradient(120%_60%_at_0%_0%,#163a66_0%,transparent_60%)] text-white">
+        <div className="flex items-center gap-3 px-5 pb-5 pt-6 max-[1400px]:justify-center max-[1400px]:px-0">
           <BrandMark size={42} />
-          <div className="min-w-0">
+          <div className="min-w-0 max-[1400px]:sr-only">
             <div className="text-[1.35rem] font-bold leading-none tracking-tight">Thoudang</div>
             <div className="mt-1 text-[0.8rem] font-medium text-teal-soft/90">AI Scrutiny Desk</div>
           </div>
@@ -56,7 +56,7 @@ export function Layout() {
         <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-2" aria-label="Main">
           {NAV.map((g) => (
             <div key={g.group}>
-              <div className="px-3 pb-1.5 text-overline font-bold uppercase text-navy-300">
+              <div className="px-3 pb-1.5 text-overline font-bold uppercase text-navy-300 max-[1400px]:sr-only">
                 {g.group}
               </div>
               <ul className="space-y-0.5">
@@ -64,8 +64,9 @@ export function Layout() {
                   <li key={item.to}>
                     <NavLink
                       to={item.to}
+                      title={item.label}
                       className={({ isActive }) =>
-                        `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
+                        `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors max-[1400px]:justify-center max-[1400px]:px-0 ${
                           isActive
                             ? 'bg-white/[0.09] text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)]'
                             : 'text-slate-300 hover:bg-white/[0.05] hover:text-white'
@@ -87,7 +88,7 @@ export function Layout() {
                           >
                             <Icon name={item.icon} size={19} />
                           </span>
-                          <span className="min-w-0 leading-tight">
+                          <span className="min-w-0 leading-tight max-[1400px]:sr-only">
                             <span className="block font-semibold">{item.label}</span>
                             <span className="block truncate text-xs text-slate-400 [@media(max-height:820px)]:hidden">
                               {item.hint}
@@ -104,7 +105,7 @@ export function Layout() {
         </nav>
         <div className="shrink-0 space-y-3 px-3 pb-4 pt-2">
           <HealthBadge />
-          <p className="px-2 text-xs leading-relaxed text-slate-400">
+          <p className="px-2 text-xs leading-relaxed text-slate-400 max-[1400px]:hidden">
             <span className="font-semibold text-slate-200">AI reads</span> ·{' '}
             <span className="font-semibold text-slate-200">code decides</span> ·{' '}
             <span className="font-semibold text-teal-soft">officer makes the final call</span>

@@ -68,7 +68,10 @@ function Section({
       aria-labelledby={`s${n}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-6 py-4">
-        <h2 id={`s${n}`} className="flex items-center gap-3 text-xl font-bold tracking-tight text-navy-900">
+        <h2
+          id={`s${n}`}
+          className="flex items-center gap-3 text-xl font-bold tracking-tight text-navy-900"
+        >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy-900 text-base text-white">
             {n}
           </span>
@@ -274,7 +277,11 @@ function Check({
         role="img"
         aria-label={ok === null ? 'not run' : ok ? 'pass' : 'fail'}
       >
-        <Icon name={ok === null ? 'question' : ok ? 'check' : 'alert'} size={18} strokeWidth={2.8} />
+        <Icon
+          name={ok === null ? 'question' : ok ? 'check' : 'alert'}
+          size={18}
+          strokeWidth={2.8}
+        />
       </span>
       <div className="min-w-0">
         <div className="text-[1.02rem] font-semibold text-navy-900">{title}</div>

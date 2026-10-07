@@ -52,10 +52,20 @@ export function PresentationToggle() {
           : 'border-line bg-white text-ink-soft hover:border-line-strong'
       }`}
     >
-      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <svg
+        viewBox="0 0 24 24"
+        width="17"
+        height="17"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
         <path d="M3 4h18v12H3zM12 16v4M8 20h8" />
       </svg>
-      <span>Presentation mode</span>
+      <span className="max-[1400px]:sr-only">Presentation mode</span>
       <span
         aria-hidden
         className={`relative h-5 w-9 rounded-full transition-colors ${on ? 'bg-teal-deep' : 'bg-slate-300'}`}

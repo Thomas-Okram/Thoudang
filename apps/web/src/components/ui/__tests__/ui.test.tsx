@@ -42,9 +42,9 @@ describe('Button', () => {
 describe('Badge', () => {
   it('renders its tone as a data attribute', () => {
     render(<Badge tone="warn">Pending review</Badge>);
-    expect(screen.getByText('Pending review').closest('[data-tone]')!.getAttribute('data-tone')).toBe(
-      'warn',
-    );
+    expect(
+      screen.getByText('Pending review').closest('[data-tone]')!.getAttribute('data-tone'),
+    ).toBe('warn');
   });
 });
 

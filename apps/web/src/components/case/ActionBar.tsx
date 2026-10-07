@@ -102,18 +102,24 @@ export function ActionBar({
           </span>
         )}
         <span className="ml-auto flex gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            icon="note"
+          <button
             onClick={() => setNoteOpen((o) => !o)}
             disabled={!hasOfficer}
+            aria-label="Add note"
+            title="Add note"
+            className="flex h-10 w-10 items-center justify-center rounded-control text-ink-soft hover:bg-navy-50 hover:text-navy-900 disabled:text-slate-300"
           >
-            Add note
-          </Button>
-          <Button variant="ghost" size="sm" icon="history" onClick={onOpenAudit}>
-            Audit trail ({d.audit.length})
-          </Button>
+            <Icon name="note" size={19} />
+          </button>
+          <button
+            onClick={onOpenAudit}
+            aria-label={`Audit trail (${d.audit.length})`}
+            title="Audit trail"
+            className="flex h-10 items-center gap-1.5 rounded-control px-2.5 text-sm font-semibold text-navy-900 hover:bg-navy-50"
+          >
+            <Icon name="history" size={19} />
+            <span className="tabular-nums">{d.audit.length}</span>
+          </button>
         </span>
       </div>
       {(approveWhy || correctWhy) && !approved && (

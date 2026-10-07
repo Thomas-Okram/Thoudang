@@ -124,7 +124,8 @@ export function MobileUploadPage() {
               >
                 {TYPES.map((t) => {
                   const on = docType === t.type;
-                  const sent = session?.files.filter((f) => (f.docType ?? null) === t.type).length ?? 0;
+                  const sent =
+                    session?.files.filter((f) => (f.docType ?? null) === t.type).length ?? 0;
                   return (
                     <button
                       key={t.label}

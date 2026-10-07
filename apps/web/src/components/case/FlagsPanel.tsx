@@ -320,7 +320,9 @@ function FlagCard({
                       })()}
                     </span>
                     {e.confidence !== undefined && e.confidence < 0.75 && (
-                      <span className="text-[11px] font-semibold text-warm-700">low confidence</span>
+                      <span className="text-[11px] font-semibold text-warm-700">
+                        low confidence
+                      </span>
                     )}
                   </span>
                 ))}

@@ -44,7 +44,12 @@ export function Page({
 }) {
   return (
     <div className={`mx-auto ${width} px-8 py-9`}>
-      <PageHeader title={title} subtitle={subtitle || undefined} eyebrow={eyebrow} actions={actions} />
+      <PageHeader
+        title={title}
+        subtitle={subtitle || undefined}
+        eyebrow={eyebrow}
+        actions={actions}
+      />
       {children}
     </div>
   );

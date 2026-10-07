@@ -50,7 +50,11 @@ export function Tabs<V extends string>({
   };
 
   const pad =
-    size === 'sm' ? 'px-3 py-1.5 text-sm' : size === 'lg' ? 'px-6 py-2.5 text-base' : 'px-4 py-2 text-[0.95rem]';
+    size === 'sm'
+      ? 'px-3 py-1.5 text-sm'
+      : size === 'lg'
+        ? 'px-6 py-2.5 text-base'
+        : 'px-4 py-2 text-[0.95rem]';
   return (
     <div
       role="tablist"

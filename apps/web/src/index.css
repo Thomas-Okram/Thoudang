@@ -237,8 +237,7 @@ kbd {
 
 /* Manipuri scripts — bundled fonts so they render offline and on any machine. */
 .font-beng {
-  font-family:
-    'Noto Sans Bengali Variable', 'Noto Sans Bengali', 'Bangla Sangam MN', sans-serif;
+  font-family: 'Noto Sans Bengali Variable', 'Noto Sans Bengali', 'Bangla Sangam MN', sans-serif;
   line-height: 1.75;
 }
 .font-mtei {

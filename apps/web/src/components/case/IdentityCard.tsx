@@ -156,9 +156,7 @@ export function IdentityCard({
 
         {identity.pairs.length > 0 && (
           <>
-            <h3 className="mt-5 text-overline font-bold uppercase text-ink-muted">
-              Comparisons
-            </h3>
+            <h3 className="mt-5 text-overline font-bold uppercase text-ink-muted">Comparisons</h3>
             <ul className="mt-2 space-y-2" aria-label="Pairwise comparisons">
               {identity.pairs.map((p) => (
                 <PairRow key={`${p.a}-${p.b}`} pair={p} a={label(p.a)} b={label(p.b)} />
@@ -209,10 +207,7 @@ function PairRow({ pair, a, b }: { pair: IdentityPair; a: string; b: string }) {
       {open && (
         <div className="animate-enter border-t border-line bg-white/80 px-4 py-3">
           {pair.candidates.length > 0 && (
-            <div
-              className="mb-3 flex flex-wrap items-center gap-2"
-              aria-label="Candidate yumnaks"
-            >
+            <div className="mb-3 flex flex-wrap items-center gap-2" aria-label="Candidate yumnaks">
               <span className="text-sm font-bold text-warm-900">Could be:</span>
               {pair.candidates.map((c) => (
                 <span

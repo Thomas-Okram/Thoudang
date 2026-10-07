@@ -48,7 +48,10 @@ export function IntakePage() {
         <>
           {single.length > 0 && (
             <section className="mb-8 space-y-4" aria-labelledby="progress-title">
-              <h2 id="progress-title" className="flex items-center gap-2 text-title font-bold text-navy-900">
+              <h2
+                id="progress-title"
+                className="flex items-center gap-2 text-title font-bold text-navy-900"
+              >
                 Screening progress
               </h2>
               {single.map((c) => (
@@ -177,7 +180,9 @@ function PacketIntake({
               session={session}
               busy={busy !== null}
               onUpload={(list, type) =>
-                void guard('uploading', () => uploadToSession(session.sessionId, list, 'desk', type))
+                void guard('uploading', () =>
+                  uploadToSession(session.sessionId, list, 'desk', type),
+                )
               }
               onMove={(id, type) =>
                 void guard(null, () => setSessionFileType(session.sessionId, id, type))
@@ -185,7 +190,7 @@ function PacketIntake({
               onRemove={(id) => void guard(null, () => removeSessionFile(session.sessionId, id))}
             />
           ) : (
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
               {[0, 1, 2, 3, 4].map((i) => (
                 <Skeleton key={i} className="h-56" />
               ))}
@@ -258,7 +263,13 @@ function PhonePanel({ session }: { session: UploadSession | null }) {
       </div>
       <div className="mx-6 flex aspect-square items-center justify-center rounded-2xl bg-white p-3 shadow-inner">
         {qr ? (
-          <img src={qr} alt="QR code for phone upload" width={240} height={240} className="h-full w-full" />
+          <img
+            src={qr}
+            alt="QR code for phone upload"
+            width={240}
+            height={240}
+            className="h-full w-full"
+          />
         ) : (
           <span className="flex items-center gap-2 text-ink-muted">
             <Spinner size={16} /> Preparing…

@@ -378,7 +378,13 @@ export function QueuePage() {
 }
 
 function StatsBar({ stats, loading }: { stats: Stats | undefined; loading: boolean }) {
-  const items: { label: string; value: string; tone?: 'navy' | 'success' | 'warn' | 'teal' | 'muted'; icon: IconName; extra?: string }[] = stats
+  const items: {
+    label: string;
+    value: string;
+    tone?: 'navy' | 'success' | 'warn' | 'teal' | 'muted';
+    icon: IconName;
+    extra?: string;
+  }[] = stats
     ? [
         { label: 'Total cases', value: String(stats.total), icon: 'folder' },
         {
@@ -419,7 +425,10 @@ function StatsBar({ stats, loading }: { stats: Stats | undefined; loading: boole
       ]
     : [];
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7" aria-label="Queue statistics">
+    <div
+      className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7"
+      aria-label="Queue statistics"
+    >
       {loading && Array.from({ length: 7 }, (_, i) => <Skeleton key={i} className="h-[92px]" />)}
       {items.map((s) => (
         <StatTile

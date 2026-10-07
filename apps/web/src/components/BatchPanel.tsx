@@ -119,9 +119,10 @@ export function BatchPanel({
           <div>
             <h2 className="text-lg font-bold text-navy-900">Batch intake</h2>
             <p className="mt-0.5 max-w-3xl text-ink-muted">
-              Choose a folder with <strong className="text-navy-900">one sub-folder per applicant</strong>{' '}
-              (e.g. <code className="rounded bg-slate-100 px-1 text-[0.9em]">batch/packet-01/…</code>),
-              or a .zip with the same layout. Each sub-folder becomes one case.
+              Choose a folder with{' '}
+              <strong className="text-navy-900">one sub-folder per applicant</strong> (e.g.{' '}
+              <code className="rounded bg-slate-100 px-1 text-[0.9em]">batch/packet-01/…</code>), or
+              a .zip with the same layout. Each sub-folder becomes one case.
             </p>
           </div>
         </div>

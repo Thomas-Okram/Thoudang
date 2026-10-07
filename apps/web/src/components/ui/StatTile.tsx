@@ -41,7 +41,11 @@ export function StatTile({
   className?: string;
 }) {
   const valueSize =
-    size === 'lg' ? 'text-[2.6rem] leading-none' : size === 'sm' ? 'text-2xl' : 'text-[2rem] leading-tight';
+    size === 'lg'
+      ? 'text-[2.6rem] leading-none'
+      : size === 'sm'
+        ? 'text-2xl'
+        : 'text-[2rem] leading-tight';
   return (
     <div
       data-testid="stat-tile"
@@ -57,7 +61,9 @@ export function StatTile({
           </span>
         )}
       </div>
-      <div className={`mt-1 font-bold tracking-tight tabular-nums ${valueSize} ${VALUE_TONE[tone]}`}>
+      <div
+        className={`mt-1 font-bold tracking-tight tabular-nums ${valueSize} ${VALUE_TONE[tone]}`}
+      >
         {value}
       </div>
       {hint && <div className="mt-1 text-sm text-ink-muted">{hint}</div>}
