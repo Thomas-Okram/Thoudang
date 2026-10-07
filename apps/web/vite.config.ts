@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     port: 5173,
     // Listen on the LAN so phones on the same Wi-Fi can reach the intake page (Phase 4 QR upload).
-    host: true,
+    host: '0.0.0.0',
     proxy: {
       '/api': 'http://localhost:3001',
     },

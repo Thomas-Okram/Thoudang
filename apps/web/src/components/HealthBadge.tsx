@@ -30,9 +30,12 @@ export function HealthBadge() {
         <div className="flex items-center gap-2">
           <Dot ok={Boolean(data?.claudeConfigured)} />
           <span className="text-slate-300">
-            {data?.claudeConfigured ? 'AI reader ready' : 'AI key missing'}
+            {data?.claudeConfigured ? 'AI reader ready' : 'AI key missing — cache only'}
           </span>
         </div>
+      )}
+      {apiOk && data?.demoMode !== 'live' && (
+        <div className="text-xs text-amber-300">Mode: {data?.demoMode.replace('_', ' ')}</div>
       )}
     </div>
   );
