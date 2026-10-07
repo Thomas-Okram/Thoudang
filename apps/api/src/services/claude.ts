@@ -9,6 +9,9 @@ import type { Effort } from '../env.js';
  * no assistant prefill, structured outputs via output_config.format json_schema,
  * 60s timeout, 2 retries with backoff. Everything else depends on the VisionClient
  * interface so tests never call the real API.
+ *
+ * Provider selection (AI_PROVIDER=anthropic | bedrock) lives in ./providers — the Bedrock
+ * client reuses the retry, error and message helpers exported from here.
  */
 
 export interface VisionRequest {
@@ -97,6 +100,37 @@ export interface AnthropicVisionOptions {
   onRetry?: RetryOptions['onRetry'];
 }
 
+/** The single user turn every provider sends: the image first, then the instructions. */
+export function buildUserContent(req: VisionRequest): Anthropic.ContentBlockParam[] {
+  return [
+    {
+      type: 'image',
+      source: { type: 'base64', media_type: req.image.mediaType, data: req.image.data },
+    },
+    { type: 'text', text: req.prompt },
+  ];
+}
+
+/** Refusals and truncation are never worth retrying or repairing. */
+export function assertUsableStop(msg: Pick<Anthropic.Message, 'stop_reason' | 'stop_details'>) {
+  if (msg.stop_reason === 'refusal') {
+    throw new VisionError(
+      `Claude declined to process the image${msg.stop_details?.category ? ` (${msg.stop_details.category})` : ''}`,
+      false,
+    );
+  }
+  if (msg.stop_reason === 'max_tokens') {
+    throw new VisionError('Claude response was truncated (max_tokens)', false);
+  }
+}
+
+export function messageText(msg: Pick<Anthropic.Message, 'content'>): string {
+  return msg.content
+    .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+    .map((b) => b.text)
+    .join('');
+}
+
 export function createAnthropicVisionClient(opts: AnthropicVisionOptions): VisionClient {
   // SDK retries disabled: withRetry owns retry/backoff so behaviour is explicit and testable.
   const sdk = opts.sdk ?? new Anthropic({ timeout: opts.timeoutMs, maxRetries: 0 });
@@ -108,18 +142,7 @@ export function createAnthropicVisionClient(opts: AnthropicVisionOptions): Visio
         model: opts.model,
         max_tokens: req.maxTokens,
         system: req.system,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: { type: 'base64', media_type: req.image.mediaType, data: req.image.data },
-              },
-              { type: 'text', text: req.prompt },
-            ],
-          },
-        ],
+        messages: [{ role: 'user', content: buildUserContent(req) }],
         output_config: {
           effort: req.effort,
           format: { type: 'json_schema', schema: req.schema },
@@ -129,19 +152,8 @@ export function createAnthropicVisionClient(opts: AnthropicVisionOptions): Visio
     );
     const latencyMs = Math.round(performance.now() - started);
 
-    if (msg.stop_reason === 'refusal') {
-      throw new VisionError(
-        `Claude declined to process the image${msg.stop_details?.category ? ` (${msg.stop_details.category})` : ''}`,
-        false,
-      );
-    }
-    if (msg.stop_reason === 'max_tokens') {
-      throw new VisionError('Claude response was truncated (max_tokens)', false);
-    }
-    const text = msg.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b) => b.text)
-      .join('');
+    assertUsableStop(msg);
+    const text = messageText(msg);
     let json: unknown;
     try {
       json = JSON.parse(text);
