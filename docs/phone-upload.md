@@ -54,3 +54,10 @@ not the laptop. Symptom: the phone shows a spinner or "can't connect" on the QR 
 - Warm the cache the night before: with `DEMO_MODE=live` and a working key, upload each demo packet
   once through the Intake page (or batch mode). Then switch to `cache_first`. Note: `npm run eval`
   uses its own database (`data/eval.db`), so it does not warm the demo cache.
+
+## Behind Docker, a reverse proxy or a tunnel
+
+The QR code normally points at `http://<first LAN IP>:<WEB_PORT>`. If phones must use another
+address (Docker host, nginx, a tunnel), set `PUBLIC_BASE_URL` in `apps/api/.env`, e.g.
+`PUBLIC_BASE_URL=https://thoudang.dswo.local`. The phone-upload QR and the citizen-status QR on
+printed notices then use it.

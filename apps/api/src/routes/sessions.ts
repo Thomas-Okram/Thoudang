@@ -15,15 +15,15 @@ export function sessionsRouter(deps: {
   bus: EventBus;
   uploadsDir: string;
   webPort: number;
+  publicBaseUrl: string | null;
 }): Router {
   const { sessions, pipeline, bus } = deps;
   const router = Router();
   const upload = createUploader(deps.uploadsDir, { maxFiles: MAX_FILES_PER_PACKET });
 
-  const mobileUrl = (id: string) => {
-    const ip = lanAddresses()[0] ?? 'localhost';
-    return `http://${ip}:${deps.webPort}/m/upload/${id}`;
-  };
+  const baseUrl = () =>
+    deps.publicBaseUrl ?? `http://${lanAddresses()[0] ?? 'localhost'}:${deps.webPort}`;
+  const mobileUrl = (id: string) => `${baseUrl()}/m/upload/${id}`;
   const view = (s: UploadSession) => ({
     sessionId: s.id,
     mobileUrl: mobileUrl(s.id),
@@ -45,7 +45,12 @@ export function sessionsRouter(deps: {
 
   router.get('/network', (_req, res) => {
     const ips = lanAddresses();
-    res.json({ lanIp: ips[0] ?? null, lanIps: ips, webPort: deps.webPort });
+    res.json({
+      lanIp: ips[0] ?? null,
+      lanIps: ips,
+      webPort: deps.webPort,
+      publicBaseUrl: deps.publicBaseUrl,
+    });
   });
 
   router.post('/sessions', (_req, res) => {

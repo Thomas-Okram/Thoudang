@@ -288,6 +288,13 @@ const send = <T>(path: string, init: RequestInit) =>
 const post = <T>(path: string, body?: unknown) =>
   send<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) });
 
+export const fetchNetwork = () =>
+  getJson<{
+    lanIp: string | null;
+    lanIps: string[];
+    webPort: number;
+    publicBaseUrl: string | null;
+  }>('/api/network');
 export const fetchHealth = () => getJson<HealthResponse>('/api/health');
 export const fetchMeta = () => getJson<Meta>('/api/meta');
 export const fetchStats = () => getJson<Stats>('/api/stats');

@@ -131,6 +131,7 @@ export function createApp(deps: AppDeps): AppBundle {
       bus,
       uploadsDir: config.uploadsDir,
       webPort: config.webPort,
+      publicBaseUrl: config.publicBaseUrl,
     }),
   );
 

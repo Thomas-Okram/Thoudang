@@ -42,7 +42,12 @@ export const testSecurity = (vars: NodeJS.ProcessEnv = {}): SecurityConfig =>
 export function setupApp(
   vision: VisionClient | null,
   demoMode: DemoMode = 'live',
-  opts: { tts?: TtsClient | null; serveWeb?: boolean; security?: SecurityConfig } = {},
+  opts: {
+    tts?: TtsClient | null;
+    serveWeb?: boolean;
+    security?: SecurityConfig;
+    env?: Record<string, string>;
+  } = {},
 ): TestApp {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'thoudang-test-'));
   const dbPath = path.join(dir, 'test.db');
@@ -59,6 +64,7 @@ export function setupApp(
     STATUS_LINK_SECRET: 'test-secret',
     EVAL_REPORT: path.join(dir, 'eval-report.json'),
     FAIRNESS_HOLDOUT: path.join(dir, 'fairness-holdout.json'),
+    ...opts.env,
   });
   const handle = openDb(dbPath);
   const bundle = createApp({

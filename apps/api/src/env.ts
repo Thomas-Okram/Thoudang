@@ -12,6 +12,11 @@ export interface AppConfig {
   port: number;
   /** Port the web app (Vite) is served on — used to build the phone-upload URL. */
   webPort: number;
+  /**
+   * PUBLIC_BASE_URL, e.g. https://thoudang.dswo.local — the address phones and printed notices
+   * should use (Docker, reverse proxy, tunnel). null → http://<first LAN IP>:<webPort>.
+   */
+  publicBaseUrl: string | null;
   dbPath: string;
   uploadsDir: string;
   logFile: string;
@@ -59,10 +64,23 @@ const oneOf = <T extends string>(
   fallback: T,
 ): T => (value && (allowed as readonly string[]).includes(value) ? (value as T) : fallback);
 
+/** Only absolute http(s) URLs; trailing slashes dropped. Anything else is ignored. */
+export function parsePublicBaseUrl(raw: string | undefined): string | null {
+  if (!raw?.trim()) return null;
+  try {
+    const u = new URL(raw.trim());
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+    return `${u.origin}${u.pathname}`.replace(/\/+$/, '');
+  } catch {
+    return null;
+  }
+}
+
 export function loadConfig(vars: NodeJS.ProcessEnv = process.env): AppConfig {
   return {
     port: Number(vars.PORT ?? 3001),
     webPort: Number(vars.WEB_PORT ?? 5173),
+    publicBaseUrl: parsePublicBaseUrl(vars.PUBLIC_BASE_URL),
     dbPath: path.resolve(apiRoot, vars.DB_PATH ?? './data/thoudang.db'),
     uploadsDir: path.resolve(apiRoot, vars.UPLOADS_DIR ?? './uploads'),
     logFile: path.resolve(apiRoot, vars.LOG_FILE ?? './logs/api.log'),

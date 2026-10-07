@@ -11,6 +11,28 @@ import { setupApp, type TestApp } from './setup.js';
 let t: TestApp;
 afterEach(() => t?.cleanup());
 
+describe('PUBLIC_BASE_URL', () => {
+  it('the phone QR link uses PUBLIC_BASE_URL when set (Docker / reverse proxy / tunnel)', async () => {
+    t = setupApp(packetVision(), 'live', {
+      env: { PUBLIC_BASE_URL: 'https://thoudang.example.in/' },
+    });
+    const s = await request(t.app).post('/api/sessions').expect(201);
+    expect(s.body.mobileUrl).toBe(`https://thoudang.example.in/m/upload/${s.body.sessionId}`);
+    const again = await request(t.app).get(`/api/sessions/${s.body.sessionId}`).expect(200);
+    expect(again.body.mobileUrl).toBe(s.body.mobileUrl);
+    const net = await request(t.app).get('/api/network').expect(200);
+    expect(net.body.publicBaseUrl).toBe('https://thoudang.example.in');
+  });
+
+  it('is ignored when it is not an http(s) URL', async () => {
+    t = setupApp(packetVision(), 'live', { env: { PUBLIC_BASE_URL: 'javascript:alert(1)' } });
+    const s = await request(t.app).post('/api/sessions').expect(201);
+    expect(s.body.mobileUrl).toMatch(/^http:\/\/.+:5173\/m\/upload\/[\w-]+$/);
+    const net = await request(t.app).get('/api/network').expect(200);
+    expect(net.body.publicBaseUrl).toBeNull();
+  });
+});
+
 describe('phone/desk upload sessions', () => {
   it('desk + phone add images to one session; submit creates a phone-sourced case', async () => {
     t = setupApp(packetVision());

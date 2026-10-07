@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router';
 import QRCode from 'qrcode';
-import { fetchNotice, markNoticeSent } from '../lib/api';
+import { fetchNetwork, fetchNotice, markNoticeSent } from '../lib/api';
 import { useOfficer } from '../lib/officer';
 import { MODES, NoticeDocument, type NoticeMode } from '../components/notice/NoticeDocument';
 import { AudioPlayer } from '../components/notice/AudioPlayer';
@@ -22,7 +22,14 @@ export function NoticePage() {
     error,
   } = useQuery({ queryKey: ['notice', caseId], queryFn: () => fetchNotice(caseId) });
 
-  const statusUrl = useMemo(() => (n ? `${window.location.origin}${n.statusPath}` : ''), [n]);
+  // PUBLIC_BASE_URL (if the API sets it) is the address citizens' phones can reach.
+  const { data: network } = useQuery({
+    queryKey: ['network'],
+    queryFn: fetchNetwork,
+    staleTime: Infinity,
+  });
+  const base = network?.publicBaseUrl ?? window.location.origin;
+  const statusUrl = useMemo(() => (n ? `${base}${n.statusPath}` : ''), [n, base]);
   useEffect(() => {
     if (!statusUrl) return;
     QRCode.toDataURL(statusUrl, {
