@@ -1,0 +1,411 @@
+{
+  "_note": "Synthetic labelled name pairs for the name-engine fairness evaluation. samePerson is ground truth.",
+  "pairs": [
+    {
+      "community": "Meitei",
+      "a": "Okram Thomas Meitei",
+      "b": "Thomas Okram",
+      "samePerson": true,
+      "note": "word order + dropped ending"
+    },
+    {
+      "community": "Meitei",
+      "a": "Okram Thomas Meitei",
+      "b": "Thomas Singh Okram",
+      "samePerson": true,
+      "note": "Singh/Meitei swap"
+    },
+    {
+      "community": "Meitei",
+      "a": "Thokchom Ibemcha Devi",
+      "b": "Ibemcha Devi Thokchom",
+      "samePerson": true,
+      "note": "word order"
+    },
+    {
+      "community": "Meitei",
+      "a": "Laishram Ningol Okram Ongbi Ibemcha Devi",
+      "b": "Laishram Ibemcha Chanu",
+      "samePerson": true,
+      "note": "pre-marriage name (Ningol)"
+    },
+    {
+      "community": "Meitei",
+      "a": "Laishram Ningol Okram Ongbi Ibemcha Devi",
+      "b": "Okram Ongbi Ibemcha Devi",
+      "samePerson": true,
+      "note": "married name (Ongbi)"
+    },
+    {
+      "community": "Meitei",
+      "a": "Yumnam Joykumar Singh",
+      "b": "YUMNAM JOYKUMAR MEETEI",
+      "samePerson": true,
+      "note": "Meetei spelling, caps"
+    },
+    {
+      "community": "Meitei",
+      "a": "Ningthoujam Rameshwor Singh",
+      "b": "Ningthoujam Rameshwar Singh",
+      "samePerson": true,
+      "note": "spelling variant"
+    },
+    {
+      "community": "Meitei",
+      "a": "Moirangthem Phajabati Devi",
+      "b": "Moirangthem Fajabati Devi",
+      "samePerson": true,
+      "note": "ph/f romanisation"
+    },
+    {
+      "community": "Meitei",
+      "a": "Huidrom Prem Kumar Singh",
+      "b": "Huidrom Premkumar Singh",
+      "samePerson": true,
+      "note": "split given name"
+    },
+    {
+      "community": "Meitei",
+      "a": "Sapam Ibomcha Sharma",
+      "b": "Sapam Ibomcha",
+      "samePerson": true,
+      "note": "Bamon ending dropped"
+    },
+    {
+      "community": "Meitei",
+      "a": "Kh. Loken Singh",
+      "b": "Khuraijam Loken Singh",
+      "samePerson": true,
+      "note": "ambiguous abbreviation (should refer)"
+    },
+    {
+      "community": "Meitei",
+      "a": "Wahengbam Tombi Chanu",
+      "b": "Wahengbam Tombi Devi",
+      "samePerson": true,
+      "note": "Chanu/Devi swap"
+    },
+    {
+      "community": "Meitei",
+      "a": "Okram Thomas",
+      "b": "Okram Tomba",
+      "samePerson": false,
+      "note": "different given name"
+    },
+    {
+      "community": "Meitei",
+      "a": "Okram Tomba Singh",
+      "b": "Okram Tombi Devi",
+      "samePerson": false,
+      "note": "gender vowel"
+    },
+    {
+      "community": "Meitei",
+      "a": "Laishram Ibobi Singh",
+      "b": "Yumnam Ibobi Singh",
+      "samePerson": false,
+      "note": "different yumnak"
+    },
+    {
+      "community": "Meitei",
+      "a": "Konthoujam Bijoy Singh",
+      "b": "Konthoujam Biren Singh",
+      "samePerson": false,
+      "note": "different given name"
+    },
+    {
+      "community": "Meitei",
+      "a": "Sagolsem Lokendro Singh",
+      "b": "Sagolsem Nabakishore Singh",
+      "samePerson": false,
+      "note": "different given name"
+    },
+    {
+      "community": "Pangal",
+      "a": "Md. Abdul Rahim",
+      "b": "Mohammad Abdul Rahim",
+      "samePerson": true,
+      "note": "Md./Mohammad"
+    },
+    {
+      "community": "Pangal",
+      "a": "Mohd Abdul Rahim Khan",
+      "b": "Md Abdul Rahim",
+      "samePerson": true,
+      "note": "Khan dropped"
+    },
+    {
+      "community": "Pangal",
+      "a": "Mohammed Iqbal Hussain",
+      "b": "Md. Iqbal Husain",
+      "samePerson": true,
+      "note": "spelling + prefix"
+    },
+    {
+      "community": "Pangal",
+      "a": "Fatima Begum",
+      "b": "Fatema Begum",
+      "samePerson": true,
+      "note": "spelling variant"
+    },
+    {
+      "community": "Pangal",
+      "a": "Mohammad Abdul Salam",
+      "b": "Md. Abdul Salam",
+      "samePerson": true,
+      "note": "prefix variant"
+    },
+    {
+      "community": "Pangal",
+      "a": "Phundreimayum Md. Ismail",
+      "b": "Md. Ismail Phundreimayum",
+      "samePerson": true,
+      "note": "family name order"
+    },
+    {
+      "community": "Pangal",
+      "a": "Rahima Bibi",
+      "b": "Rahima Begum",
+      "samePerson": true,
+      "note": "Bibi/Begum swap"
+    },
+    {
+      "community": "Pangal",
+      "a": "Md. Nurul Haque",
+      "b": "Mohd. Nurul Hoque",
+      "samePerson": true,
+      "note": "spelling variant"
+    },
+    {
+      "community": "Pangal",
+      "a": "Makakmayum Abdul Karim",
+      "b": "Abdul Karim",
+      "samePerson": true,
+      "note": "family name missing"
+    },
+    {
+      "community": "Pangal",
+      "a": "Md. Abdul Rahim",
+      "b": "Md. Abdul Karim",
+      "samePerson": false,
+      "note": "different given name"
+    },
+    {
+      "community": "Pangal",
+      "a": "Md. Iqbal Hussain",
+      "b": "Md. Iqbal Ahmed",
+      "samePerson": false,
+      "note": "different name part"
+    },
+    {
+      "community": "Pangal",
+      "a": "Fatima Begum",
+      "b": "Rahima Begum",
+      "samePerson": false,
+      "note": "different given name"
+    },
+    {
+      "community": "Pangal",
+      "a": "Mohammad Ismail Khan",
+      "b": "Mohammad Ibrahim Khan",
+      "samePerson": false,
+      "note": "different given name"
+    },
+    {
+      "community": "Pangal",
+      "a": "Phundreimayum Md. Ismail",
+      "b": "Makakmayum Md. Ismail",
+      "samePerson": false,
+      "note": "different family name"
+    },
+    {
+      "community": "Naga",
+      "a": "Shimray Thotso",
+      "b": "Thotso Shimray",
+      "samePerson": true,
+      "note": "clan order"
+    },
+    {
+      "community": "Naga",
+      "a": "Keishing Ngashangva",
+      "b": "Ngashangva Keishing",
+      "samePerson": true,
+      "note": "clan order"
+    },
+    {
+      "community": "Naga",
+      "a": "Kamei Ramkung",
+      "b": "Ramkung Kamei",
+      "samePerson": true,
+      "note": "clan order"
+    },
+    {
+      "community": "Naga",
+      "a": "Zimik Hormila",
+      "b": "Hormila Zimik",
+      "samePerson": true,
+      "note": "clan order"
+    },
+    {
+      "community": "Naga",
+      "a": "Wungnaoshang Ruivah",
+      "b": "Wungnaoshang",
+      "samePerson": true,
+      "note": "single name"
+    },
+    {
+      "community": "Naga",
+      "a": "Panmei Gaikhangam",
+      "b": "Gaikhangam Panmei",
+      "samePerson": true,
+      "note": "clan order"
+    },
+    {
+      "community": "Naga",
+      "a": "Luithui Somila",
+      "b": "SOMILA LUITHUI",
+      "samePerson": true,
+      "note": "clan order, caps"
+    },
+    {
+      "community": "Naga",
+      "a": "Newmai Ramgailung",
+      "b": "Ramgailung Newmai",
+      "samePerson": true,
+      "note": "clan order"
+    },
+    {
+      "community": "Naga",
+      "a": "Hungyo Shangam",
+      "b": "Shangam Hungyo",
+      "samePerson": true,
+      "note": "clan order"
+    },
+    {
+      "community": "Naga",
+      "a": "Shimray Thotso",
+      "b": "Shimray Somila",
+      "samePerson": false,
+      "note": "different given name"
+    },
+    {
+      "community": "Naga",
+      "a": "Kamei Ramkung",
+      "b": "Gangmei Ramkung",
+      "samePerson": false,
+      "note": "different clan"
+    },
+    {
+      "community": "Naga",
+      "a": "Zimik Hormila",
+      "b": "Zimik Ngalanchon",
+      "samePerson": false,
+      "note": "different given name"
+    },
+    {
+      "community": "Naga",
+      "a": "Ruivah Shangam",
+      "b": "Raikhan Shangam",
+      "samePerson": false,
+      "note": "different clan"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Haokip Thangboi",
+      "b": "Thangboi Haokip",
+      "samePerson": true,
+      "note": "clan order"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Paolen Kipgen",
+      "b": "Kipgen Paolen",
+      "samePerson": true,
+      "note": "clan order"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Lalremsiami Hmar",
+      "b": "Lalremsiami",
+      "samePerson": true,
+      "note": "single name"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Hoineilhing Sitlhou",
+      "b": "HOINEILHING SITLHOU",
+      "samePerson": true,
+      "note": "caps"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Thangkhanlal Ngaihte",
+      "b": "Ngaihte Thangkhanlal",
+      "samePerson": true,
+      "note": "clan order"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Vungzagin Tonsing",
+      "b": "Vungjagin Tonsing",
+      "samePerson": true,
+      "note": "spelling variant"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Lalrinmawii Vaiphei",
+      "b": "Lalrinmawii",
+      "samePerson": true,
+      "note": "single name"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Nemneilhing Baite",
+      "b": "Baite Nemneilhing",
+      "samePerson": true,
+      "note": "clan order"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Thanglienmang Zou",
+      "b": "Thanglienmang ZOU.",
+      "samePerson": true,
+      "note": "punctuation"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Haokip Thangboi",
+      "b": "Haokip Thangminlen",
+      "samePerson": false,
+      "note": "different given name"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Paolen Kipgen",
+      "b": "Paolen Singsit",
+      "samePerson": false,
+      "note": "different clan"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Lalremsiami Hmar",
+      "b": "Lalrinmawii Hmar",
+      "samePerson": false,
+      "note": "different given name"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Vungzagin Tonsing",
+      "b": "Vungzagin Guite",
+      "samePerson": false,
+      "note": "different clan"
+    },
+    {
+      "community": "Kuki-Zo",
+      "a": "Nemneilhing Baite",
+      "b": "Hoineilhing Baite",
+      "samePerson": false,
+      "note": "different given name"
+    }
+  ]
+}
