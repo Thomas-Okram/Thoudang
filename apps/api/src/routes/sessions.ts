@@ -6,6 +6,7 @@ import { lanAddresses } from '../network.js';
 import { PacketError, type Pipeline } from '../pipeline/pipeline.js';
 import { MAX_FILES_PER_PACKET, type SessionStore, type UploadSession } from '../sessions.js';
 import { createUploader } from '../upload.js';
+import { toDecodable } from '../services/images.js';
 
 export function sessionsRouter(deps: {
   sessions: SessionStore;
@@ -85,7 +86,7 @@ export function sessionsRouter(deps: {
     const file = find(req.params.id).files.find((f) => f.id === req.params.fileId);
     if (!file) throw new NotFound('File not found');
     try {
-      const thumb = await sharp(file.path)
+      const thumb = await sharp(await toDecodable(fs.readFileSync(file.path)))
         .rotate()
         .resize({ width: 360, height: 360, fit: 'inside' })
         .jpeg({ quality: 75 })

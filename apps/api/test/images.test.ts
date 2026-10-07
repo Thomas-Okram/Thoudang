@@ -39,3 +39,17 @@ describe('preprocessImage', () => {
     await expect(preprocessImage(Buffer.from('not an image'))).rejects.toThrow();
   });
 });
+
+describe('HEIC (iPhone photos)', () => {
+  it('detects and converts HEIC to JPEG', async () => {
+    const fs = await import('node:fs');
+    const { isHeic } = await import('../src/services/images.js');
+    const heic = fs.readFileSync(new URL('./fixtures/specimen-aadhaar.heic', import.meta.url));
+    expect(isHeic(heic)).toBe(true);
+    expect(isHeic(await makeImage('#fff'))).toBe(false);
+    const out = await preprocessImage(heic);
+    expect(out.mediaType).toBe('image/jpeg');
+    expect(Math.max(out.width, out.height)).toBe(600);
+    expect((await sharp(out.buffer).metadata()).format).toBe('jpeg');
+  });
+});
