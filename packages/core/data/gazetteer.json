@@ -1,0 +1,585 @@
+{
+  "_note": "Starter list — to be expanded with department data. Abbreviations are lowercase without dots. An abbreviation shared by several surnames (e.g. \"kh\", \"th\", \"o\") is treated as AMBIGUOUS unless the packet disambiguates it.",
+  "entries": [
+    {
+      "surname": "Okram",
+      "community": "Meitei",
+      "abbreviations": ["o"]
+    },
+    {
+      "surname": "Oinam",
+      "community": "Meitei",
+      "abbreviations": ["o"]
+    },
+    {
+      "surname": "Thokchom",
+      "community": "Meitei",
+      "abbreviations": ["th"]
+    },
+    {
+      "surname": "Thounaojam",
+      "community": "Meitei",
+      "abbreviations": ["th"]
+    },
+    {
+      "surname": "Thangjam",
+      "community": "Meitei",
+      "abbreviations": ["th"]
+    },
+    {
+      "surname": "Thoudam",
+      "community": "Meitei",
+      "abbreviations": ["th"]
+    },
+    {
+      "surname": "Thiyam",
+      "community": "Meitei",
+      "abbreviations": ["th"]
+    },
+    {
+      "surname": "Khuraijam",
+      "community": "Meitei",
+      "abbreviations": ["kh"]
+    },
+    {
+      "surname": "Khwairakpam",
+      "community": "Meitei",
+      "abbreviations": ["kh"]
+    },
+    {
+      "surname": "Khumanthem",
+      "community": "Meitei",
+      "abbreviations": ["kh"]
+    },
+    {
+      "surname": "Khundrakpam",
+      "community": "Meitei",
+      "abbreviations": ["kh"]
+    },
+    {
+      "surname": "Khangembam",
+      "community": "Meitei",
+      "abbreviations": ["kh"]
+    },
+    {
+      "surname": "Ningthoujam",
+      "community": "Meitei",
+      "abbreviations": ["n"]
+    },
+    {
+      "surname": "Ningombam",
+      "community": "Meitei",
+      "abbreviations": ["n", "ng"]
+    },
+    {
+      "surname": "Ngangom",
+      "community": "Meitei",
+      "abbreviations": ["ng"]
+    },
+    {
+      "surname": "Nongmaithem",
+      "community": "Meitei",
+      "abbreviations": ["n"]
+    },
+    {
+      "surname": "Nameirakpam",
+      "community": "Meitei",
+      "abbreviations": ["n"]
+    },
+    {
+      "surname": "Naorem",
+      "community": "Meitei",
+      "abbreviations": ["n"]
+    },
+    {
+      "surname": "Laishram",
+      "community": "Meitei",
+      "abbreviations": ["l"]
+    },
+    {
+      "surname": "Leishangthem",
+      "community": "Meitei",
+      "abbreviations": ["l"]
+    },
+    {
+      "surname": "Loitongbam",
+      "community": "Meitei",
+      "abbreviations": ["l"]
+    },
+    {
+      "surname": "Longjam",
+      "community": "Meitei",
+      "abbreviations": ["l"]
+    },
+    {
+      "surname": "Lourembam",
+      "community": "Meitei",
+      "abbreviations": ["l"]
+    },
+    {
+      "surname": "Yumnam",
+      "community": "Meitei",
+      "abbreviations": ["y"]
+    },
+    {
+      "surname": "Yengkhom",
+      "community": "Meitei",
+      "abbreviations": ["y"]
+    },
+    {
+      "surname": "Sapam",
+      "community": "Meitei",
+      "abbreviations": ["s"]
+    },
+    {
+      "surname": "Salam",
+      "community": "Meitei",
+      "abbreviations": ["s"]
+    },
+    {
+      "surname": "Soibam",
+      "community": "Meitei",
+      "abbreviations": ["s"]
+    },
+    {
+      "surname": "Sagolsem",
+      "community": "Meitei",
+      "abbreviations": ["s"]
+    },
+    {
+      "surname": "Sorokhaibam",
+      "community": "Meitei",
+      "abbreviations": ["s"]
+    },
+    {
+      "surname": "Sanasam",
+      "community": "Meitei",
+      "abbreviations": ["s"]
+    },
+    {
+      "surname": "Sougaijam",
+      "community": "Meitei",
+      "abbreviations": ["s"]
+    },
+    {
+      "surname": "Sinam",
+      "community": "Meitei",
+      "abbreviations": ["s"]
+    },
+    {
+      "surname": "Huidrom",
+      "community": "Meitei",
+      "abbreviations": ["h"]
+    },
+    {
+      "surname": "Haobam",
+      "community": "Meitei",
+      "abbreviations": ["h"]
+    },
+    {
+      "surname": "Heisnam",
+      "community": "Meitei",
+      "abbreviations": ["h"]
+    },
+    {
+      "surname": "Hijam",
+      "community": "Meitei",
+      "abbreviations": ["h"]
+    },
+    {
+      "surname": "Konthoujam",
+      "community": "Meitei",
+      "abbreviations": ["k"]
+    },
+    {
+      "surname": "Kshetrimayum",
+      "community": "Meitei",
+      "abbreviations": ["k", "ksh"]
+    },
+    {
+      "surname": "Keisham",
+      "community": "Meitei",
+      "abbreviations": ["k"]
+    },
+    {
+      "surname": "Kangjam",
+      "community": "Meitei",
+      "abbreviations": ["k"]
+    },
+    {
+      "surname": "Wahengbam",
+      "community": "Meitei",
+      "abbreviations": ["w"]
+    },
+    {
+      "surname": "Waikhom",
+      "community": "Meitei",
+      "abbreviations": ["w"]
+    },
+    {
+      "surname": "Wangkhem",
+      "community": "Meitei",
+      "abbreviations": ["w"]
+    },
+    {
+      "surname": "Moirangthem",
+      "community": "Meitei",
+      "abbreviations": ["m"]
+    },
+    {
+      "surname": "Mayengbam",
+      "community": "Meitei",
+      "abbreviations": ["m"]
+    },
+    {
+      "surname": "Maibam",
+      "community": "Meitei",
+      "abbreviations": ["m"]
+    },
+    {
+      "surname": "Mutum",
+      "community": "Meitei",
+      "abbreviations": ["m"]
+    },
+    {
+      "surname": "Elangbam",
+      "community": "Meitei",
+      "abbreviations": ["e"]
+    },
+    {
+      "surname": "Akoijam",
+      "community": "Meitei",
+      "abbreviations": ["a"]
+    },
+    {
+      "surname": "Arambam",
+      "community": "Meitei",
+      "abbreviations": ["a"]
+    },
+    {
+      "surname": "Angom",
+      "community": "Meitei",
+      "abbreviations": ["a"]
+    },
+    {
+      "surname": "Ayekpam",
+      "community": "Meitei",
+      "abbreviations": ["a"]
+    },
+    {
+      "surname": "Aribam",
+      "community": "Meitei",
+      "abbreviations": ["a"]
+    },
+    {
+      "surname": "Chongtham",
+      "community": "Meitei",
+      "abbreviations": ["ch"]
+    },
+    {
+      "surname": "Chingakham",
+      "community": "Meitei",
+      "abbreviations": ["ch"]
+    },
+    {
+      "surname": "Pukhrambam",
+      "community": "Meitei",
+      "abbreviations": ["p"]
+    },
+    {
+      "surname": "Pebam",
+      "community": "Meitei",
+      "abbreviations": ["p"]
+    },
+    {
+      "surname": "Phurailatpam",
+      "community": "Meitei",
+      "abbreviations": ["ph"]
+    },
+    {
+      "surname": "Rajkumar",
+      "community": "Meitei",
+      "abbreviations": ["rk"]
+    },
+    {
+      "surname": "Takhellambam",
+      "community": "Meitei",
+      "abbreviations": ["t"]
+    },
+    {
+      "surname": "Tongbram",
+      "community": "Meitei",
+      "abbreviations": ["t"]
+    },
+    {
+      "surname": "Irom",
+      "community": "Meitei",
+      "abbreviations": ["i"]
+    },
+    {
+      "surname": "Gurumayum",
+      "community": "Meitei",
+      "abbreviations": ["g"]
+    },
+    {
+      "surname": "Phundreimayum",
+      "community": "Pangal",
+      "abbreviations": []
+    },
+    {
+      "surname": "Makakmayum",
+      "community": "Pangal",
+      "abbreviations": []
+    },
+    {
+      "surname": "Moijingmayum",
+      "community": "Pangal",
+      "abbreviations": []
+    },
+    {
+      "surname": "Shimray",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Keishing",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Kasar",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Ruivah",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Muivah",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Zimik",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Hungyo",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Raikhan",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Shaiza",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Luithui",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Horam",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Awungshi",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Vashum",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Ningshen",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Gangmei",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Kamei",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Panmei",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Golmei",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Pamei",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Riamei",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Longmei",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Newmai",
+      "community": "Naga",
+      "abbreviations": []
+    },
+    {
+      "surname": "Haokip",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Kipgen",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Singsit",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Touthang",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Lhungdim",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Baite",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Doungel",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Mate",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Chongloi",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Hangshing",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Kilong",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Sitlhou",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Lhouvum",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Haolai",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Misao",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Khongsai",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Lupho",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Guite",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Tonsing",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Ngaihte",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Gangte",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Vaiphei",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Hmar",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Zou",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Simte",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Pudaite",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    },
+    {
+      "surname": "Infimate",
+      "community": "Kuki-Zo",
+      "abbreviations": []
+    }
+  ]
+}
