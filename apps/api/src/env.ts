@@ -103,7 +103,10 @@ export function loadConfig(vars: NodeJS.ProcessEnv = process.env): AppConfig {
     audioDir: path.resolve(apiRoot, vars.AUDIO_DIR ?? './data/audio'),
     statusLinkSecret: vars.STATUS_LINK_SECRET ?? 'thoudang-prototype-status-links',
     evalReportPath: path.resolve(repoRoot, vars.EVAL_REPORT ?? 'eval-report.json'),
-    fairnessHoldoutPath: path.resolve(repoRoot, 'packages/core/data/fairness-holdout.json'),
+    fairnessHoldoutPath: path.resolve(
+      repoRoot,
+      vars.FAIRNESS_HOLDOUT ?? 'packages/core/data/fairness-holdout.json',
+    ),
   };
 }
 

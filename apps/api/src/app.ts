@@ -11,6 +11,7 @@ import { PacketError, Pipeline } from './pipeline/pipeline.js';
 import { casesRouter } from './routes/cases.js';
 import { decisionsRouter } from './routes/decisions.js';
 import { noticesRouter } from './routes/notices.js';
+import { insightsRouter } from './routes/insights.js';
 import { TemplateStore } from './notices.js';
 import { AudioCache, createGeminiTts, type TtsClient } from './services/tts.js';
 import { ensureOfficers, HttpError } from './officers.js';
@@ -86,12 +87,14 @@ export function createApp(deps: AppDeps): AppBundle {
             timeoutMs: config.tts.timeoutMs,
           })
         : null;
+  const templates = new TemplateStore(config.templatesPath);
+  app.use('/api', insightsRouter({ db, config, templates, bus }));
   app.use(
     '/api',
     noticesRouter({
       db,
       bus,
-      templates: new TemplateStore(config.templatesPath),
+      templates,
       tts,
       audio: new AudioCache(config.audioDir),
       statusLinkSecret: config.statusLinkSecret,

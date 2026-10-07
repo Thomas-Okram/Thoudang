@@ -50,6 +50,8 @@ export function caseSummary(row: CaseRow, flagRows: FlagRow[] = [], today = istT
     age: row.applicantDob ? (ageOn(row.applicantDob, today)?.years ?? null) : null,
     scheme: 'MOAPS',
     source: row.source,
+    historical: row.historical,
+    noticeSentAt: row.noticeSentAt?.toISOString() ?? null,
     batchId: row.batchId,
     packetName: row.packetName,
     receivedAt: row.receivedAt.toISOString(),
@@ -67,6 +69,8 @@ export function caseSummary(row: CaseRow, flagRows: FlagRow[] = [], today = istT
 export type CaseSummary = ReturnType<typeof caseSummary>;
 
 export interface ListFilters {
+  /** Synthetic historical cases (seed:dashboard) are hidden from the live queue by default. */
+  includeHistorical?: boolean;
   status?: string;
   batchId?: string;
   q?: string;
@@ -84,6 +88,7 @@ export function listCases(db: Db, filters: ListFilters = {}) {
   const today = istToday();
 
   let list = rows
+    .filter((r) => filters.includeHistorical || !r.historical)
     .filter((r) => !filters.status || r.status === filters.status)
     .filter((r) => !filters.batchId || r.batchId === filters.batchId)
     .map((r) => ({

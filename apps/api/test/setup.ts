@@ -18,6 +18,7 @@ export interface TestApp extends AppBundle {
   logFile: string;
   events: PipelineEvent[];
   templatesPath: string;
+  config: ReturnType<typeof loadConfig>;
   cleanup: () => void;
 }
 
@@ -25,7 +26,7 @@ export interface TestApp extends AppBundle {
 export function setupApp(
   vision: VisionClient | null,
   demoMode: DemoMode = 'live',
-  opts: { tts?: TtsClient | null } = {},
+  opts: { tts?: TtsClient | null; serveWeb?: boolean } = {},
 ): TestApp {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'thoudang-test-'));
   const dbPath = path.join(dir, 'test.db');
@@ -40,6 +41,8 @@ export function setupApp(
     TEMPLATES_PATH: templatesPath,
     AUDIO_DIR: path.join(dir, 'audio'),
     STATUS_LINK_SECRET: 'test-secret',
+    EVAL_REPORT: path.join(dir, 'eval-report.json'),
+    FAIRNESS_HOLDOUT: path.join(dir, 'fairness-holdout.json'),
   });
   const handle = openDb(dbPath);
   const bundle = createApp({
@@ -60,6 +63,7 @@ export function setupApp(
     logFile,
     events,
     templatesPath,
+    config,
     cleanup: () => {
       handle.close();
       fs.rmSync(dir, { recursive: true, force: true });

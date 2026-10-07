@@ -17,7 +17,9 @@
     "demo": "DEMO_MODE=cache_first PORT=5173 WEB_PORT=5173 SERVE_WEB=1 tsx src/server.ts",
     "demo:prime": "tsx src/demo/prime.ts",
     "dev:fixtures": "tsx src/demo/fixtures.ts",
-    "notices:prime": "tsx src/demo/prime-notices.ts"
+    "notices:prime": "tsx src/demo/prime-notices.ts",
+    "seed:dashboard": "tsx src/demo/seed-dashboard.ts",
+    "fairness": "tsx src/eval/fairness-cli.ts"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",
