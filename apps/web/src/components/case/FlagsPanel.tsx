@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import type { CaseFlag, Reason, Severity } from '../../lib/api';
-import { DOC_SHORT } from '../../lib/highlight';
+import type { CaseDocument, CaseFlag, FlagEvidence, Reason, Severity } from '../../lib/api';
+import { DOC_SHORT, documentFor, wireField } from '../../lib/highlight';
+
+/** Show evidence as written on the document (raw extraction), falling back to the rule value. */
+function asWritten(e: FlagEvidence, documents: CaseDocument[]): string | null {
+  const field = wireField(e);
+  const raw = field ? documentFor(e, documents)?.extraction?.fields[field]?.value : undefined;
+  if (raw !== undefined && raw !== null && e.field !== 'aadhaarLast4' && e.field !== 'last4')
+    return raw;
+  return e.value === null ? null : String(e.value);
+}
 
 const GROUPS: { severity: Severity; title: string; dot: string; card: string }[] = [
   { severity: 'critical', title: 'Critical', dot: 'bg-rose-500', card: 'border-l-rose-500' },
@@ -20,6 +29,7 @@ const isTyping = (t: EventTarget | null) =>
 
 export function FlagsPanel({
   flags,
+  documents = [],
   selectedId,
   onSelect,
   onResolve,
@@ -28,6 +38,7 @@ export function FlagsPanel({
   reasons,
 }: {
   flags: CaseFlag[];
+  documents?: CaseDocument[];
   selectedId: string | null;
   onSelect: (flag: CaseFlag) => void;
   onResolve: (
@@ -137,6 +148,7 @@ export function FlagsPanel({
                     <FlagCard
                       key={f.id}
                       flag={f}
+                      documents={documents}
                       accent={g.card}
                       selected={f.id === selectedId}
                       onSelect={() => onSelect(f)}
@@ -170,6 +182,7 @@ export function FlagsPanel({
 
 function FlagCard({
   flag,
+  documents,
   accent,
   selected,
   onSelect,
@@ -179,6 +192,7 @@ function FlagCard({
   onReopen,
 }: {
   flag: CaseFlag;
+  documents: CaseDocument[];
   accent: string;
   selected: boolean;
   onSelect: () => void;
@@ -230,7 +244,10 @@ function FlagCard({
                   {DOC_SHORT[e.document]}:
                 </span>
                 <span className="font-medium text-navy-900">
-                  {e.value === null ? '—' : `“${String(e.value)}”`}
+                  {(() => {
+                    const v = asWritten(e, documents);
+                    return v === null ? '—' : `“${v}”`;
+                  })()}
                 </span>
                 {e.confidence !== undefined && e.confidence < 0.75 && (
                   <span className="text-[11px] font-semibold text-amber-700">low confidence</span>

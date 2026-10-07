@@ -122,6 +122,7 @@ function CaseView({ caseId }: { caseId: string }) {
   const selectFlag = useCallback(
     (f: CaseFlag) => {
       setSelectedFlag(f.id);
+      setHover(null); // an explicit selection beats a stale hover
       const h = highlightForEvidence(f.evidence, documents);
       if (h) {
         setFocus(h);
@@ -198,6 +199,7 @@ function CaseView({ caseId }: { caseId: string }) {
         />
         <FlagsPanel
           flags={data.flags}
+          documents={documents}
           selectedId={selectedFlag}
           onSelect={selectFlag}
           onResolve={onResolve}
@@ -214,6 +216,7 @@ function CaseView({ caseId }: { caseId: string }) {
             if (t) setActiveDoc(t.documentId);
           }}
           onFocusField={(t) => {
+            setHover(null);
             setFocus({ ...t, mode: 'click' });
             setActiveDoc(t.documentId);
           }}

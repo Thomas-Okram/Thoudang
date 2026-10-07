@@ -121,6 +121,14 @@ function Slot({
               alt={f.originalName}
               className="h-24 w-full bg-slate-50 object-contain"
             />
+            {f.docType !== 'bank_passbook' && f.docType !== 'epic' && (
+              <span
+                className="absolute left-1 top-1 rounded bg-navy-900/85 px-1.5 text-[10px] font-semibold text-white"
+                title="Blurred until the Aadhaar number is located and masked"
+              >
+                preview blurred
+              </span>
+            )}
             <div className="flex items-center justify-between gap-1 border-t border-slate-100 px-2 py-1 text-[11px]">
               <span className="truncate text-slate-600">{f.originalName}</span>
               {f.from === 'phone' && (

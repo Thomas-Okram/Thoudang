@@ -355,7 +355,11 @@ function StatsBar({ stats, loading }: { stats: Stats | undefined; loading: boole
         {
           label: 'Avg screening time',
           value:
-            stats.avgScreeningMs === null ? '—' : `${(stats.avgScreeningMs / 1000).toFixed(1)} s`,
+            stats.avgScreeningMs === null
+              ? '—'
+              : stats.avgScreeningMs < 100
+                ? '<0.1 s'
+                : `${(stats.avgScreeningMs / 1000).toFixed(1)} s`,
         },
         { label: 'Issues caught', value: String(stats.flagsCaught), tone: 'text-teal-deep' },
       ]

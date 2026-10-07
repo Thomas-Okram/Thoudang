@@ -85,16 +85,25 @@ export function sessionsRouter(deps: {
     res.status(201).json(view(find(session.id)));
   });
 
+  /**
+   * Preview thumbnail. Until the AI has located the Aadhaar number (after "Screen application"),
+   * any image that may carry one — Aadhaar, form, or unsorted — is served BLURRED, so the full
+   * number is never shown on a projector. Passbook and voter-ID previews stay sharp.
+   */
   router.get('/sessions/:id/files/:fileId', async (req, res) => {
     const file = find(req.params.id).files.find((f) => f.id === req.params.fileId);
     if (!file) throw new NotFound('File not found');
+    const safe = file.docType === 'bank_passbook' || file.docType === 'epic';
     try {
-      const thumb = await sharp(await toDecodable(fs.readFileSync(file.path)))
+      let img = sharp(await toDecodable(fs.readFileSync(file.path)))
         .rotate()
-        .resize({ width: 360, height: 360, fit: 'inside' })
-        .jpeg({ quality: 75 })
-        .toBuffer();
-      res.type('image/jpeg').send(thumb);
+        .resize({ width: 360, height: 360, fit: 'inside' });
+      if (!safe) img = sharp(await img.toBuffer()).blur(6);
+      const thumb = await img.jpeg({ quality: 75 }).toBuffer();
+      res
+        .set({ 'X-Redaction': safe ? 'none' : 'blur', 'Cache-Control': 'no-store' })
+        .type('image/jpeg')
+        .send(thumb);
     } catch {
       res.status(415).json({ error: 'Preview not available for this file type' });
     }

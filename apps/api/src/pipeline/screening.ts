@@ -81,9 +81,17 @@ export const toFlag = (f: FlagRow): Flag => ({
 export const effectiveFlags = (rows: FlagRow[]): Flag[] =>
   rows.filter((f) => f.resolution !== 'OVERRIDDEN').map(toFlag);
 
-/** Critical flags that block approval: open, or accepted as real. Only an override clears them. */
+/**
+ * Flags that block approval:
+ * - critical flags that are open or accepted as real (only an override clears them);
+ * - warnings nobody has reviewed yet (accept or override each one).
+ */
 export const blockingFlags = (rows: FlagRow[]): FlagRow[] =>
-  rows.filter((f) => f.severity === 'critical' && f.resolution !== 'OVERRIDDEN');
+  rows.filter(
+    (f) =>
+      (f.severity === 'critical' && f.resolution !== 'OVERRIDDEN') ||
+      (f.severity === 'warn' && f.resolution === 'OPEN'),
+  );
 
 const istToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 

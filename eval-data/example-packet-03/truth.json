@@ -1,0 +1,69 @@
+{
+  "_note": "Married woman (Ningol/Ongbi): the passbook still carries her maiden name — the name engine matches it via the natal clan. Aadhaar shows only year of birth 1943 vs form 1944 → DOB mismatch (citizen). Form Aadhaar last-4 differs from card → officer warning. Widow, 82, relief-camp address → high priority. SYNTHETIC SPECIMEN DATA. Field values are the exact transcription expected; null = blank on the document. Aadhaar numbers are stored masked only.",
+  "expected_status": "NEEDS_CITIZEN_CORRECTION",
+  "documents": {
+    "form.jpg": {
+      "type": "application_form",
+      "fields": {
+        "applicant_name": "Laishram Ningol Okram Ongbi Ibemcha Devi",
+        "father_or_husband_name": "Late Okram Tomba Singh",
+        "address": "Relief Camp, Moirang College, Bishnupur",
+        "district": "Bishnupur",
+        "category": "General",
+        "aadhaar_number": "XXXX XXXX 2990",
+        "mobile": "9436012345",
+        "bank_name": "State Bank of India",
+        "branch": "Moirang",
+        "ifsc": "SBIN0004567",
+        "account_number": "20987654321",
+        "date_of_birth": "15-03-1944",
+        "age": "82",
+        "annual_income": "Rs. 18,000/-",
+        "signature_present": "yes",
+        "application_date": "21/09/2026",
+        "marital_status_if_stated": "Widow",
+        "disability_if_stated": "No"
+      }
+    },
+    "aadhaar.jpg": {
+      "type": "aadhaar",
+      "fields": {
+        "name": "Okram Ongbi Ibemcha Devi",
+        "dob_or_yob": "1943",
+        "gender": "Female",
+        "aadhaar_number": "XXXX XXXX 2341"
+      }
+    },
+    "passbook.jpg": {
+      "type": "bank_passbook",
+      "fields": {
+        "account_holder_name": "LAISHRAM IBEMCHA CHANU",
+        "account_number": "20987654321",
+        "ifsc": "SBIN0004567",
+        "bank_name": "State Bank of India",
+        "branch": "Moirang"
+      }
+    },
+    "epic.jpg": {
+      "type": "epic",
+      "fields": {
+        "name": "Okram Ongbi Ibemcha Devi",
+        "relative_name": "Okram Tomba Singh",
+        "epic_number": "MNP7654321",
+        "dob_or_age": "Age as on 01.01.2026: 81"
+      }
+    }
+  },
+  "name_checks": [
+    {
+      "a": "form.jpg:applicant_name",
+      "b": "aadhaar.jpg:name",
+      "expected": "SAME"
+    },
+    {
+      "a": "form.jpg:applicant_name",
+      "b": "passbook.jpg:account_holder_name",
+      "expected": "SAME"
+    }
+  ]
+}

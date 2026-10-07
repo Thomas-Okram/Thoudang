@@ -167,6 +167,8 @@ interface PacketSpec {
 function packets(): PacketSpec[] {
   const n1 = aadhaarNumber('23456789012');
   const n2 = aadhaarNumber('34567890123');
+  const n3 = aadhaarNumber('45678901234');
+  const n3form = aadhaarNumber('45678901299'); // misread/miswritten on the form: different last 4
   return [
     {
       name: 'example-packet-01',
@@ -257,7 +259,116 @@ function packets(): PacketSpec[] {
       },
       name_checks: [{ a: 'form.jpg:applicant_name', b: 'aadhaar.jpg:name', expected: 'AMBIGUOUS' }],
     },
+    {
+      name: 'example-packet-03',
+      expected_status: 'NEEDS_CITIZEN_CORRECTION',
+      note: 'Married woman (Ningol/Ongbi): the passbook still carries her maiden name — the name engine matches it via the natal clan. Aadhaar shows only year of birth 1943 vs form 1944 → DOB mismatch (citizen). Form Aadhaar last-4 differs from card → officer warning. Widow, 82, relief-camp address → high priority.',
+      form: {
+        applicant_name: 'Laishram Ningol Okram Ongbi Ibemcha Devi',
+        father_or_husband_name: 'Late Okram Tomba Singh',
+        address: 'Relief Camp, Moirang College, Bishnupur',
+        district: 'Bishnupur',
+        category: 'General',
+        aadhaar_number: spaced(n3form),
+        mobile: '9436012345',
+        bank_name: 'State Bank of India',
+        branch: 'Moirang',
+        ifsc: 'SBIN0004567',
+        account_number: '20987654321',
+        date_of_birth: '15-03-1944',
+        age: '82',
+        annual_income: 'Rs. 18,000/-',
+        signature_present: 'yes',
+        application_date: '21/09/2026',
+        marital_status_if_stated: 'Widow',
+        disability_if_stated: 'No',
+      },
+      aadhaar: {
+        name: 'Okram Ongbi Ibemcha Devi',
+        dob: '1943',
+        gender: 'Female',
+        number: n3,
+        address: 'Moirang, Bishnupur, Manipur 795133',
+      },
+      passbook: {
+        holder: 'LAISHRAM IBEMCHA CHANU',
+        account: '20987654321',
+        ifsc: 'SBIN0004567',
+        bank: 'State Bank of India',
+        branch: 'Moirang',
+      },
+      epic: {
+        name: 'Okram Ongbi Ibemcha Devi',
+        relative: 'Okram Tomba Singh',
+        number: 'MNP7654321',
+        dobOrAge: 'Age as on 01.01.2026: 81',
+      },
+      name_checks: [
+        { a: 'form.jpg:applicant_name', b: 'aadhaar.jpg:name', expected: 'SAME' },
+        { a: 'form.jpg:applicant_name', b: 'passbook.jpg:account_holder_name', expected: 'SAME' },
+      ],
+    },
   ];
+}
+
+type Box = [number, number, number, number];
+
+/**
+ * Approximate bounding boxes of each value as drawn by the SVGs above (same coordinates).
+ * Used only by `npm run dev:fixtures` to give fixture data realistic highlight boxes.
+ */
+function layoutFor(p: PacketSpec): Record<string, Record<string, Box>> {
+  const r = (n: number) => Math.round(n);
+  const form: Record<string, Box> = {};
+  FORM_LABELS.forEach(([key], i) => {
+    const y = 420 + i * 92;
+    form[key] = [735, y - 36, r(745 + p.form[key].length * 19), y + 12];
+  });
+  const sigY = 420 + FORM_LABELS.length * 92 + 70;
+  form.application_date = [205, sigY - 36, r(215 + p.form.application_date.length * 19), sigY + 12];
+  form.signature_present = [1050, sigY - 70, 1570, sigY + 50];
+
+  const card = (vals: string[]): Box[] =>
+    vals.map((v, i) => [515, 190 + i * 58 - 28, r(525 + v.length * 16.5), 190 + i * 58 + 8]);
+  const [aName, aDob, aGender, aAddr] = card([
+    p.aadhaar.name,
+    p.aadhaar.dob,
+    p.aadhaar.gender,
+    p.aadhaar.address.slice(0, 28),
+  ]);
+  const numW = 14 * 33.6;
+  const out: Record<string, Record<string, Box>> = {
+    'form.jpg': form,
+    'aadhaar.jpg': {
+      name: aName!,
+      dob_or_yob: aDob!,
+      gender: aGender!,
+      address: aAddr!,
+      aadhaar_number: [r(506 - numW / 2), 510, r(506 + numW / 2), 570],
+    },
+    'passbook.jpg': Object.fromEntries(
+      [
+        ['account_holder_name', p.passbook.holder],
+        ['account_number', p.passbook.account],
+        ['ifsc', p.passbook.ifsc],
+        ['bank_name', p.passbook.bank],
+        ['branch', p.passbook.branch],
+      ].map(([k, v], i) => [
+        k,
+        [515, 260 + i * 80 - 32, r(525 + v!.length * 20.5), 260 + i * 80 + 10] as Box,
+      ]),
+    ),
+  };
+  if (p.epic) {
+    const [num, name, rel, dob] = card([
+      p.epic.number,
+      p.epic.name,
+      p.epic.relative,
+      p.epic.dobOrAge,
+    ]);
+    out['epic.jpg'] = { epic_number: num!, name: name!, relative_name: rel!, dob_or_age: dob! };
+  }
+  return out;
 }
 
 async function writePacket(root: string, p: PacketSpec): Promise<void> {
@@ -299,9 +410,11 @@ async function writePacket(root: string, p: PacketSpec): Promise<void> {
     );
   }
 
+  fs.writeFileSync(path.join(dir, 'layout.json'), `${JSON.stringify(layoutFor(p), null, 2)}\n`);
+
   const formTruth: Record<string, string | null> = {
     ...p.form,
-    aadhaar_number: masked(p.aadhaar.number),
+    aadhaar_number: masked(p.form.aadhaar_number.replace(/\s/g, '')),
   };
   const truth = {
     _note: `${p.note} SYNTHETIC SPECIMEN DATA. Field values are the exact transcription expected; null = blank on the document. Aadhaar numbers are stored masked only.`,

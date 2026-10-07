@@ -292,7 +292,7 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
     if (blockers.length) {
       throw new HttpError(
         409,
-        'Resolve the critical flags before approving',
+        'Resolve critical flags and review every warning before approving',
         blockers.map((f) => ({ id: f.id, code: f.code, title: flagTitle(f.code) })),
       );
     }

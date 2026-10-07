@@ -34,12 +34,14 @@ export const fieldTitle = (f: string) =>
 /** "claude-sonnet-5-5" → "Sonnet 5.5" */
 export function modelLabel(model: unknown): string {
   if (typeof model !== 'string') return 'AI';
+  if (model.startsWith('fixture')) return 'Fixture data, no AI';
   const m = /claude-([a-z]+)-(\d+)(?:-(\d+))?/.exec(model);
   if (!m) return model;
   const family = m[1]!.charAt(0).toUpperCase() + m[1]!.slice(1);
   return `${family} ${m[2]}${m[3] ? `.${m[3]}` : ''}`;
 }
 
+const isFixture = (model: unknown) => typeof model === 'string' && model.startsWith('fixture');
 const secs = (ms: unknown) => (typeof ms === 'number' ? `${(ms / 1000).toFixed(1)}s` : '');
 const quote = (v: unknown) =>
   v === null || v === undefined || v === '' ? '(blank)' : `“${String(v)}”`;
@@ -76,12 +78,16 @@ export function describeAudit(a: AuditRow, ctx: AuditContext): string {
       if (after.ok === false)
         return `AI could not identify ${doc?.originalName ?? 'an image'}: ${String(after.error ?? 'error')}`;
       const type = DOC_TITLE[(after.detectedType as DetectedType) ?? 'other'];
+      if (isFixture(after.model))
+        return `Fixture type for ${doc?.originalName ?? 'image'}: ${type} (no AI)`;
       return `AI identified ${doc?.originalName ?? 'image'} as ${type} (${modelLabel(after.model)}${after.cacheHit ? ', cached' : `, ${secs(after.latencyMs)}`})`;
     }
     case 'AI_EXTRACTION': {
       if (after.ok === false)
         return `AI could not read the ${docName}: ${String(after.error ?? 'error')}`;
       const n = typeof after.fieldsRead === 'number' ? `${after.fieldsRead} fields` : 'fields';
+      if (isFixture(after.model))
+        return `Fixture data loaded for ${docName} (${n} from truth.json — no AI)`;
       return `AI extracted ${n} from ${docName} (${modelLabel(after.model)}${after.cacheHit ? ', cached' : `, ${secs(after.latencyMs)}`})`;
     }
     case 'RULE_RESULT': {

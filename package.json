@@ -23,7 +23,8 @@
     "smoke": "npm run smoke -w @thoudang/api --",
     "make-specimens": "npm run make-specimens -w @thoudang/api --",
     "demo": "npm run build -w @thoudang/web && npm run demo -w @thoudang/api",
-    "demo:prime": "npm run demo:prime -w @thoudang/api --"
+    "demo:prime": "npm run demo:prime -w @thoudang/api --",
+    "dev:fixtures": "npm run dev:fixtures -w @thoudang/api --"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

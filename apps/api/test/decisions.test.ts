@@ -105,6 +105,29 @@ describe('roles and approval', () => {
     expect((await as(DSWO)(request(t.app).post(`/api/cases/${id}/approve`))).status).toBe(200);
   });
 
+  it('open warnings must be reviewed before approval (accept or override each)', async () => {
+    const { id } = await screened({
+      application_form: { applicant_name: 'Kh. Loken Singh', father_or_husband_name: null },
+      aadhaar: { name: 'Khuraijam Loken Singh' },
+      bank_passbook: { account_holder_name: 'Khuraijam Loken Singh' },
+    });
+    const d = (await request(t.app).get(`/api/cases/${id}`)).body;
+    const warns = d.flags.filter((f: { severity: string }) => f.severity === 'warn');
+    expect(warns.length).toBeGreaterThan(0);
+    expect(d.actions.canApprove).toBe(false);
+    const blocked = await as(DSWO)(request(t.app).post(`/api/cases/${id}/approve`));
+    expect(blocked.status).toBe(409);
+    expect(blocked.body.error).toMatch(/review/i);
+    for (const f of warns) {
+      await as(DSWO)(
+        request(t.app)
+          .post(`/api/cases/${id}/flags/${f.id}/resolve`)
+          .send({ decision: 'accept', reasonText: 'Khuraijam confirmed with applicant' }),
+      ).expect(200);
+    }
+    expect((await as(DSWO)(request(t.app).post(`/api/cases/${id}/approve`))).status).toBe(200);
+  });
+
   it('there is no reject endpoint', async () => {
     const { id } = await screened();
     expect((await as(DSWO)(request(t.app).post(`/api/cases/${id}/reject`))).status).toBe(404);
@@ -124,13 +147,11 @@ describe('flag decisions', () => {
         .status,
     ).toBe(400);
     const ok = await as(DA)(
-      request(t.app)
-        .post(url)
-        .send({
-          decision: 'override',
-          reasonCode: 'other',
-          reasonText: 'Bank confirmed IFSC by phone',
-        }),
+      request(t.app).post(url).send({
+        decision: 'override',
+        reasonCode: 'other',
+        reasonText: 'Bank confirmed IFSC by phone',
+      }),
     );
     expect(ok.status).toBe(200);
     expect(flagOf(ok.body, 'IFSC_INVALID')).toMatchObject({
@@ -192,14 +213,12 @@ describe('field edits', () => {
     expect(noReason.status).toBe(400);
 
     const res = await as(DA)(
-      request(t.app)
-        .patch(`/api/cases/${id}/fields`)
-        .send({
-          documentId: passbook.id,
-          field: 'ifsc',
-          value: 'SBIN0001234',
-          reasonCode: 'ai_misread',
-        }),
+      request(t.app).patch(`/api/cases/${id}/fields`).send({
+        documentId: passbook.id,
+        field: 'ifsc',
+        value: 'SBIN0001234',
+        reasonCode: 'ai_misread',
+      }),
     );
     expect(res.status).toBe(200);
     d = res.body;
@@ -234,14 +253,12 @@ describe('field edits', () => {
     );
     d = (
       await as(DA)(
-        request(t.app)
-          .patch(`/api/cases/${id}/fields`)
-          .send({
-            documentId: form.id,
-            field: 'district',
-            value: 'Imphal West',
-            reasonCode: 'applicant_confirmed',
-          }),
+        request(t.app).patch(`/api/cases/${id}/fields`).send({
+          documentId: form.id,
+          field: 'district',
+          value: 'Imphal West',
+          reasonCode: 'applicant_confirmed',
+        }),
       )
     ).body;
     expect(flagOf(d, 'IFSC_INVALID')).toMatchObject({ id: ifsc.id, resolution: 'OVERRIDDEN' });
@@ -252,14 +269,12 @@ describe('field edits', () => {
     const d = (await request(t.app).get(`/api/cases/${id}`)).body;
     const aadhaar = d.documents.find((x: { detectedType: string }) => x.detectedType === 'aadhaar');
     const res = await as(DA)(
-      request(t.app)
-        .patch(`/api/cases/${id}/fields`)
-        .send({
-          documentId: aadhaar.id,
-          field: 'aadhaar_number',
-          value: '1',
-          reasonCode: 'ai_misread',
-        }),
+      request(t.app).patch(`/api/cases/${id}/fields`).send({
+        documentId: aadhaar.id,
+        field: 'aadhaar_number',
+        value: '1',
+        reasonCode: 'ai_misread',
+      }),
     );
     expect(res.status).toBe(400);
   });

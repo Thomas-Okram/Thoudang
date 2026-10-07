@@ -109,6 +109,34 @@ describe('labelled intake slots (speed path)', () => {
   });
 });
 
+describe('intake previews never show an Aadhaar number', () => {
+  it('blurs Aadhaar, form and unsorted previews; passbook/voter ID stay sharp', async () => {
+    t = setupApp(packetVision());
+    const id = (await request(t.app).post('/api/sessions')).body.sessionId;
+    const add = async (type: string | null, name: string) =>
+      (
+        await request(t.app)
+          .post(`/api/sessions/${id}/files${type ? `?type=${type}` : ''}`)
+          .attach('files', await makeImage('#eeeeee'), {
+            filename: name,
+            contentType: 'image/jpeg',
+          })
+      ).body.files.at(-1);
+    const expectations: [string | null, string, string][] = [
+      ['aadhaar', 'a.jpg', 'blur'],
+      ['application_form', 'f.jpg', 'blur'],
+      [null, 'x.jpg', 'blur'],
+      ['bank_passbook', 'p.jpg', 'none'],
+      ['epic', 'e.jpg', 'none'],
+    ];
+    for (const [type, name, mode] of expectations) {
+      const file = await add(type, name);
+      const thumb = await request(t.app).get(file.thumbUrl);
+      expect(thumb.headers['x-redaction']).toBe(mode);
+    }
+  });
+});
+
 describe('upload sessions survive an API restart', () => {
   it('a session created by one app instance is usable by the next (same DB file)', async () => {
     t = setupApp(packetVision());

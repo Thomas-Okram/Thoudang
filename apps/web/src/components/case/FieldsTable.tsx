@@ -57,7 +57,17 @@ export function FieldsTable({
       {withFields.map((d) => (
         <div key={d.id} className="border-b border-slate-100 last:border-0">
           <h3 className="flex items-center justify-between bg-slate-50 px-5 py-1.5 text-xs font-bold uppercase tracking-wide text-slate-500">
-            <span>{d.detectedType ? DOC_LABEL[d.detectedType] : d.originalName}</span>
+            <span>
+              {d.detectedType ? DOC_LABEL[d.detectedType] : d.originalName}
+              {d.model?.startsWith('fixture') && (
+                <span
+                  className="ml-2 rounded bg-amber-200 px-1.5 py-0.5 font-bold text-amber-900"
+                  title="Seeded from truth.json by npm run dev:fixtures"
+                >
+                  Fixture data (no AI)
+                </span>
+              )}
+            </span>
             {d.extraction?.notes && (
               <span
                 className="max-w-[60%] truncate font-normal normal-case text-slate-400"
