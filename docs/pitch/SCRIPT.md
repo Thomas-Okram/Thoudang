@@ -133,8 +133,10 @@ point at the QR code on the notice.
 **2. Name-engine fairness by community** → **3. Safeguards — with live proof**.
 
 > "AI reads, code decides, the officer makes the final call.
-> Here is measured field accuracy on our labelled test set, name-engine fairness across Meitei,
-> Pangal, Naga and Kuki-Zo names, and live checks: the database is scanned for any full Aadhaar
+> Here is measured field accuracy on our labelled test set, and name-engine fairness across Meitei,
+> Pangal, Naga and Kuki-Zo names on a blind held-out set. The number we put first is false
+> matches — two different people merged. It is not zero yet: nine of 160, all near-identical given
+> names like Tomba and Thoiba, and every one is listed right here. And live checks: the database is scanned for any full Aadhaar
 > number, only the DSWO can approve, and the audit log cannot be edited.
 > We also list our known limitations on this page — the data is synthetic and the gazetteer needs
 > department review."
