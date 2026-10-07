@@ -123,7 +123,7 @@ export function CaseProgressCard({ c }: { c: CaseProgress }) {
       {c.stage === 'done' && (
         <div className="mt-5 flex justify-end">
           <Link
-            to={`/case/${c.caseId}`}
+            to={`/cases/${c.caseId}`}
             className="rounded-lg bg-navy-900 px-4 py-2 font-semibold text-white hover:bg-navy-800"
           >
             Open case →

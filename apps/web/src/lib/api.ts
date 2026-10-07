@@ -12,6 +12,9 @@ export type CaseStatus =
   'READY' | 'NEEDS_CITIZEN_CORRECTION' | 'OFFICER_ATTENTION' | 'APPROVED_BY_OFFICER';
 
 export type DetectedType = 'application_form' | 'aadhaar' | 'bank_passbook' | 'epic' | 'other';
+export type SlotType = Exclude<DetectedType, 'other'>;
+export type Severity = 'info' | 'warn' | 'critical';
+export type NameVerdict = 'SAME' | 'LIKELY_SAME' | 'AMBIGUOUS' | 'DIFFERENT';
 
 export interface CaseSummary {
   id: string;
@@ -24,10 +27,22 @@ export interface CaseSummary {
   priorityReasons: string[];
   aadhaarMasked: string | null;
   applicantDob: string | null;
+  age: number | null;
+  scheme: string;
   source: string;
   batchId: string | null;
   packetName: string | null;
   receivedAt: string;
+  updatedAt: string;
+  screenedAt: string | null;
+  screeningMs: number | null;
+  forwardedAt: string | null;
+  decidedAt: string | null;
+  correctionRequestedAt: string | null;
+  topFlag: { code: string; title: string; severity: Severity } | null;
+  flagCounts: { critical: number; warn: number; info: number };
+  openFlags: number;
+  searchScore?: number;
 }
 
 export interface ExtractedValue {
@@ -35,6 +50,7 @@ export interface ExtractedValue {
   status: 'present' | 'blank' | 'unreadable';
   confidence: 'high' | 'medium' | 'low';
   bbox: [number, number, number, number] | null;
+  editedBy?: string;
 }
 
 export interface CaseDocument {
@@ -42,11 +58,13 @@ export interface CaseDocument {
   originalName: string;
   detectedType: DetectedType | null;
   typeConfidence: 'high' | 'medium' | 'low' | null;
+  typeSource: 'ai' | 'officer' | null;
   state: 'UPLOADED' | 'CLASSIFIED' | 'EXTRACTED' | 'FAILED' | 'SKIPPED';
   width: number;
   height: number;
   imageUrl: string;
   thumbUrl: string;
+  redaction: 'bbox' | 'blur' | 'none';
   classification: { type: DetectedType; confidence: string; reason: string } | null;
   extraction: {
     legibility: 'good' | 'poor';
@@ -57,40 +75,114 @@ export interface CaseDocument {
   error: string | null;
   cacheHit: boolean;
   latencyMs: number;
+  model: string | null;
+}
+
+export interface FlagEvidence {
+  document: 'form' | 'aadhaar' | 'passbook' | 'epic';
+  field: string;
+  value: string | number | boolean | null;
+  confidence?: number;
 }
 
 export interface CaseFlag {
   id: string;
   code: string;
-  severity: 'info' | 'warn' | 'critical';
+  title: string;
+  severity: Severity;
   action: 'citizen' | 'officer' | 'none';
   reason: string;
-  evidence: {
-    document: string;
-    field: string;
-    value: string | number | boolean | null;
-    confidence?: number;
-  }[];
-  resolution: string;
+  evidence: FlagEvidence[];
+  resolution: 'OPEN' | 'ACCEPTED' | 'OVERRIDDEN';
+  resolvedBy: string | null;
+  resolvedByName: string | null;
+  resolvedAt: string | null;
+  resolutionReason: string | null;
+}
+
+export interface IdentityEntry {
+  key: string;
+  documentId: string;
+  docType: DetectedType;
+  label: string;
+  field: string;
+  value: string;
+}
+
+export interface IdentityPair {
+  a: string;
+  b: string;
+  verdict: NameVerdict;
+  score: number;
+  reasons: string[];
+  candidates: string[];
+}
+
+export interface Identity {
+  entries: IdentityEntry[];
+  pairs: IdentityPair[];
+  knownYumnaks: string[];
+  relatives: string[];
 }
 
 export interface AuditEntry {
   id: number;
   actor: string;
+  actorName: string | null;
   action: string;
   entityType: string;
   entityId: string | null;
-  after: unknown;
   reason: string | null;
   createdAt: string;
+  summary: string;
 }
+
+export type Permission =
+  'approve' | 'resolve_flag' | 'edit_field' | 'add_note' | 'send_for_correction' | 'forward';
 
 export interface CaseDetail {
   case: CaseSummary;
   documents: CaseDocument[];
+  identity: Identity;
   flags: CaseFlag[];
   notice: { allowed: boolean; blockedBy: string[]; reasons: string[] };
+  actions: {
+    canApprove: boolean;
+    approveBlockedBy: { id: string; code: string; title: string }[];
+    canSendForCorrection: boolean;
+    correctionBlockedReason: string | null;
+    viewerPermissions: Permission[];
+  };
   audit: AuditEntry[];
+}
+
+export interface Officer {
+  id: string;
+  name: string;
+  role: 'DSWO' | 'DEALING_ASSISTANT';
+  roleLabel: string;
+  district: string | null;
+  permissions: Permission[];
+}
+
+export interface Reason {
+  code: string;
+  label: string;
+}
+
+export interface Meta {
+  officers: Officer[];
+  overrideReasons: Reason[];
+  editReasons: Reason[];
+}
+
+export interface Stats {
+  total: number;
+  byStatus: Record<CaseStatus, number>;
+  avgScreeningMs: number | null;
+  flagsCaught: number;
+  districts: string[];
+  processing: number;
 }
 
 export interface UploadSession {
@@ -102,6 +194,7 @@ export interface UploadSession {
     originalName: string;
     size: number;
     from: 'desk' | 'phone';
+    docType: DetectedType | null;
     thumbUrl: string;
   }[];
 }
@@ -118,46 +211,126 @@ export interface BatchResult {
   skipped: { packetName: string; reason: string }[];
 }
 
+// ---------------------------------------------------------------------------------------------
+
+/** The officer acting in this browser; sent as X-Officer-Id on every request. */
+let currentOfficer: string | null = null;
+export const setCurrentOfficer = (id: string | null) => {
+  currentOfficer = id;
+};
+
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+    readonly details?: unknown,
+  ) {
+    super(message);
+  }
+}
+
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let message = `${res.status} ${res.statusText}`;
+    let details: unknown;
     try {
-      const body = (await res.json()) as { error?: string };
+      const body = (await res.json()) as { error?: string; details?: unknown };
       if (body.error) message = body.error;
+      details = body.details;
     } catch {
       // keep status text
     }
-    throw new Error(message);
+    throw new ApiError(res.status, message, details);
   }
   return (await res.json()) as T;
 }
 
-export const getJson = <T>(path: string) =>
-  fetch(path, { headers: { Accept: 'application/json' } }).then((r) => handle<T>(r));
+const headers = (extra: Record<string, string> = {}) => ({
+  Accept: 'application/json',
+  ...(currentOfficer ? { 'X-Officer-Id': currentOfficer } : {}),
+  ...extra,
+});
 
-const send = <T>(path: string, init: RequestInit) => fetch(path, init).then((r) => handle<T>(r));
+export const getJson = <T>(path: string) =>
+  fetch(path, { headers: headers() }).then((r) => handle<T>(r));
+
+const send = <T>(path: string, init: RequestInit) =>
+  fetch(path, {
+    ...init,
+    headers: headers(init.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+  }).then((r) => handle<T>(r));
+const post = <T>(path: string, body?: unknown) =>
+  send<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) });
 
 export const fetchHealth = () => getJson<HealthResponse>('/api/health');
+export const fetchMeta = () => getJson<Meta>('/api/meta');
+export const fetchStats = () => getJson<Stats>('/api/stats');
 export const fetchCase = (id: string) => getJson<CaseDetail>(`/api/cases/${id}`);
-export const fetchCases = (q = '') => getJson<{ cases: CaseSummary[] }>(`/api/cases${q}`);
+export const fetchCases = (params: Record<string, string | undefined> = {}) => {
+  const q = new URLSearchParams(
+    Object.entries(params).filter((e): e is [string, string] => Boolean(e[1])),
+  );
+  const qs = q.toString();
+  return getJson<{ cases: CaseSummary[] }>(`/api/cases${qs ? `?${qs}` : ''}`);
+};
 
-export const createSession = () => send<UploadSession>('/api/sessions', { method: 'POST' });
+export const resolveFlag = (
+  caseId: string,
+  flagId: string,
+  body: { decision: 'accept' | 'override' | 'reopen'; reasonCode?: string; reasonText?: string },
+) => post<CaseDetail>(`/api/cases/${caseId}/flags/${flagId}/resolve`, body);
+
+export const editField = (
+  caseId: string,
+  body: {
+    documentId: string;
+    field: string;
+    value: string | null;
+    reasonCode: string;
+    reasonText?: string;
+  },
+) =>
+  send<CaseDetail>(`/api/cases/${caseId}/fields`, { method: 'PATCH', body: JSON.stringify(body) });
+
+export const approveCase = (caseId: string, note?: string) =>
+  post<CaseDetail>(`/api/cases/${caseId}/approve`, { note });
+export const sendForCorrection = (caseId: string, note?: string) =>
+  post<CaseDetail>(`/api/cases/${caseId}/send-for-correction`, { note });
+export const addNote = (caseId: string, text: string) =>
+  post<CaseDetail>(`/api/cases/${caseId}/notes`, { text });
+export const forwardCases = (caseIds: string[]) =>
+  post<{ forwarded: string[]; skipped: { id: string; reason: string }[] }>('/api/cases/forward', {
+    caseIds,
+  });
+
+export const createSession = () => post<UploadSession>('/api/sessions');
 export const fetchSession = (id: string) => getJson<UploadSession>(`/api/sessions/${id}`);
 
-export function uploadToSession(id: string, files: File[], from: 'desk' | 'phone') {
+export function uploadToSession(
+  id: string,
+  files: File[],
+  from: 'desk' | 'phone',
+  type?: SlotType | null,
+) {
   const form = new FormData();
   files.forEach((f) => form.append('files', f, f.name));
-  return send<UploadSession>(`/api/sessions/${id}/files?from=${from}`, {
+  const q = new URLSearchParams({ from, ...(type ? { type } : {}) });
+  return send<UploadSession>(`/api/sessions/${id}/files?${q.toString()}`, {
     method: 'POST',
     body: form,
   });
 }
 
+export const setSessionFileType = (id: string, fileId: string, docType: SlotType | null) =>
+  send<UploadSession>(`/api/sessions/${id}/files/${fileId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ docType }),
+  });
+
 export const removeSessionFile = (id: string, fileId: string) =>
   send<UploadSession>(`/api/sessions/${id}/files/${fileId}`, { method: 'DELETE' });
 
-export const submitSession = (id: string) =>
-  send<CreatedCase>(`/api/sessions/${id}/submit`, { method: 'POST' });
+export const submitSession = (id: string) => post<CreatedCase>(`/api/sessions/${id}/submit`);
 
 /** Folder upload: each file is preceded by its relative path ("batch/packet-01/form.jpg"). */
 export function uploadBatch(files: { file: File; relPath: string }[]) {

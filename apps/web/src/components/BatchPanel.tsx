@@ -139,7 +139,7 @@ export function BatchPanel({
               return (
                 <li key={t.caseId}>
                   <Link
-                    to={`/case/${t.caseId}`}
+                    to={`/cases/${t.caseId}`}
                     className={`block rounded-lg border p-3 transition hover:shadow ${t.stage === 'done' ? 'border-slate-200 bg-white' : 'border-teal-accent/30 bg-teal-soft/20'}`}
                   >
                     <div className="truncate font-semibold text-navy-900">{t.packetName}</div>

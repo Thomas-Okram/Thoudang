@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import type { CaseStatus, DetectedType } from './api';
 
-export type CaseStage = 'uploaded' | 'classifying' | 'extracting' | 'screening' | 'done' | 'error';
+export type CaseStage =
+  'uploaded' | 'classifying' | 'extracting' | 'screening' | 'done' | 'error' | 'updated';
 export type DocumentStage =
   'classifying' | 'classified' | 'extracting' | 'extracted' | 'failed' | 'skipped';
 

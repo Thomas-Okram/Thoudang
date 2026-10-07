@@ -15,7 +15,9 @@ export function App() {
         <Route index element={<Navigate to="/intake" replace />} />
         <Route path="intake" element={<IntakePage />} />
         <Route path="queue" element={<QueuePage />} />
-        <Route path="case" element={<CasePage />} />
+        <Route path="cases" element={<CasePage />} />
+        <Route path="cases/:caseId" element={<CasePage />} />
+        <Route path="case" element={<Navigate to="/cases" replace />} />
         <Route path="case/:caseId" element={<CasePage />} />
         <Route path="notices" element={<NoticesPage />} />
         <Route path="trust" element={<TrustReportPage />} />

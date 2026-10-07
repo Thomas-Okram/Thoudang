@@ -1,10 +1,11 @@
 import { NavLink, Outlet } from 'react-router';
 import { HealthBadge } from './HealthBadge';
+import { OfficerSwitcher } from './OfficerSwitcher';
 
 const NAV = [
   { to: '/intake', label: 'Intake', hint: 'Upload packets' },
   { to: '/queue', label: 'Queue', hint: 'Cases by priority' },
-  { to: '/case', label: 'Case', hint: 'Scrutinise one case' },
+  { to: '/cases', label: 'Case', hint: 'Scrutinise one case' },
   { to: '/notices', label: 'Notices', hint: 'Deficiency notices' },
   { to: '/trust', label: 'Trust Report', hint: 'Accuracy & safeguards' },
 ] as const;
@@ -12,7 +13,7 @@ const NAV = [
 export function Layout() {
   return (
     <div className="flex min-h-screen">
-      <aside className="flex w-64 shrink-0 flex-col bg-navy-900 text-white">
+      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col bg-navy-900 text-white">
         <div className="border-b border-navy-700 px-5 py-5">
           <div className="text-2xl font-bold tracking-tight">Thoudang</div>
           <div className="mt-0.5 text-sm text-slate-300">Welfare Scrutiny Desk</div>
@@ -43,8 +44,13 @@ export function Layout() {
           </p>
         </div>
       </aside>
-      <main className="flex-1 overflow-x-hidden">
-        <Outlet />
+      <main className="flex min-w-0 flex-1 flex-col">
+        <div className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-end border-b border-slate-200 bg-white/90 px-6 backdrop-blur">
+          <OfficerSwitcher />
+        </div>
+        <div className="min-w-0 flex-1">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

@@ -1,39 +1,154 @@
-import { useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router';
 import { EmptyState, Page } from '../components/Page';
-import { StatusBadge } from '../components/StatusBadge';
-import { fetchCase, type CaseDetail, type CaseFlag } from '../lib/api';
-import { DOC_LABEL, prettyField } from '../lib/labels';
+import { DocumentViewer } from '../components/case/DocumentViewer';
+import { IdentityCard } from '../components/case/IdentityCard';
+import { FlagsPanel } from '../components/case/FlagsPanel';
+import { FieldsTable } from '../components/case/FieldsTable';
+import { StatusBanner } from '../components/case/StatusBanner';
+import { ActionBar } from '../components/case/ActionBar';
+import { AuditDrawer } from '../components/case/AuditDrawer';
+import {
+  addNote,
+  approveCase,
+  editField,
+  fetchCase,
+  resolveFlag,
+  sendForCorrection,
+  type CaseDetail,
+  type CaseFlag,
+} from '../lib/api';
+import { usePipelineEvents, type PipelineEvent } from '../lib/events';
+import { highlightForEvidence, type Highlight } from '../lib/highlight';
+import { useOfficer } from '../lib/officer';
 
-/** Interim case summary (Phase 4). The full scrutiny view with image highlights is Phase 5. */
+const DOC_ORDER = ['application_form', 'aadhaar', 'bank_passbook', 'epic', 'other'];
+
 export function CasePage() {
   const { caseId } = useParams();
-  const { data, error, isPending } = useQuery({
-    queryKey: ['case', caseId],
-    queryFn: () => fetchCase(caseId!),
-    enabled: Boolean(caseId),
-    refetchInterval: (q) => {
-      const s = q.state.data?.case.processingState;
-      return s === 'RECEIVED' || s === 'EXTRACTING' ? 2000 : false;
-    },
-  });
-
   if (!caseId) {
     return (
-      <Page title="Case" subtitle="Open a case from Intake or the Queue.">
+      <Page title="Case" subtitle="Open a case from the Queue or from Intake.">
         <EmptyState
           heading="No case selected"
-          body="Screen a packet on the Intake page, then open it here."
+          body="Pick a case in the Queue to scrutinise its documents, identity checks and flags."
         />
+        <div className="mt-6 text-center">
+          <Link to="/queue" className="font-semibold text-teal-deep hover:underline">
+            Go to the queue →
+          </Link>
+        </div>
       </Page>
     );
   }
-  if (isPending)
-    return (
-      <Page title="Case" subtitle="Loading…">
-        <div />
-      </Page>
-    );
+  return <CaseView caseId={caseId} />;
+}
+
+function CaseView({ caseId }: { caseId: string }) {
+  const qc = useQueryClient();
+  const { officer, can, meta } = useOfficer();
+  const key = useMemo(() => ['case', caseId, officer?.id ?? null] as const, [caseId, officer?.id]);
+  const { data, error, isPending } = useQuery({
+    queryKey: key,
+    queryFn: () => fetchCase(caseId),
+    refetchInterval: (q) => {
+      const s = q.state.data?.case.processingState;
+      return s === 'RECEIVED' || s === 'EXTRACTING' ? 1500 : false;
+    },
+  });
+
+  const [activeDoc, setActiveDoc] = useState<string | null>(null);
+  const [hover, setHover] = useState<Highlight | null>(null);
+  const [focus, setFocus] = useState<Highlight | null>(null);
+  const [selectedFlag, setSelectedFlag] = useState<string | null>(null);
+  const [auditOpen, setAuditOpen] = useState(false);
+  const [toast, setToast] = useState<{ text: string; tone: 'ok' | 'error' } | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  // Another officer (or the pipeline) changed this case → refresh.
+  usePipelineEvents(
+    useCallback(
+      (e: PipelineEvent) => {
+        if (
+          e.type === 'case' &&
+          e.caseId === caseId &&
+          (e.stage === 'done' || e.stage === 'updated')
+        ) {
+          void qc.invalidateQueries({ queryKey: ['case', caseId] });
+        }
+      },
+      [caseId, qc],
+    ),
+    `?caseId=${caseId}`,
+  );
+
+  const documents = useMemo(
+    () =>
+      [...(data?.documents ?? [])].sort(
+        (a, b) =>
+          DOC_ORDER.indexOf(a.detectedType ?? 'other') -
+          DOC_ORDER.indexOf(b.detectedType ?? 'other'),
+      ),
+    [data?.documents],
+  );
+  const highlight = hover ?? focus;
+  const shownDoc = activeDoc ?? documents[0]?.id ?? null;
+
+  const mutate = useCallback(
+    async (fn: () => Promise<CaseDetail>, ok: string) => {
+      try {
+        const next = await fn();
+        qc.setQueryData(key, next);
+        void qc.invalidateQueries({ queryKey: ['cases'] });
+        void qc.invalidateQueries({ queryKey: ['stats'] });
+        setToast({ text: ok, tone: 'ok' });
+      } catch (err) {
+        setToast({
+          text: err instanceof Error ? err.message : 'Something went wrong',
+          tone: 'error',
+        });
+        throw err;
+      }
+    },
+    [key, qc],
+  );
+
+  const selectFlag = useCallback(
+    (f: CaseFlag) => {
+      setSelectedFlag(f.id);
+      const h = highlightForEvidence(f.evidence, documents);
+      if (h) {
+        setFocus(h);
+        setActiveDoc(h.documentId);
+      }
+    },
+    [documents],
+  );
+
+  const onResolve = useCallback(
+    (
+      f: CaseFlag,
+      decision: 'accept' | 'override' | 'reopen',
+      reason?: { reasonCode: string; reasonText?: string },
+    ) =>
+      mutate(
+        () => resolveFlag(caseId, f.id, { decision, ...reason }),
+        decision === 'accept'
+          ? `Accepted “${f.title}”`
+          : decision === 'override'
+            ? `Overrode “${f.title}”`
+            : `Reopened “${f.title}”`,
+      ).catch(() => undefined),
+    [caseId, mutate],
+  );
+
+  if (isPending) return <CaseSkeleton />;
   if (error || !data) {
     return (
       <Page title="Case" subtitle="">
@@ -44,166 +159,118 @@ export function CasePage() {
       </Page>
     );
   }
-  return <CaseSummaryView d={data} />;
+
+  const approved = data.case.status === 'APPROVED_BY_OFFICER';
+  const readOnlyReason = !officer
+    ? 'Choose who you are (top right) to accept or override flags.'
+    : approved
+      ? 'Approved — the case is locked.'
+      : null;
+
+  return (
+    <div className="grid min-h-[calc(100vh-3.5rem)] grid-cols-1 xl:grid-cols-[minmax(0,46fr)_minmax(0,54fr)]">
+      <div className="border-r border-slate-200 bg-white xl:sticky xl:top-14 xl:h-[calc(100vh-3.5rem)]">
+        <div className="h-[70vh] xl:h-full">
+          <DocumentViewer
+            documents={documents}
+            activeId={shownDoc}
+            onSelect={setActiveDoc}
+            highlight={highlight}
+          />
+        </div>
+      </div>
+
+      <div className="min-w-0 space-y-4 px-5 py-5 xl:px-6">
+        <div className="flex items-center gap-2 text-sm text-slate-500">
+          <Link to="/queue" className="hover:text-navy-900">
+            Queue
+          </Link>
+          <span>/</span>
+          <span className="font-medium text-navy-900">{data.case.reference}</span>
+        </div>
+        <StatusBanner d={data} />
+        <IdentityCard
+          identity={data.identity}
+          onHover={(t) => {
+            setHover(t ? { ...t, mode: 'hover' } : null);
+            if (t) setActiveDoc(t.documentId);
+          }}
+        />
+        <FlagsPanel
+          flags={data.flags}
+          selectedId={selectedFlag}
+          onSelect={selectFlag}
+          onResolve={onResolve}
+          canResolve={Boolean(officer) && can('resolve_flag') && !approved}
+          readOnlyReason={readOnlyReason}
+          reasons={meta?.overrideReasons ?? []}
+        />
+        <FieldsTable
+          documents={documents}
+          canEdit={Boolean(officer) && can('edit_field') && !approved}
+          reasons={meta?.editReasons ?? []}
+          onHover={(t) => {
+            setHover(t ? { ...t, mode: 'hover' } : null);
+            if (t) setActiveDoc(t.documentId);
+          }}
+          onFocusField={(t) => {
+            setFocus({ ...t, mode: 'click' });
+            setActiveDoc(t.documentId);
+          }}
+          onEdit={(args) => mutate(() => editField(caseId, args), 'Saved — rules re-checked')}
+        />
+        <ActionBar
+          d={data}
+          hasOfficer={Boolean(officer)}
+          canApproveRole={can('approve')}
+          canCorrectRole={can('send_for_correction')}
+          onApprove={() =>
+            mutate(() => approveCase(caseId), 'Approved for sanction').catch(() => undefined)
+          }
+          onSendForCorrection={() =>
+            mutate(() => sendForCorrection(caseId), 'Sent for citizen correction').catch(
+              () => undefined,
+            )
+          }
+          onOpenAudit={() => setAuditOpen(true)}
+          onAddNote={(text) => mutate(() => addNote(caseId, text), 'Note added')}
+        />
+      </div>
+
+      {auditOpen && <AuditDrawer entries={data.audit} onClose={() => setAuditOpen(false)} />}
+      {toast && (
+        <div
+          role="status"
+          className={`fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-enter rounded-lg px-4 py-2.5 text-sm font-semibold shadow-lg ${
+            toast.tone === 'ok' ? 'bg-navy-900 text-white' : 'bg-rose-600 text-white'
+          }`}
+        >
+          {toast.text}
+        </div>
+      )}
+    </div>
+  );
 }
 
-const SEVERITY_STYLE: Record<CaseFlag['severity'], string> = {
-  critical: 'border-l-rose-500 bg-rose-50/60',
-  warn: 'border-l-amber-500 bg-amber-50/60',
-  info: 'border-l-slate-400 bg-slate-50',
-};
-const ACTION_LABEL: Record<CaseFlag['action'], string> = {
-  citizen: 'Citizen must correct',
-  officer: 'Officer to review',
-  none: 'For information',
-};
-const CONF_STYLE = {
-  high: 'text-emerald-700',
-  medium: 'text-amber-700',
-  low: 'text-rose-700',
-} as const;
-
-function CaseSummaryView({ d }: { d: CaseDetail }) {
-  const c = d.case;
-  const flags = [...d.flags].sort(
-    (a, b) =>
-      ({ critical: 0, warn: 1, info: 2 })[a.severity] -
-      { critical: 0, warn: 1, info: 2 }[b.severity],
-  );
+function CaseSkeleton() {
   return (
-    <Page
-      title={c.applicantName ?? c.reference}
-      subtitle={`${c.reference} · received ${new Date(c.receivedAt).toLocaleString('en-IN')}`}
+    <div
+      className="grid min-h-[calc(100vh-3.5rem)] grid-cols-1 xl:grid-cols-[minmax(0,46fr)_minmax(0,54fr)]"
+      aria-busy
     >
-      <section className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <StatusBadge status={c.status} large />
-        <span className="text-slate-600">
-          Priority <strong className="text-navy-900">{c.priorityScore}</strong>
-          {c.priorityReasons.length > 0 && <> · {c.priorityReasons.join(' · ')}</>}
-        </span>
-        {c.aadhaarMasked && (
-          <span className="font-mono text-slate-600">Aadhaar {c.aadhaarMasked}</span>
-        )}
-        {c.processingState === 'EXTRACTING' && (
-          <span className="text-teal-accent">Processing…</span>
-        )}
-        <span className="ml-auto text-sm text-slate-500">
-          Notice: {d.notice.allowed ? 'can be drafted' : (d.notice.reasons[0] ?? 'not needed')}
-        </span>
-      </section>
-
-      <section className="mt-6">
-        <h2 className="mb-3 text-xl font-bold text-navy-900">Flags ({flags.length})</h2>
-        {flags.length === 0 && <p className="text-slate-600">No flags — every check passed.</p>}
-        <ul className="space-y-2">
-          {flags.map((f) => (
-            <li
-              key={f.id}
-              className={`rounded-lg border border-l-4 border-slate-200 p-4 ${SEVERITY_STYLE[f.severity]}`}
-            >
-              <div className="flex flex-wrap items-center gap-2 text-sm">
-                <code className="rounded bg-white px-1.5 font-semibold text-navy-900">
-                  {f.code}
-                </code>
-                <span className="uppercase tracking-wide text-slate-500">{f.severity}</span>
-                <span className="text-slate-500">· {ACTION_LABEL[f.action]}</span>
-              </div>
-              <p className="mt-1 text-navy-900">{f.reason}</p>
-              {f.evidence.length > 0 && (
-                <ul className="mt-2 flex flex-wrap gap-2 text-xs text-slate-600">
-                  {f.evidence.map((e, i) => (
-                    <li key={i} className="rounded bg-white px-2 py-1 ring-1 ring-slate-200">
-                      {e.document}.{e.field}:{' '}
-                      <strong>{e.value === null ? '—' : String(e.value)}</strong>
-                      {e.confidence !== undefined && (
-                        <span className="text-slate-400"> ({Math.round(e.confidence * 100)}%)</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
+      <div className="border-r border-slate-200 bg-white p-4">
+        <div className="flex gap-2">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="skeleton h-12 w-36" />
           ))}
-        </ul>
-      </section>
-
-      <section className="mt-8 space-y-5">
-        <h2 className="text-xl font-bold text-navy-900">Documents</h2>
-        {d.documents.map((doc) => (
-          <article
-            key={doc.id}
-            className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-[220px_1fr]"
-          >
-            <a href={doc.imageUrl} target="_blank" rel="noreferrer" className="block">
-              <img
-                src={doc.thumbUrl}
-                alt={doc.originalName}
-                className="w-full rounded border border-slate-200 bg-slate-50 object-contain"
-              />
-            </a>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-lg font-bold text-navy-900">
-                  {doc.detectedType ? DOC_LABEL[doc.detectedType] : 'Unidentified'}
-                </h3>
-                <span className="text-sm text-slate-500">{doc.originalName}</span>
-                {doc.cacheHit && (
-                  <span className="rounded bg-slate-200 px-1.5 text-xs font-semibold text-slate-600">
-                    cached
-                  </span>
-                )}
-                {doc.extraction?.legibility === 'poor' && (
-                  <span className="rounded bg-amber-100 px-1.5 text-xs font-semibold text-amber-900">
-                    poor legibility
-                  </span>
-                )}
-              </div>
-              {doc.error && (
-                <p className="mt-2 rounded bg-rose-50 px-3 py-1.5 text-sm text-rose-800">
-                  {doc.error}
-                </p>
-              )}
-              {doc.extraction && (
-                <table className="mt-3 w-full text-sm">
-                  <tbody>
-                    {Object.entries(doc.extraction.fields).map(([name, v]) => (
-                      <tr key={name} className="border-t border-slate-100">
-                        <td className="w-56 py-1.5 pr-3 text-slate-500">{prettyField(name)}</td>
-                        <td className="py-1.5 font-medium text-navy-900">
-                          {v.value ?? <span className="italic text-slate-400">{v.status}</span>}
-                        </td>
-                        <td
-                          className={`w-20 py-1.5 text-right text-xs font-semibold ${CONF_STYLE[v.confidence]}`}
-                        >
-                          {v.confidence}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-              {doc.extraction?.notes && (
-                <p className="mt-2 text-sm text-slate-600">Notes: {doc.extraction.notes}</p>
-              )}
-            </div>
-          </article>
-        ))}
-      </section>
-
-      <section className="mt-8">
-        <h2 className="mb-3 text-xl font-bold text-navy-900">Audit trail</h2>
-        <ol className="space-y-1 font-mono text-xs text-slate-600">
-          {d.audit.map((a) => (
-            <li key={a.id}>
-              {new Date(a.createdAt).toLocaleTimeString('en-IN')} · {a.actor} ·{' '}
-              <strong>{a.action}</strong> · {a.entityType}
-            </li>
-          ))}
-        </ol>
-        <Link to="/intake" className="mt-6 inline-block text-teal-accent hover:underline">
-          ← Back to intake
-        </Link>
-      </section>
-    </Page>
+        </div>
+        <div className="skeleton mt-4 h-[70vh] w-full" />
+      </div>
+      <div className="space-y-4 p-6">
+        <div className="skeleton h-36 w-full" />
+        <div className="skeleton h-56 w-full" />
+        <div className="skeleton h-72 w-full" />
+      </div>
+    </div>
   );
 }
