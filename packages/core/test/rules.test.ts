@@ -404,7 +404,7 @@ describe('priority', () => {
       'Age 86 (80+)',
       'Widowed',
       'Person with disability',
-      'Internally displaced',
+      'Displaced (address)',
       'Pending 130 days',
     ]);
   });
@@ -553,5 +553,25 @@ describe('owner decisions (Phase 3)', () => {
     expect(n.allowed).toBe(false);
     expect(n.blockedBy).toEqual([]);
     expect(n.reasons[0]).toMatch(/no citizen corrections/i);
+  });
+});
+
+describe('Phase 5 decisions', () => {
+  it('Aadhaar last-4 on the form differs from the card → warn flag for the officer', () => {
+    const r = screenCase(makeCase({ form: ok(form({ aadhaarLast4: f('1234') })) }), opts);
+    const flag = r.flags.find((x) => x.code === 'AADHAAR_FORM_CARD_MISMATCH');
+    expect(flag).toMatchObject({ severity: 'warn', action: 'officer' });
+    expect(flag?.reason).toBe("Aadhaar on form doesn't match card (last 4: 1234 vs 4821).");
+    expect(flag?.evidence.map((e) => [e.document, e.value])).toEqual([
+      ['form', '1234'],
+      ['aadhaar', '4821'],
+    ]);
+    expect(r.status).toBe('OFFICER_ATTENTION');
+  });
+
+  it('matching last-4 → no flag', () => {
+    const r = screenCase(makeCase({ form: ok(form({ aadhaarLast4: f('4821') })) }), opts);
+    expect(r.flags.map((x) => x.code)).not.toContain('AADHAAR_FORM_CARD_MISMATCH');
+    expect(r.status).toBe('READY');
   });
 });

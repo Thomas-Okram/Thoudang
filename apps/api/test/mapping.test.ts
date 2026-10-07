@@ -134,6 +134,18 @@ describe('toExtractedCase → screenCase', () => {
     expect(r.status).toBe('NEEDS_CITIZEN_CORRECTION');
   });
 
+  it('Aadhaar last-4 on the form is cross-checked against the card', () => {
+    const outcomes = [
+      extracted('application_form', { aadhaar_number: '2345 6789 1111' }),
+      extracted('aadhaar'),
+      extracted('bank_passbook'),
+    ];
+    const r = screenCase(toExtractedCase('c1', RECEIVED, outcomes), { today: TODAY });
+    expect(r.flags.find((f) => f.code === 'AADHAAR_FORM_CARD_MISMATCH')?.reason).toBe(
+      `Aadhaar on form doesn't match card (last 4: 1111 vs ${AADHAAR_LAST4}).`,
+    );
+  });
+
   it('merges two images of the same type (Aadhaar front + back)', () => {
     const front = doc('aadhaar', { address: null });
     const back = doc('aadhaar', {

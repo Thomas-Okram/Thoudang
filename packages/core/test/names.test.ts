@@ -6,6 +6,7 @@ import {
   phoneticKey,
   NAME_MATCH_THRESHOLDS,
   defaultGazetteer,
+  identityMatrix,
   type NameVerdict,
 } from '../src/index.js';
 
@@ -367,5 +368,41 @@ describe('robustness', () => {
 
   it('uses the bundled starter gazetteer by default', () => {
     expect(defaultGazetteer.size).toBeGreaterThanOrEqual(100);
+  });
+});
+
+describe('ambiguity candidates and identity matrix', () => {
+  it('exposes candidate yumnaks for an ambiguous abbreviation', () => {
+    const r = matchNames('Kh. Loken Singh', 'Khuraijam Loken Singh');
+    expect(r.ambiguousYumnaks).toEqual(
+      expect.arrayContaining(['Khuraijam', 'Khwairakpam', 'Khumanthem']),
+    );
+    expect(matchNames('Okram Thomas', 'Thomas Okram').ambiguousYumnaks).toBeUndefined();
+  });
+
+  it('identityMatrix compares every pair of names and uses relatives to disambiguate', () => {
+    const m = identityMatrix(
+      [
+        { key: 'form', value: 'Th. Ibemcha Devi' },
+        { key: 'aadhaar', value: 'Thokchom Ibemcha Devi' },
+        { key: 'passbook', value: 'THOKCHOM IBEMCHA DEVI' },
+      ],
+      { relativeNames: ['Thokchom Tomba Singh'] },
+    );
+    expect(m.pairs.map((p) => [p.a, p.b, p.verdict])).toEqual([
+      ['form', 'aadhaar', 'SAME'],
+      ['form', 'passbook', 'SAME'],
+      ['aadhaar', 'passbook', 'SAME'],
+    ]);
+    expect(m.knownYumnaks).toEqual(['Thokchom']);
+  });
+
+  it('identityMatrix without relatives leaves the abbreviation ambiguous', () => {
+    const m = identityMatrix([
+      { key: 'form', value: 'Kh. Loken Singh' },
+      { key: 'aadhaar', value: 'Khuraijam Loken Singh' },
+    ]);
+    expect(m.pairs[0]).toMatchObject({ verdict: 'AMBIGUOUS' });
+    expect(m.pairs[0]!.candidates.length).toBeGreaterThan(1);
   });
 });

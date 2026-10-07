@@ -14,7 +14,7 @@ import type {
 import { isValidIfsc, validateEpic } from '../validators/ids.js';
 import { checkAge, checkIncome, parseDate } from '../validators/eligibility.js';
 import { matchNames, type NameMatchResult } from '../names/match.js';
-import { parseName } from '../names/parse.js';
+import { knownYumnaksFrom } from '../names/identity.js';
 import { defaultGazetteer, type Gazetteer } from '../names/gazetteer.js';
 import { computePriority } from './priority.js';
 
@@ -255,6 +255,21 @@ export function screenCase(extracted: ExtractedCase, opts: ScreenOptions = {}): 
     }
   }
 
+  const formLast4 = present(form?.aadhaarLast4);
+  const cardLast4 = present(aadhaar?.last4);
+  if (form?.aadhaarLast4 && aadhaar && formLast4 && cardLast4 && formLast4 !== cardLast4) {
+    add({
+      code: 'AADHAAR_FORM_CARD_MISMATCH',
+      severity: 'warn',
+      action: 'officer',
+      reason: `Aadhaar on form doesn't match card (last 4: ${formLast4} vs ${cardLast4}).`,
+      evidence: [
+        ev('form', 'aadhaarLast4', form.aadhaarLast4),
+        ev('aadhaar', 'last4', aadhaar.last4),
+      ],
+    });
+  }
+
   // --- 4. Bank details consistency ------------------------------------------------------------
   if (form && passbook) {
     const pairs = [
@@ -291,11 +306,10 @@ export function screenCase(extracted: ExtractedCase, opts: ScreenOptions = {}): 
         : null;
 
   // Full yumnaks from relatives' names (same packet) may disambiguate an abbreviation like "Th.".
-  const knownYumnaks = [present(form?.fatherOrHusbandName), present(epic?.relativeName)]
-    .filter((n): n is string => n !== null)
-    .flatMap((n) => parseName(n, gazetteer).family)
-    .filter((t) => t.kind === 'full')
-    .map((t) => t.display);
+  const knownYumnaks = knownYumnaksFrom(
+    [present(form?.fatherOrHusbandName), present(epic?.relativeName)],
+    gazetteer,
+  );
 
   if (anchor) {
     const others: { doc: DocType; field: string; f: ExtractedField<string> | undefined }[] = [

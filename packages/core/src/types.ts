@@ -61,6 +61,8 @@ export const FormFieldsSchema = z.object({
   internallyDisplaced: field(z.boolean()),
   bankAccountNumber: field(z.string()),
   ifsc: field(z.string()),
+  /** Last 4 digits of the Aadhaar number written on the form (the full number is never kept). */
+  aadhaarLast4: field(z.string().regex(/^\d{4}$/)).optional(),
   applicationDate: field(isoDate),
 });
 export type FormFields = z.infer<typeof FormFieldsSchema>;

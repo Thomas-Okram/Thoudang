@@ -33,7 +33,7 @@ export function computePriority(input: PriorityInputs, config: PriorityConfig): 
   }
   if (input.internallyDisplaced) {
     score += w.internallyDisplaced;
-    reasons.push('Internally displaced');
+    reasons.push('Displaced (address)');
   }
   if (input.daysPending > 0) {
     score += Math.min(input.daysPending * w.perDayPending, w.maxDaysPendingPoints);

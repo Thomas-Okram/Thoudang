@@ -10,6 +10,8 @@ export interface NameMatchResult {
   verdict: NameVerdict;
   /** Plain-English explanation, safe to show to officers. Never empty. */
   reasons: string[];
+  /** Present when an abbreviated yumnak could stand for several surnames (verdict AMBIGUOUS). */
+  ambiguousYumnaks?: string[];
 }
 
 export interface NameThresholds {
@@ -241,6 +243,7 @@ export function matchNames(a: string, b: string, ctx: MatchContext = {}): NameMa
   const ambiguity: string[] = [];
   let score = 100;
   let hardDifferent = false;
+  let ambiguousYumnaks: string[] | undefined;
 
   // --- Given names (dominant) ---------------------------------------------------------------
   const g = alignGiven(A.given, B.given);
@@ -367,6 +370,7 @@ export function matchNames(a: string, b: string, ctx: MatchContext = {}): NameMa
           );
           break;
         case 'abbr-ambiguous':
+          ambiguousYumnaks = best.candidates;
           ambiguity.push(
             `${abbr?.display} could stand for ${list(best.candidates)} — the documents do not show which. Officer to confirm the yumnak.`,
           );
@@ -469,7 +473,9 @@ export function matchNames(a: string, b: string, ctx: MatchContext = {}): NameMa
     verdict = 'AMBIGUOUS';
   }
   if (!reasons.length) reasons.push('All name parts match.');
-  return { score, verdict, reasons };
+  return verdict === 'AMBIGUOUS' && ambiguousYumnaks
+    ? { score, verdict, reasons, ambiguousYumnaks }
+    : { score, verdict, reasons };
 }
 
 export type { ParsedName };
