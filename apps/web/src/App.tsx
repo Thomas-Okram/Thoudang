@@ -10,13 +10,22 @@ import { TrustReportPage } from './pages/TrustReportPage';
 import { TemplatesPage } from './pages/TemplatesPage';
 import { MobileUploadPage } from './pages/MobileUploadPage';
 import { StatusPage } from './pages/StatusPage';
+import { LoginPage } from './pages/LoginPage';
+import { RequireOfficer } from './components/RequireOfficer';
 
 export function App() {
   return (
     <Routes>
       <Route path="m/upload/:sessionId" element={<MobileUploadPage />} />
       <Route path="s/:ref" element={<StatusPage />} />
-      <Route element={<Layout />}>
+      <Route path="login" element={<LoginPage />} />
+      <Route
+        element={
+          <RequireOfficer>
+            <Layout />
+          </RequireOfficer>
+        }
+      >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="intake" element={<IntakePage />} />

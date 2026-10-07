@@ -1,8 +1,69 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useOfficer } from '../lib/officer';
 import { Icon } from './ui/Icon';
 
+/**
+ * Header identity. Session mode (default): "Signed in as …" + Sign out. Header mode
+ * (AUTH_MODE=header fallback): the old "Acting as" dropdown.
+ */
 export function OfficerSwitcher() {
-  const { officer, officers, choose } = useOfficer();
+  const { mode, officer, officers, choose, signOut } = useOfficer();
+  const navigate = useNavigate();
+  const [leaving, setLeaving] = useState(false);
+
+  if (mode === 'session') {
+    if (!officer) return null;
+    return (
+      <div className="flex items-center gap-2.5" data-testid="signed-in-officer">
+        <span
+          aria-hidden
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-navy-900 text-sm font-bold text-white"
+        >
+          {officer.name
+            .split(/\s+/)
+            .filter((w) => /^[A-Za-z]/.test(w))
+            .map((w) => w[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase()}
+        </span>
+        <div className="leading-tight">
+          <div className="text-[0.7rem] font-semibold text-ink-muted">Signed in as</div>
+          <div className="max-w-[15rem] truncate text-[0.92rem] font-bold text-navy-900">
+            {officer.name}
+          </div>
+        </div>
+        <span
+          className={`hidden rounded-full px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-wide xl:inline ${
+            officer.role === 'DSWO' ? 'bg-navy-900 text-white' : 'bg-teal-wash text-teal-darker'
+          }`}
+          title={officer.roleLabel}
+        >
+          {officer.role === 'DSWO' ? 'DSWO · can approve' : 'Dealing Assistant'}
+        </span>
+        <button
+          type="button"
+          title="Sign out"
+          disabled={leaving}
+          onClick={async () => {
+            setLeaving(true);
+            try {
+              await signOut();
+            } finally {
+              setLeaving(false);
+              navigate('/login', { replace: true });
+            }
+          }}
+          className="ml-1 inline-flex h-9 items-center gap-1.5 rounded-control px-2.5 text-sm font-semibold text-ink-soft transition-colors hover:bg-navy-50 hover:text-navy-900 disabled:opacity-60"
+        >
+          <Icon name="lock" size={16} />
+          <span className="max-2xl:sr-only">Sign out</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-2.5">
       <span

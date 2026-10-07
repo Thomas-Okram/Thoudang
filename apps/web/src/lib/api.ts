@@ -223,10 +223,20 @@ export interface BatchResult {
 
 // ---------------------------------------------------------------------------------------------
 
-/** The officer acting in this browser; sent as X-Officer-Id on every request. */
+/**
+ * Officer identity. In the default AUTH_MODE=session the API reads it from the httpOnly session
+ * cookie set by PIN sign-in (sent automatically on same-origin fetch and EventSource), and this
+ * stays null. Only the AUTH_MODE=header fallback sends the chosen officer as X-Officer-Id.
+ */
 let currentOfficer: string | null = null;
 export const setCurrentOfficer = (id: string | null) => {
   currentOfficer = id;
+};
+
+/** Called on any 401 (session expired / API restarted) so the app can send the officer to sign in. */
+let onUnauthorized: (() => void) | null = null;
+export const setUnauthorizedHandler = (fn: (() => void) | null) => {
+  onUnauthorized = fn;
 };
 
 export class ApiError extends Error {
@@ -240,6 +250,7 @@ export class ApiError extends Error {
 }
 
 async function handle<T>(res: Response): Promise<T> {
+  if (res.status === 401 && !res.url.includes('/api/auth/')) onUnauthorized?.();
   if (!res.ok) {
     let message = `${res.status} ${res.statusText}`;
     let details: unknown;
@@ -312,6 +323,27 @@ export const forwardCases = (caseIds: string[]) =>
   post<{ forwarded: string[]; skipped: { id: string; reason: string }[] }>('/api/cases/forward', {
     caseIds,
   });
+
+// --- PIN sign-in (cookie session) ----------------------------------------------------------
+
+export type AuthMode = 'session' | 'header';
+
+export interface AuthMe {
+  mode: AuthMode;
+  officer: Officer | null;
+  expiresAt: string | null;
+}
+
+export interface SignInOfficer extends Officer {
+  canSignIn: boolean;
+}
+
+export const fetchMe = () => getJson<AuthMe>('/api/auth/me');
+export const fetchSignInOfficers = () =>
+  getJson<{ mode: AuthMode; officers: SignInOfficer[] }>('/api/auth/officers');
+export const signIn = (officerId: string, pin: string) =>
+  post<{ officer: Officer }>('/api/auth/login', { officerId, pin });
+export const signOut = () => post<{ ok: true }>('/api/auth/logout');
 
 export const createSession = () => post<UploadSession>('/api/sessions');
 export const fetchSession = (id: string) => getJson<UploadSession>(`/api/sessions/${id}`);
