@@ -1,0 +1,73 @@
+# Thoudang — one-command on-prem run (State Data Centre VM or a district office server).
+#
+#   cp deploy/thoudang.env.example deploy/thoudang.env   # fill in secrets / provider
+#   docker compose up -d --build
+#   open http://<server>:8080
+#
+# Two containers, both non-root: `web` (nginx: built UI + /api proxy, the only published port)
+# and `api` (Node 20, SQLite). Data lives in named volumes — back them up (docs/deploy).
+
+name: thoudang
+
+services:
+  api:
+    build:
+      context: .
+      target: api
+    image: thoudang-api:${THOUDANG_VERSION:-latest}
+    restart: unless-stopped
+    env_file:
+      - path: deploy/thoudang.env
+        required: false
+    environment:
+      # Fixed by the image layout — do not override in thoudang.env.
+      PORT: '3001'
+      SERVE_WEB: '0'
+      WEB_PORT: ${THOUDANG_HTTP_PORT:-8080}
+      DB_PATH: /app/apps/api/data/thoudang.db
+      UPLOADS_DIR: /app/apps/api/uploads
+      LOG_FILE: /app/apps/api/logs/api.log
+      AUDIO_DIR: /app/apps/api/data/audio
+      TEMPLATES_PATH: /app/apps/api/data/templates/templates.json
+    volumes:
+      - thoudang-data:/app/apps/api/data
+      - thoudang-uploads:/app/apps/api/uploads
+      - thoudang-logs:/app/apps/api/logs
+    # Not published: only reachable through `web`.
+    expose:
+      - '3001'
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    stop_grace_period: 60s # lets in-flight extractions finish (pipeline.whenIdle)
+
+  web:
+    build:
+      context: .
+      target: web
+    image: thoudang-web:${THOUDANG_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - '${THOUDANG_BIND:-0.0.0.0}:${THOUDANG_HTTP_PORT:-8080}:8080'
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:8080/api/health >/dev/null || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  thoudang-data: # SQLite DB (+ WAL), notice templates, cached audio — the system of record
+  thoudang-uploads: # application images (contain PII; redacted only when served)
+  thoudang-logs: # JSON-lines API logs (Aadhaar-redacted)

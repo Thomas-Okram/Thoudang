@@ -1,0 +1,20 @@
+# Keep the build context small and free of secrets / local state.
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.github
+.claude
+**/*.tsbuildinfo
+**/coverage
+apps/api/data
+apps/api/uploads
+apps/api/logs
+eval-data
+eval-report.json
+demo-packets
+docs
+REPORT-*.md
+**/.DS_Store
