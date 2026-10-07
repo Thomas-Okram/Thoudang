@@ -174,12 +174,12 @@ describe('trust report', () => {
     for (const f of d.flags.filter((x: { severity: string }) => x.severity !== 'info')) {
       await request(t.app)
         .post(`/api/cases/${id}/flags/${f.id}/resolve`)
-        .set('X-Officer-Id', 'dswo-imphal-west')
+        .set('Cookie', t.cookie('dswo-imphal-west'))
         .send({ decision: 'override', reasonCode: 'verified_original' });
     }
     await request(t.app)
       .post(`/api/cases/${id}/approve`)
-      .set('X-Officer-Id', 'dswo-imphal-west')
+      .set('Cookie', t.cookie('dswo-imphal-west'))
       .expect(200);
     const s = (await request(t.app).get('/api/trust')).body.safeguards;
     expect(s).toMatchObject({ overrideRate: 1, approvals: 1, approvalsByDswoOnly: true });

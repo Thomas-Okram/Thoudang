@@ -224,3 +224,7 @@ export class AuditChain {
     return { ok: problems.length === 0, verified, unsealed, head: prev, lastSealedId, problems };
   }
 }
+
+/** The better-sqlite3 handle behind a drizzle Db (drizzle sets $client; the app's Db type omits it). */
+export const sqliteOf = (db: object): Database.Database =>
+  (db as { $client: Database.Database }).$client;
