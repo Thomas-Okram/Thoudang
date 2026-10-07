@@ -45,6 +45,14 @@ describe('synthetic historical cases (seed:dashboard)', () => {
     ).toBe(true);
   });
 
+  it('do not shift live reference numbering', async () => {
+    t = setupApp(packetVision());
+    seedHistorical(t.handle.db, 25, 1, NOW);
+    await liveCase();
+    const [c] = (await request(t.app).get('/api/cases')).body.cases;
+    expect(c.reference).toMatch(/^THD-\d{4}-0001$/);
+  });
+
   it('stay out of the live queue and its stats by default', async () => {
     t = setupApp(packetVision());
     seedHistorical(t.handle.db, 30, 1, NOW);

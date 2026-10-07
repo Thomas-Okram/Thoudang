@@ -6,7 +6,6 @@ import {
   BarChart,
   CartesianGrid,
   LabelList,
-  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -261,8 +260,18 @@ function DistrictSection({ d }: { d: Dashboard }) {
           ))}
         </div>
       </div>
+      {view === 'chart' && (
+        <ul className="mt-3 flex flex-wrap gap-4 text-sm text-slate-600" aria-label="Legend">
+          {SERIES.map((s) => (
+            <li key={s.key} className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 rounded-sm" style={{ background: s.color }} />
+              {s.label}
+            </li>
+          ))}
+        </ul>
+      )}
       {view === 'chart' ? (
-        <div className="mt-3" style={{ height: Math.max(260, rows.length * 30 + 60) }}>
+        <div className="mt-2" style={{ height: Math.max(260, rows.length * 30 + 30) }}>
           <ResponsiveContainer>
             <BarChart
               data={rows}
@@ -289,12 +298,9 @@ function DistrictSection({ d }: { d: Dashboard }) {
               <Tooltip
                 cursor={{ fill: 'rgba(10,27,51,0.05)' }}
                 contentStyle={{ borderRadius: 8, borderColor: INK.grid }}
-              />
-              <Legend
-                verticalAlign="top"
-                align="left"
-                iconType="square"
-                wrapperStyle={{ paddingBottom: 8, color: INK.secondary, fontSize: 13 }}
+                itemStyle={{ color: INK.primary }}
+                labelStyle={{ color: INK.primary, fontWeight: 700 }}
+                itemSorter={(item) => SERIES.findIndex((x) => x.label === item.name)}
               />
               {SERIES.map((s, i) => (
                 <Bar

@@ -106,7 +106,20 @@ export function trustReport(
       .select({ n: sql<number>`count(*)` })
       .from(auditLog)
       .get()?.n ?? 0;
-  const flagRows = db.select().from(flags).all();
+  // Officer-decision numbers come from LIVE cases only (synthetic history is excluded).
+  const liveIds = new Set(
+    db
+      .select({ id: cases.id, historical: cases.historical })
+      .from(cases)
+      .all()
+      .filter((c) => !c.historical)
+      .map((c) => c.id),
+  );
+  const flagRows = db
+    .select()
+    .from(flags)
+    .all()
+    .filter((f) => liveIds.has(f.caseId));
   const decided = flagRows.filter((f) => f.resolution !== 'OPEN' && f.severity !== 'info');
   const overridden = decided.filter((f) => f.resolution === 'OVERRIDDEN').length;
   const approvals = db

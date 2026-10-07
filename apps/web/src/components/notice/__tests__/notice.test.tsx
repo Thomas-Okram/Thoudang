@@ -132,19 +132,17 @@ describe('citizen status page', () => {
   it('shows only the first name, reference and status', async () => {
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue(
-          new Response(
-            JSON.stringify({
-              reference: 'THD-2026-0003',
-              firstName: 'Ibemcha',
-              status: 'Correction needed',
-              updatedAt: '2026-10-08T06:00:00Z',
-            }),
-            { status: 200 },
-          ),
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            reference: 'THD-2026-0003',
+            firstName: 'Ibemcha',
+            status: 'Correction needed',
+            updatedAt: '2026-10-08T06:00:00Z',
+          }),
+          { status: 200 },
         ),
+      ),
     );
     render(
       <QueryClientProvider client={new QueryClient()}>

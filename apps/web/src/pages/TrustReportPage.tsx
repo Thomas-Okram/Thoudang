@@ -328,12 +328,17 @@ function Safeguards({ s }: { s: TrustReport['safeguards'] }) {
           deletions of the audit log.
         </Check>
         <Check ok={s.approvalsByDswoOnly} title="Only the DSWO can approve">
-          {s.approvals} approval{s.approvals === 1 ? '' : 's'} so far, all by a DSWO. Enforced on
-          the server, not just hidden in the UI.
+          {s.approvals
+            ? `${s.approvals} approval${s.approvals === 1 ? '' : 's'} so far, ${s.approvalsByDswoOnly ? 'all by a DSWO' : 'NOT all by a DSWO'}.`
+            : 'No approvals yet.'}{' '}
+          The server refuses approval from any other role (HTTP 403) — enforced, not just hidden in
+          the UI.
         </Check>
         <Check ok title="Officers can and do override the machine">
-          {s.flagsDecidedByOfficers} flags decided by officers · override rate {pct(s.overrideRate)}{' '}
-          — every override needs a reason and is audited.
+          {s.flagsDecidedByOfficers
+            ? `${s.flagsDecidedByOfficers} flags decided by officers on live cases · override rate ${pct(s.overrideRate)}.`
+            : 'No officer decisions on live cases yet.'}{' '}
+          Every override needs a reason and is audited.
         </Check>
         <Check ok={s.notices.aiCalls === 0} title="AI never writes citizen-facing Manipuri">
           Notices are filled from {s.notices.templates} templates ({s.notices.reviewed} reviewed by
@@ -408,7 +413,7 @@ function DataFlow() {
   return (
     <Section n={4} title="Where the data goes">
       <svg
-        viewBox="0 0 1140 260"
+        viewBox="0 0 1180 260"
         className="w-full"
         role="img"
         aria-label="Data flow: phone or scanner to the Thoudang server, which sends images to Claude for extraction and receives masked text back; deterministic rules and the name engine run on the server; the officer decides; the notice is built from templates."
@@ -440,7 +445,7 @@ function DataFlow() {
           Thoudang server — State Data Centre in production · officer’s laptop in this prototype
         </text>
         {box(10, 60, 120, 'Phone / scan', 'packet photos', 'slate')}
-        {arrow(130, 170, 97, 'LAN')}
+        {arrow(130, 170, 97)}
         {box(170, 60, 170, 'Store + redact', 'images stay on server', 'navy')}
         {arrow(340, 400, 97)}
         {box(400, 60, 220, 'Rules + name engine', 'deterministic · no AI', 'navy')}
@@ -449,7 +454,7 @@ function DataFlow() {
         {arrow(810, 850, 97)}
         {box(850, 60, 120, 'Notice', 'templates · 0 AI', 'navy')}
         {arrow(970, 1010, 97)}
-        {box(1010, 60, 120, 'Citizen', 'print · WhatsApp · QR', 'slate')}
+        {box(1010, 60, 165, 'Citizen', 'print · WhatsApp · QR', 'slate')}
         {/* Claude extraction, outside the server */}
         <line
           x1={255}
@@ -469,10 +474,10 @@ function DataFlow() {
           strokeWidth={2}
           markerEnd="url(#arrow)"
         />
-        <text x={180} y={168} textAnchor="end" fontSize={11} fill="#64748b">
+        <text x={248} y={156} textAnchor="end" fontSize={11} fill="#64748b">
           images only
         </text>
-        <text x={312} y={172} fontSize={11} fill="#64748b">
+        <text x={312} y={184} fontSize={11} fill="#64748b">
           text, Aadhaar masked on arrival
         </text>
         {box(170, 186, 260, 'Claude extraction', 'reads the documents — never decides', 'teal')}

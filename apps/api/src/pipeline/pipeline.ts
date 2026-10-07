@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { eq, sql } from 'drizzle-orm';
+import { eq, like, sql } from 'drizzle-orm';
 import { redactAadhaarInText, type Flag } from '@thoudang/core';
 import type { Db } from '../db/client.js';
 import {
@@ -115,9 +115,11 @@ export class Pipeline {
 
   private nextReference(): string {
     const year = new Date().getFullYear();
+    // Count only live references for this year (synthetic HIST-… cases must not shift numbering).
     const row = this.deps.db
       .select({ n: sql<number>`count(*)` })
       .from(cases)
+      .where(like(cases.reference, `THD-${year}-%`))
       .get();
     let n = (row?.n ?? 0) + 1;
     for (;;) {
