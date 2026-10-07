@@ -10,3 +10,5 @@ apps/api/data/*.db-*
 apps/api/logs/
 .DS_Store
 coverage/
+eval-report.json
+apps/api/data/eval.db*

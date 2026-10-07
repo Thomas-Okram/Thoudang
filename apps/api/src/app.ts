@@ -1,26 +1,101 @@
+import path from 'node:path';
 import express, { type ErrorRequestHandler } from 'express';
+import multer from 'multer';
 import type { Db } from './db/client.js';
+import type { AppConfig } from './env.js';
+import { EventBus } from './events.js';
+import { ExtractionService } from './extraction/service.js';
+import { createLogger, type Logger } from './logger.js';
+import { PacketError, Pipeline } from './pipeline/pipeline.js';
+import { casesRouter } from './routes/cases.js';
+import { eventsRouter } from './routes/events.js';
 import { healthRouter } from './routes/health.js';
+import { NotFound, sessionsRouter } from './routes/sessions.js';
+import type { VisionClient } from './services/claude.js';
+import { SessionStore } from './sessions.js';
 
 export interface AppDeps {
   db: Db;
-  anthropicConfigured: boolean;
+  config: AppConfig;
+  /** null when no API key — the pipeline then serves cached results only. */
+  vision: VisionClient | null;
+  logger?: Logger;
+  today?: () => string;
 }
 
-export function createApp(deps: AppDeps): express.Express {
+export interface AppBundle {
+  app: express.Express;
+  pipeline: Pipeline;
+  bus: EventBus;
+  sessions: SessionStore;
+  extraction: ExtractionService;
+}
+
+export function createApp(deps: AppDeps): AppBundle {
+  const { db, config } = deps;
+  const logger = deps.logger ?? createLogger({ file: config.logFile });
+  const bus = new EventBus();
+  const extraction = new ExtractionService({
+    db,
+    vision: deps.vision,
+    model: config.claude.model,
+    demoMode: config.demoMode,
+    concurrency: config.claude.concurrency,
+    effortClassify: config.claude.effortClassify,
+    effortExtract: config.claude.effortExtract,
+    logger,
+  });
+  const pipeline = new Pipeline({
+    db,
+    extraction,
+    bus,
+    logger,
+    uploadsDir: config.uploadsDir,
+    today: deps.today,
+  });
+  const sessions = new SessionStore(path.join(config.uploadsDir, 'sessions'));
+
   const app = express();
   app.use(express.json({ limit: '1mb' }));
-  app.use('/api', healthRouter(deps.db, { anthropicConfigured: deps.anthropicConfigured }));
+  app.use(
+    '/api',
+    healthRouter(db, {
+      anthropicConfigured: Boolean(deps.vision),
+      demoMode: config.demoMode,
+      model: config.claude.model,
+    }),
+  );
+  app.use('/api', eventsRouter(bus));
+  app.use('/api', casesRouter({ db, pipeline, uploadsDir: config.uploadsDir }));
+  app.use(
+    '/api',
+    sessionsRouter({
+      sessions,
+      pipeline,
+      bus,
+      uploadsDir: config.uploadsDir,
+      webPort: config.webPort,
+    }),
+  );
 
   app.use('/api', (_req, res) => {
     res.status(404).json({ error: 'Not found' });
   });
 
   const onError: ErrorRequestHandler = (err: unknown, _req, res, _next) => {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[api] unhandled error:', message);
+    if (err instanceof PacketError || err instanceof multer.MulterError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    if (err instanceof NotFound) {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+    logger.error('Unhandled API error', {
+      message: err instanceof Error ? err.message : 'unknown',
+    });
     res.status(500).json({ error: 'Internal error' });
   };
   app.use(onError);
-  return app;
+  return { app, pipeline, bus, sessions, extraction };
 }

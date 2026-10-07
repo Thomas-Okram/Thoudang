@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import { sql } from 'drizzle-orm';
 import type { Db } from '../db/client.js';
+import type { DemoMode } from '../env.js';
 
-export function healthRouter(db: Db, opts: { anthropicConfigured: boolean }): Router {
+export function healthRouter(
+  db: Db,
+  opts: { anthropicConfigured: boolean; demoMode: DemoMode; model: string },
+): Router {
   const router = Router();
   router.get('/health', (_req, res) => {
     let dbOk: boolean;
@@ -17,6 +21,8 @@ export function healthRouter(db: Db, opts: { anthropicConfigured: boolean }): Ro
       service: 'thoudang-api',
       db: dbOk ? 'ok' : 'error',
       claudeConfigured: opts.anthropicConfigured,
+      demoMode: opts.demoMode,
+      model: opts.model,
       time: new Date().toISOString(),
     });
   });

@@ -177,7 +177,7 @@ export function screenCase(extracted: ExtractedCase, opts: ScreenOptions = {}): 
         code: 'EXTRACTION_FAILED',
         severity: 'warn',
         action: 'officer',
-        reason: `Extraction failed for the ${DOC_LABEL[doc]} — please check the document image manually.`,
+        reason: `Extraction failed — manual review needed for the ${DOC_LABEL[doc]} (${result.error}).`,
         evidence: [{ document: doc, field: 'document', value: result.error }],
       });
     }
