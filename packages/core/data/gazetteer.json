@@ -1,585 +1,2587 @@
 {
-  "_note": "Starter list — to be expanded with department data. Abbreviations are lowercase without dots. An abbreviation shared by several surnames (e.g. \"kh\", \"th\", \"o\") is treated as AMBIGUOUS unless the packet disambiguates it.",
+  "_note": "Starter list — department review needed. Compiled from general knowledge (source: general-knowledge), NOT from an official register. confidence: high = widely attested surname; medium = attested, but community/tribe/abbreviation needs checking; low = included for department review. Abbreviations are lowercase without dots and only given for Meitei yumnaks (incl. Bamon): first letter, or th/kh/ng/ch/ph for those digraphs. An abbreviation shared by several surnames is AMBIGUOUS unless the packet disambiguates it. salai is recorded only where known; variants are alternative romanisations.",
   "entries": [
     {
       "surname": "Okram",
       "community": "Meitei",
-      "abbreviations": ["o"]
+      "abbreviations": [
+        "o"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Oinam",
       "community": "Meitei",
-      "abbreviations": ["o"]
+      "abbreviations": [
+        "o"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Thokchom",
       "community": "Meitei",
-      "abbreviations": ["th"]
+      "abbreviations": [
+        "th"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Thounaojam",
       "community": "Meitei",
-      "abbreviations": ["th"]
+      "abbreviations": [
+        "th"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Thangjam",
       "community": "Meitei",
-      "abbreviations": ["th"]
+      "abbreviations": [
+        "th"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Thoudam",
       "community": "Meitei",
-      "abbreviations": ["th"]
+      "abbreviations": [
+        "th"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Thiyam",
       "community": "Meitei",
-      "abbreviations": ["th"]
+      "abbreviations": [
+        "th"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Khuraijam",
       "community": "Meitei",
-      "abbreviations": ["kh"]
+      "abbreviations": [
+        "kh"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Khwairakpam",
       "community": "Meitei",
-      "abbreviations": ["kh"]
+      "abbreviations": [
+        "kh"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Khumanthem",
       "community": "Meitei",
-      "abbreviations": ["kh"]
+      "abbreviations": [
+        "kh"
+      ],
+      "salai": "Khuman",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Khundrakpam",
       "community": "Meitei",
-      "abbreviations": ["kh"]
+      "abbreviations": [
+        "kh"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Khangembam",
       "community": "Meitei",
-      "abbreviations": ["kh"]
+      "abbreviations": [
+        "kh"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Ningthoujam",
       "community": "Meitei",
-      "abbreviations": ["n"]
+      "abbreviations": [
+        "n"
+      ],
+      "salai": "Mangang",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Ningombam",
       "community": "Meitei",
-      "abbreviations": ["n", "ng"]
+      "abbreviations": [
+        "n",
+        "ng"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Ngangom",
       "community": "Meitei",
-      "abbreviations": ["ng"]
+      "abbreviations": [
+        "ng"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Nongmaithem",
       "community": "Meitei",
-      "abbreviations": ["n"]
+      "abbreviations": [
+        "n"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Nameirakpam",
       "community": "Meitei",
-      "abbreviations": ["n"]
+      "abbreviations": [
+        "n"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Naorem",
       "community": "Meitei",
-      "abbreviations": ["n"]
+      "abbreviations": [
+        "n"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Laishram",
       "community": "Meitei",
-      "abbreviations": ["l"]
+      "abbreviations": [
+        "l"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Leishangthem",
       "community": "Meitei",
-      "abbreviations": ["l"]
+      "abbreviations": [
+        "l"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Loitongbam",
       "community": "Meitei",
-      "abbreviations": ["l"]
+      "abbreviations": [
+        "l"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Longjam",
       "community": "Meitei",
-      "abbreviations": ["l"]
+      "abbreviations": [
+        "l"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Lourembam",
       "community": "Meitei",
-      "abbreviations": ["l"]
+      "abbreviations": [
+        "l"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Yumnam",
       "community": "Meitei",
-      "abbreviations": ["y"]
+      "abbreviations": [
+        "y"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Yengkhom",
       "community": "Meitei",
-      "abbreviations": ["y"]
+      "abbreviations": [
+        "y"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Sapam",
       "community": "Meitei",
-      "abbreviations": ["s"]
+      "abbreviations": [
+        "s"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Salam",
       "community": "Meitei",
-      "abbreviations": ["s"]
+      "abbreviations": [
+        "s"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Soibam",
       "community": "Meitei",
-      "abbreviations": ["s"]
+      "abbreviations": [
+        "s"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Sagolsem",
       "community": "Meitei",
-      "abbreviations": ["s"]
+      "abbreviations": [
+        "s"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Sorokhaibam",
       "community": "Meitei",
-      "abbreviations": ["s"]
+      "abbreviations": [
+        "s"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Sanasam",
       "community": "Meitei",
-      "abbreviations": ["s"]
+      "abbreviations": [
+        "s"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Sougaijam",
       "community": "Meitei",
-      "abbreviations": ["s"]
+      "abbreviations": [
+        "s"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Sinam",
       "community": "Meitei",
-      "abbreviations": ["s"]
+      "abbreviations": [
+        "s"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Huidrom",
       "community": "Meitei",
-      "abbreviations": ["h"]
+      "abbreviations": [
+        "h"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Haobam",
       "community": "Meitei",
-      "abbreviations": ["h"]
+      "abbreviations": [
+        "h"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Heisnam",
       "community": "Meitei",
-      "abbreviations": ["h"]
+      "abbreviations": [
+        "h"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Hijam",
       "community": "Meitei",
-      "abbreviations": ["h"]
+      "abbreviations": [
+        "h"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Konthoujam",
       "community": "Meitei",
-      "abbreviations": ["k"]
+      "abbreviations": [
+        "k"
+      ],
+      "variants": [
+        "Kontoujam"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Kshetrimayum",
       "community": "Meitei",
-      "abbreviations": ["k", "ksh"]
+      "abbreviations": [
+        "k",
+        "ksh"
+      ],
+      "variants": [
+        "Khetrimayum"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Keisham",
       "community": "Meitei",
-      "abbreviations": ["k"]
+      "abbreviations": [
+        "k"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Kangjam",
       "community": "Meitei",
-      "abbreviations": ["k"]
+      "abbreviations": [
+        "k"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Wahengbam",
       "community": "Meitei",
-      "abbreviations": ["w"]
+      "abbreviations": [
+        "w"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Waikhom",
       "community": "Meitei",
-      "abbreviations": ["w"]
+      "abbreviations": [
+        "w"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Wangkhem",
       "community": "Meitei",
-      "abbreviations": ["w"]
+      "abbreviations": [
+        "w"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Moirangthem",
       "community": "Meitei",
-      "abbreviations": ["m"]
+      "abbreviations": [
+        "m"
+      ],
+      "salai": "Moirang",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Mayengbam",
       "community": "Meitei",
-      "abbreviations": ["m"]
+      "abbreviations": [
+        "m"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Maibam",
       "community": "Meitei",
-      "abbreviations": ["m"]
+      "abbreviations": [
+        "m"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Mutum",
       "community": "Meitei",
-      "abbreviations": ["m"]
+      "abbreviations": [
+        "m"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Elangbam",
       "community": "Meitei",
-      "abbreviations": ["e"]
+      "abbreviations": [
+        "e"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Akoijam",
       "community": "Meitei",
-      "abbreviations": ["a"]
+      "abbreviations": [
+        "a"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Arambam",
       "community": "Meitei",
-      "abbreviations": ["a"]
+      "abbreviations": [
+        "a"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Angom",
       "community": "Meitei",
-      "abbreviations": ["a"]
+      "abbreviations": [
+        "a"
+      ],
+      "salai": "Angom",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Ayekpam",
       "community": "Meitei",
-      "abbreviations": ["a"]
+      "abbreviations": [
+        "a"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Aribam",
       "community": "Meitei",
-      "abbreviations": ["a"]
+      "abbreviations": [
+        "a"
+      ],
+      "subgroup": "Bamon",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Chongtham",
       "community": "Meitei",
-      "abbreviations": ["ch"]
+      "abbreviations": [
+        "ch"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Chingakham",
       "community": "Meitei",
-      "abbreviations": ["ch"]
+      "abbreviations": [
+        "ch"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Pukhrambam",
       "community": "Meitei",
-      "abbreviations": ["p"]
+      "abbreviations": [
+        "p"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Pebam",
       "community": "Meitei",
-      "abbreviations": ["p"]
+      "abbreviations": [
+        "p"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Phurailatpam",
       "community": "Meitei",
-      "abbreviations": ["ph"]
+      "abbreviations": [
+        "ph"
+      ],
+      "subgroup": "Bamon",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Rajkumar",
       "community": "Meitei",
-      "abbreviations": ["rk"]
+      "abbreviations": [
+        "rk"
+      ],
+      "variants": [
+        "Rajkumari"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Takhellambam",
       "community": "Meitei",
-      "abbreviations": ["t"]
+      "abbreviations": [
+        "t"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Tongbram",
       "community": "Meitei",
-      "abbreviations": ["t"]
+      "abbreviations": [
+        "t"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Irom",
       "community": "Meitei",
-      "abbreviations": ["i"]
+      "abbreviations": [
+        "i"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Gurumayum",
       "community": "Meitei",
-      "abbreviations": ["g"]
+      "abbreviations": [
+        "g"
+      ],
+      "subgroup": "Bamon",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Phundreimayum",
       "community": "Pangal",
-      "abbreviations": []
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Makakmayum",
       "community": "Pangal",
-      "abbreviations": []
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Moijingmayum",
       "community": "Pangal",
-      "abbreviations": []
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Shimray",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Keishing",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Kasar",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Ruivah",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Muivah",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Zimik",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Hungyo",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Raikhan",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Shaiza",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Luithui",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Horam",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Awungshi",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Vashum",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Ningshen",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Gangmei",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Kamei",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Panmei",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Golmei",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Pamei",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Riamei",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Longmei",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Newmai",
       "community": "Naga",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Liangmai",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Haokip",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Kipgen",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Singsit",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Touthang",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Lhungdim",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Baite",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Doungel",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Mate",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Chongloi",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Hangshing",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "variants": [
+        "Hangsing"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Kilong",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Sitlhou",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Lhouvum",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Haolai",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Misao",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Khongsai",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Lupho",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Guite",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Paite",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Tonsing",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Paite",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Ngaihte",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Paite",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Gangte",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Gangte",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Vaiphei",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Vaiphei",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Hmar",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Hmar",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Zou",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Zou",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Simte",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Simte",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Pudaite",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Hmar",
+      "source": "general-knowledge",
+      "confidence": "high"
     },
     {
       "surname": "Infimate",
       "community": "Kuki-Zo",
-      "abbreviations": []
+      "abbreviations": [],
+      "tribe": "Hmar",
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Achom",
+      "community": "Meitei",
+      "abbreviations": [
+        "a"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Akham",
+      "community": "Meitei",
+      "abbreviations": [
+        "a"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Asem",
+      "community": "Meitei",
+      "abbreviations": [
+        "a"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Athokpam",
+      "community": "Meitei",
+      "abbreviations": [
+        "a"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Atom",
+      "community": "Meitei",
+      "abbreviations": [
+        "a"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Chabungbam",
+      "community": "Meitei",
+      "abbreviations": [
+        "ch"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Chanam",
+      "community": "Meitei",
+      "abbreviations": [
+        "ch"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Chandam",
+      "community": "Meitei",
+      "abbreviations": [
+        "ch"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Chingangbam",
+      "community": "Meitei",
+      "abbreviations": [
+        "ch"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Chirom",
+      "community": "Meitei",
+      "abbreviations": [
+        "ch"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Chungkham",
+      "community": "Meitei",
+      "abbreviations": [
+        "ch"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Hanjabam",
+      "community": "Meitei",
+      "abbreviations": [
+        "h"
+      ],
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Heikrujam",
+      "community": "Meitei",
+      "abbreviations": [
+        "h"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Hemam",
+      "community": "Meitei",
+      "abbreviations": [
+        "h"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Hodam",
+      "community": "Meitei",
+      "abbreviations": [
+        "h"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Huirem",
+      "community": "Meitei",
+      "abbreviations": [
+        "h"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Ingudam",
+      "community": "Meitei",
+      "abbreviations": [
+        "i"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Irengbam",
+      "community": "Meitei",
+      "abbreviations": [
+        "i"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Kangabam",
+      "community": "Meitei",
+      "abbreviations": [
+        "k"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Kangujam",
+      "community": "Meitei",
+      "abbreviations": [
+        "k"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Karam",
+      "community": "Meitei",
+      "abbreviations": [
+        "k"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Keithellakpam",
+      "community": "Meitei",
+      "abbreviations": [
+        "k"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Kongbam",
+      "community": "Meitei",
+      "abbreviations": [
+        "k"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Kumam",
+      "community": "Meitei",
+      "abbreviations": [
+        "k"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Khaidem",
+      "community": "Meitei",
+      "abbreviations": [
+        "kh"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Kharibam",
+      "community": "Meitei",
+      "abbreviations": [
+        "kh"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Khoirom",
+      "community": "Meitei",
+      "abbreviations": [
+        "kh"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Khomdram",
+      "community": "Meitei",
+      "abbreviations": [
+        "kh"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Khumukcham",
+      "community": "Meitei",
+      "abbreviations": [
+        "kh"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Khongbantabam",
+      "community": "Meitei",
+      "abbreviations": [
+        "kh"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Khundongbam",
+      "community": "Meitei",
+      "abbreviations": [
+        "kh"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Khagokpam",
+      "community": "Meitei",
+      "abbreviations": [
+        "kh"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Lairenjam",
+      "community": "Meitei",
+      "abbreviations": [
+        "l"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Laitonjam",
+      "community": "Meitei",
+      "abbreviations": [
+        "l"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Leimapokpam",
+      "community": "Meitei",
+      "abbreviations": [
+        "l"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Leichombam",
+      "community": "Meitei",
+      "abbreviations": [
+        "l"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Lisham",
+      "community": "Meitei",
+      "abbreviations": [
+        "l"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Lamabam",
+      "community": "Meitei",
+      "abbreviations": [
+        "l"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Maisnam",
+      "community": "Meitei",
+      "abbreviations": [
+        "m"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Meinam",
+      "community": "Meitei",
+      "abbreviations": [
+        "m"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Mangsatabam",
+      "community": "Meitei",
+      "abbreviations": [
+        "m"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Mairembam",
+      "community": "Meitei",
+      "abbreviations": [
+        "m"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Mayanglambam",
+      "community": "Meitei",
+      "abbreviations": [
+        "m"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Nongthombam",
+      "community": "Meitei",
+      "abbreviations": [
+        "n"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Naoroibam",
+      "community": "Meitei",
+      "abbreviations": [
+        "n"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Nepram",
+      "community": "Meitei",
+      "abbreviations": [
+        "n"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Nongmeikapam",
+      "community": "Meitei",
+      "abbreviations": [
+        "n"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Nahakpam",
+      "community": "Meitei",
+      "abbreviations": [
+        "n"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Ningthoukhongjam",
+      "community": "Meitei",
+      "abbreviations": [
+        "n"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Ngairangbam",
+      "community": "Meitei",
+      "abbreviations": [
+        "ng"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Ngangbam",
+      "community": "Meitei",
+      "abbreviations": [
+        "ng"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Ngasepam",
+      "community": "Meitei",
+      "abbreviations": [
+        "ng"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Pheiroijam",
+      "community": "Meitei",
+      "abbreviations": [
+        "ph"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Philem",
+      "community": "Meitei",
+      "abbreviations": [
+        "ph"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Phijam",
+      "community": "Meitei",
+      "abbreviations": [
+        "ph"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Pangambam",
+      "community": "Meitei",
+      "abbreviations": [
+        "p"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Potsangbam",
+      "community": "Meitei",
+      "abbreviations": [
+        "p"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Sairem",
+      "community": "Meitei",
+      "abbreviations": [
+        "s"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Soraisam",
+      "community": "Meitei",
+      "abbreviations": [
+        "s"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Senjam",
+      "community": "Meitei",
+      "abbreviations": [
+        "s"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Shamurailatpam",
+      "community": "Meitei",
+      "abbreviations": [
+        "s"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Sanjenbam",
+      "community": "Meitei",
+      "abbreviations": [
+        "s"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Telem",
+      "community": "Meitei",
+      "abbreviations": [
+        "t"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Tensubam",
+      "community": "Meitei",
+      "abbreviations": [
+        "t"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Thingujam",
+      "community": "Meitei",
+      "abbreviations": [
+        "th"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Thongam",
+      "community": "Meitei",
+      "abbreviations": [
+        "th"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Thaoroijam",
+      "community": "Meitei",
+      "abbreviations": [
+        "th"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Thingbaijam",
+      "community": "Meitei",
+      "abbreviations": [
+        "th"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Thoidingjam",
+      "community": "Meitei",
+      "abbreviations": [
+        "th"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Thongbam",
+      "community": "Meitei",
+      "abbreviations": [
+        "th"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Usham",
+      "community": "Meitei",
+      "abbreviations": [
+        "u"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Wangjam",
+      "community": "Meitei",
+      "abbreviations": [
+        "w"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Wairokpam",
+      "community": "Meitei",
+      "abbreviations": [
+        "w"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Wangkheirakpam",
+      "community": "Meitei",
+      "abbreviations": [
+        "w"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Yanglem",
+      "community": "Meitei",
+      "abbreviations": [
+        "y"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Yambem",
+      "community": "Meitei",
+      "abbreviations": [
+        "y"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Yendrembam",
+      "community": "Meitei",
+      "abbreviations": [
+        "y"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Yensembam",
+      "community": "Meitei",
+      "abbreviations": [
+        "y"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Brahmacharimayum",
+      "community": "Meitei",
+      "abbreviations": [
+        "b"
+      ],
+      "subgroup": "Bamon",
+      "variants": [
+        "Bramacharimayum"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Hidangmayum",
+      "community": "Meitei",
+      "abbreviations": [
+        "h"
+      ],
+      "subgroup": "Bamon",
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Laimayum",
+      "community": "Meitei",
+      "abbreviations": [
+        "l"
+      ],
+      "subgroup": "Bamon",
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Shijagurumayum",
+      "community": "Meitei",
+      "abbreviations": [
+        "s"
+      ],
+      "subgroup": "Bamon",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Adhikarimayum",
+      "community": "Meitei",
+      "abbreviations": [
+        "a"
+      ],
+      "subgroup": "Bamon",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Kongbrailatpam",
+      "community": "Meitei",
+      "abbreviations": [
+        "k"
+      ],
+      "subgroup": "Bamon",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Lairellakpam",
+      "community": "Meitei",
+      "abbreviations": [
+        "l"
+      ],
+      "subgroup": "Bamon",
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Haorongbam",
+      "community": "Meitei",
+      "abbreviations": [
+        "h"
+      ],
+      "subgroup": "Bamon",
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Wangkheimayum",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Mayangmayum",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Thoubalmayum",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Khullakpam",
+      "community": "Pangal",
+      "abbreviations": [],
+      "variants": [
+        "Khulakpam"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Chesam",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Tampakmayum",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Sangomsumpam",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Kheirakpam",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Nongjaimayum",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Hawaibam",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Asangbam",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Sajoubam",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Yumkhaibam",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Takhelmayum",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Kazimayum",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Leikhongmayum",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Syed",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Sheikh",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Mirza",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Pathan",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Qureshi",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Ansari",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Siddiqui",
+      "community": "Pangal",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Shatsang",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Kashung",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Mahongnao",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Ramsan",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Hongray",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Khathing",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Shingnaisui",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Chahongnao",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Lungharnao",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Tangkhul",
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Daimai",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Gonmei",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Abonmei",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Malangmei",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Kamson",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Thaimei",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Dangmei",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Rongmei",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Pfoze",
+      "community": "Naga",
+      "abbreviations": [],
+      "tribe": "Mao",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Singson",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Lhangum",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Lenthang",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Thomsong",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Changsan",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Kholhou",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Hengna",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Lotjem",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Manlun",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Thadou",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Valte",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Paite",
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Samte",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Paite",
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Sukte",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Paite",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Naulak",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Paite",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Tungnung",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Paite",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Suante",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Paite",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Mangte",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Paite",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Neihsial",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Paite",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Hrangchal",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Hmar",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Lungtau",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Hmar",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Zote",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Hmar",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Darngawn",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Hmar",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Khawbung",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Hmar",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Faihriem",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Hmar",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Ralte",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Hmar",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Sailo",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Hmar",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Pachuau",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Hmar",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Chhakchhuak",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Hmar",
+      "variants": [
+        "Chakchuak"
+      ],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Tombing",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Zou",
+      "source": "general-knowledge",
+      "confidence": "low"
+    },
+    {
+      "surname": "Kom",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Kom",
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Aimol",
+      "community": "Kuki-Zo",
+      "abbreviations": [],
+      "tribe": "Aimol",
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Chhetri",
+      "community": "Nepali",
+      "abbreviations": [],
+      "variants": [
+        "Chettri",
+        "Chetri"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Thapa",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Gurung",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Rai",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Limbu",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Tamang",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Magar",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Pradhan",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Adhikari",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Bhattarai",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Upadhyaya",
+      "community": "Nepali",
+      "abbreviations": [],
+      "variants": [
+        "Upadhyay"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Poudel",
+      "community": "Nepali",
+      "abbreviations": [],
+      "variants": [
+        "Paudel"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Khadka",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Basnet",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Karki",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Bista",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Subba",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Dahal",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Koirala",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Pokharel",
+      "community": "Nepali",
+      "abbreviations": [],
+      "variants": [
+        "Pokhrel"
+      ],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Ghimire",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Bhandari",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Lama",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Shrestha",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Sapkota",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Timsina",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Acharya",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Neupane",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Kafle",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Dhakal",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "high"
+    },
+    {
+      "surname": "Thakuri",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Bhusal",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
+    },
+    {
+      "surname": "Kharka",
+      "community": "Nepali",
+      "abbreviations": [],
+      "source": "general-knowledge",
+      "confidence": "medium"
     }
   ]
 }
