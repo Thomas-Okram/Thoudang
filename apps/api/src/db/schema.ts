@@ -70,6 +70,11 @@ export const cases = sqliteTable(
       .$defaultFn(() => new Date()),
     decidedBy: text('decided_by'),
     decidedAt: integer('decided_at', { mode: 'timestamp_ms' }),
+    /** When rules screening finished — for "avg screening time". */
+    screenedAt: integer('screened_at', { mode: 'timestamp_ms' }),
+    forwardedBy: text('forwarded_by'),
+    forwardedAt: integer('forwarded_at', { mode: 'timestamp_ms' }),
+    correctionRequestedAt: integer('correction_requested_at', { mode: 'timestamp_ms' }),
     createdAt: createdAt(),
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
       .notNull()
@@ -254,3 +259,14 @@ export const sessionFiles = sqliteTable(
   },
   (t) => [index('session_files_session_idx').on(t.sessionId)],
 );
+
+export const OFFICER_ROLES = ['DSWO', 'DEALING_ASSISTANT'] as const;
+export type OfficerRole = (typeof OFFICER_ROLES)[number];
+
+/** Demo officers (no passwords). Roles are enforced on the API. */
+export const officers = sqliteTable('officers', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  role: text('role', { enum: OFFICER_ROLES }).notNull(),
+  district: text('district'),
+});

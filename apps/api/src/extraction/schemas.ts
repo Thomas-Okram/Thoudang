@@ -133,6 +133,8 @@ export interface ExtractedValue {
   confidence: Confidence;
   /** [x1, y1, x2, y2] in processed-image pixels, or null. */
   bbox: [number, number, number, number] | null;
+  /** Set when an officer corrected the value (the AI's reading is kept in the audit log). */
+  editedBy?: string;
 }
 
 export interface ExtractedDocument {

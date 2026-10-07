@@ -15,7 +15,7 @@ import { openDb } from '../db/client.js';
 import { extractions } from '../db/schema.js';
 import { loadConfig, type DemoMode } from '../env.js';
 import { createLogger } from '../logger.js';
-import { caseDetail } from '../routes/cases.js';
+import { caseDetail } from '../read-model.js';
 import { createAnthropicVisionClient } from '../services/claude.js';
 import { EXTRACTABLE_TYPES, PROMPT_VERSION, type ExtractableType } from '../extraction/schemas.js';
 import { isImageName } from '../upload.js';

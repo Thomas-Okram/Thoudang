@@ -9,6 +9,8 @@ import { ExtractionService } from './extraction/service.js';
 import { createLogger, type Logger } from './logger.js';
 import { PacketError, Pipeline } from './pipeline/pipeline.js';
 import { casesRouter } from './routes/cases.js';
+import { decisionsRouter } from './routes/decisions.js';
+import { ensureOfficers, HttpError } from './officers.js';
 import { eventsRouter } from './routes/events.js';
 import { healthRouter } from './routes/health.js';
 import { NotFound, sessionsRouter } from './routes/sessions.js';
@@ -35,6 +37,7 @@ export interface AppBundle {
 export function createApp(deps: AppDeps): AppBundle {
   const { db, config } = deps;
   const logger = deps.logger ?? createLogger({ file: config.logFile });
+  ensureOfficers(db);
   const bus = new EventBus();
   const extraction = new ExtractionService({
     db,
@@ -67,6 +70,7 @@ export function createApp(deps: AppDeps): AppBundle {
     }),
   );
   app.use('/api', eventsRouter(bus));
+  app.use('/api', decisionsRouter({ db, bus, today: deps.today }));
   app.use('/api', casesRouter({ db, pipeline, uploadsDir: config.uploadsDir }));
   app.use(
     '/api',
@@ -94,6 +98,12 @@ export function createApp(deps: AppDeps): AppBundle {
   const onError: ErrorRequestHandler = (err: unknown, _req, res, _next) => {
     if (err instanceof PacketError || err instanceof multer.MulterError) {
       res.status(400).json({ error: err.message });
+      return;
+    }
+    if (err instanceof HttpError) {
+      res
+        .status(err.status)
+        .json({ error: err.message, ...(err.details ? { details: err.details } : {}) });
       return;
     }
     if (err instanceof NotFound) {

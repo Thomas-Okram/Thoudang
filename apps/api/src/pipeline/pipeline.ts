@@ -1,13 +1,8 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { and, eq, isNotNull, ne, sql } from 'drizzle-orm';
-import {
-  redactAadhaarInText,
-  screenCase,
-  type DuplicateCandidate,
-  type Flag,
-} from '@thoudang/core';
+import { eq, sql } from 'drizzle-orm';
+import { redactAadhaarInText, type Flag } from '@thoudang/core';
 import type { Db } from '../db/client.js';
 import {
   auditLog,
@@ -22,7 +17,8 @@ import type { Logger } from '../logger.js';
 import { preprocessImage, type ProcessedImage } from '../services/images.js';
 import { EXTRACTABLE_TYPES, type ExtractableType } from '../extraction/schemas.js';
 import type { ExtractionService, StageOutcome } from '../extraction/service.js';
-import { toExtractedCase, type DocOutcome } from './mapping.js';
+import type { DocOutcome } from './mapping.js';
+import { rescreenCase } from './screening.js';
 
 export interface IncomingFile {
   /** Temporary path on the same filesystem as uploadsDir (moved, not copied). */
@@ -219,12 +215,10 @@ export class Pipeline {
       const classified = await Promise.all(docs.map((d) => this.classifyDocument(ctx, d)));
 
       this.emitCase(ctx, 'extracting');
-      const outcomes = await Promise.all(
-        docs.map((d, i) => this.extractDocument(ctx, d, classified[i]!)),
-      );
+      await Promise.all(docs.map((d, i) => this.extractDocument(ctx, d, classified[i]!)));
 
       this.emitCase(ctx, 'screening');
-      this.screen(ctx, row.receivedAt, outcomes);
+      this.screen(ctx);
     } catch (err) {
       this.fail(ctx, err);
     }
@@ -302,56 +296,12 @@ export class Pipeline {
       : { kind: 'extraction_failed', type, error: out.error };
   }
 
-  private screen(ctx: CaseCtx, receivedAt: Date, outcomes: DocOutcome[]): void {
-    const { db } = this.deps;
-    const extracted = toExtractedCase(ctx.caseId, receivedAt, outcomes);
-    const existingCases: DuplicateCandidate[] = db
-      .select({
-        caseId: cases.reference,
-        aadhaarLast4: cases.aadhaarLast4,
-        dob: cases.applicantDob,
-        applicantName: cases.applicantName,
-      })
-      .from(cases)
-      .where(and(ne(cases.id, ctx.caseId), isNotNull(cases.aadhaarLast4)))
-      .all();
-    const result = screenCase(extracted, {
+  private screen(ctx: CaseCtx): void {
+    const { result, status } = rescreenCase(this.deps.db, ctx.caseId, {
       today: (this.deps.today ?? istToday)(),
-      existingCases,
-    });
-
-    const allFailed = outcomes.every(
-      (o) => o.kind === 'unidentified' || o.kind === 'extraction_failed',
-    );
-    const district =
-      extracted.documents.form?.status === 'ok'
-        ? extracted.documents.form.fields.district.value
-        : null;
-
-    db.transaction((tx) => {
-      tx.delete(flagsTable).where(eq(flagsTable.caseId, ctx.caseId)).run();
-      for (const flag of result.flags) {
-        tx.insert(flagsTable)
-          .values({ id: crypto.randomUUID(), caseId: ctx.caseId, ...flag })
-          .run();
-      }
-      tx.update(cases)
-        .set({
-          status: result.status,
-          processingState: allFailed ? 'EXTRACTION_FAILED' : 'SCREENED',
-          priorityScore: result.priorityScore,
-          priorityReasons: result.priorityReasons,
-          applicantName: result.facts.applicantName,
-          applicantDob: result.facts.dob,
-          aadhaarLast4: result.facts.aadhaarLast4,
-          district,
-          updatedAt: new Date(),
-        })
-        .where(eq(cases.id, ctx.caseId))
-        .run();
     });
     this.audit(ctx.caseId, RULES_ACTOR, 'RULE_RESULT', 'case', ctx.caseId, null, {
-      status: result.status,
+      status,
       priorityScore: result.priorityScore,
       priorityReasons: result.priorityReasons,
       flags: result.flags.map((f: Flag) => ({
@@ -360,10 +310,10 @@ export class Pipeline {
         action: f.action,
       })),
     });
-    this.emitCase(ctx, 'done', { status: result.status });
+    this.emitCase(ctx, 'done', { status });
     this.deps.logger.info('Case screened', {
       reference: ctx.reference,
-      status: result.status,
+      status,
       flags: result.flags.length,
     });
   }
@@ -453,6 +403,13 @@ export class Pipeline {
         inputTokens: out.inputTokens,
         outputTokens: out.outputTokens,
         detectedType,
+        ...(out.ok && stage === 'extract'
+          ? {
+              fieldsRead: countRead(
+                out.value as unknown as { fields?: Record<string, { value: unknown }> },
+              ),
+            }
+          : {}),
         ...(out.ok ? {} : { error: out.error }),
       },
     );
@@ -511,6 +468,9 @@ interface CaseCtx {
   reference: string;
   batchId: string | null;
 }
+
+const countRead = (doc: { fields?: Record<string, { value: unknown }> }) =>
+  Object.values(doc.fields ?? {}).filter((f) => f.value !== null).length;
 
 export class PacketError extends Error {
   constructor(message: string) {

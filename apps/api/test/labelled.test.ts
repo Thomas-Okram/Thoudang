@@ -25,12 +25,10 @@ describe('labelled intake slots (speed path)', () => {
     t = setupApp(vision);
     let req = request(t.app).post('/api/cases');
     for (const [i, [name, type]] of SLOTS.entries()) {
-      req = req
-        .field('types', type)
-        .attach('files', await makeImage(`#e${i}e${i}e${i}`), {
-          filename: name,
-          contentType: 'image/jpeg',
-        });
+      req = req.field('types', type).attach('files', await makeImage(`#e${i}e${i}e${i}`), {
+        filename: name,
+        contentType: 'image/jpeg',
+      });
     }
     const res = await req;
     await t.pipeline.whenIdle();

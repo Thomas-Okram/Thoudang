@@ -2,13 +2,18 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { Router } from 'express';
-import sharp from 'sharp';
-import { and, asc, desc, eq, type SQL } from 'drizzle-orm';
-import { CaseStatusSchema, noticeEligibility, type Flag } from '@thoudang/core';
+import { and, desc, eq } from 'drizzle-orm';
+import { CaseStatusSchema } from '@thoudang/core';
 import type { Db } from '../db/client.js';
-import { auditLog, cases, documents, extractions, flags as flagsTable } from '../db/schema.js';
+import { documents, extractions, officers } from '../db/schema.js';
+import { caseDetail, caseStats, listCases } from '../read-model.js';
+import { redactionFor, renderRedacted } from '../services/redact.js';
 import type { Pipeline } from '../pipeline/pipeline.js';
-import { EXTRACTABLE_TYPES, type ExtractableType } from '../extraction/schemas.js';
+import {
+  EXTRACTABLE_TYPES,
+  type ExtractableType,
+  type ExtractedDocument,
+} from '../extraction/schemas.js';
 import { PacketError } from '../pipeline/pipeline.js';
 import {
   createUploader,
@@ -44,12 +49,7 @@ export function casesRouter(deps: { db: Db; pipeline: Pipeline; uploadsDir: stri
     const tmp = path.join(uploadsDir, 'tmp');
     // Relative folder paths come in a parallel "paths" field (one per file, same order), because
     // multipart clients often strip directories from file names. Fallback: the file name itself.
-    const rawPaths: unknown = (req.body as Record<string, unknown> | undefined)?.paths;
-    const paths = Array.isArray(rawPaths)
-      ? rawPaths.map(String)
-      : typeof rawPaths === 'string'
-        ? [rawPaths]
-        : [];
+    const paths = listField((req.body as Record<string, unknown> | undefined)?.paths);
     const relFiles: RelativeFile[] = [];
     for (const [i, f] of uploaded.entries()) {
       if (path.extname(f.originalname).toLowerCase() === '.zip') {
@@ -92,21 +92,26 @@ export function casesRouter(deps: { db: Db; pipeline: Pipeline; uploadsDir: stri
   });
 
   router.get('/cases', (req, res) => {
-    const where: SQL[] = [];
     const status = CaseStatusSchema.safeParse(req.query.status);
-    if (status.success) where.push(eq(cases.status, status.data));
-    if (typeof req.query.batchId === 'string') where.push(eq(cases.batchId, req.query.batchId));
-    const rows = db
-      .select()
-      .from(cases)
-      .where(where.length ? and(...where) : undefined)
-      .orderBy(desc(cases.priorityScore), asc(cases.receivedAt))
-      .all();
-    res.json({ cases: rows.map(caseSummary) });
+    res.json({
+      cases: listCases(db, {
+        status: status.success ? status.data : undefined,
+        batchId: typeof req.query.batchId === 'string' ? req.query.batchId : undefined,
+        q: typeof req.query.q === 'string' ? req.query.q : undefined,
+      }),
+    });
+  });
+
+  router.get('/stats', (_req, res) => {
+    res.json(caseStats(db));
   });
 
   router.get('/cases/:id', (req, res) => {
-    const detail = caseDetail(db, req.params.id);
+    const viewerId = req.header('x-officer-id');
+    const viewer = viewerId
+      ? (db.select().from(officers).where(eq(officers.id, viewerId)).get() ?? null)
+      : null;
+    const detail = caseDetail(db, req.params.id, viewer);
     if (!detail) {
       res.status(404).json({ error: 'Case not found' });
       return;
@@ -114,32 +119,44 @@ export function casesRouter(deps: { db: Db; pipeline: Pipeline; uploadsDir: stri
     res.json(detail);
   });
 
+  /**
+   * Images are served REDACTED: the Aadhaar number is boxed out (or the card blurred when its
+   * location is unknown). The unredacted file never leaves the server — not even ?variant=original.
+   */
   router.get('/documents/:id/image', async (req, res) => {
     const doc = db.select().from(documents).where(eq(documents.id, req.params.id)).get();
     if (!doc) {
       res.status(404).json({ error: 'Document not found' });
       return;
     }
-    const variant =
-      req.query.variant === 'original'
-        ? 'original'
-        : req.query.variant === 'thumb'
-          ? 'thumb'
-          : 'processed';
-    const file = variant === 'original' || !doc.processedPath ? doc.storedPath : doc.processedPath;
-    if (variant === 'thumb') {
-      if (!doc.processedPath) {
-        res.status(404).json({ error: 'No preview available' });
-        return;
-      }
-      const thumb = await sharp(file)
-        .resize({ width: 360, height: 360, fit: 'inside' })
-        .jpeg({ quality: 75 })
-        .toBuffer();
-      res.type('image/jpeg').send(thumb);
+    if (!doc.processedPath) {
+      res.status(404).json({ error: 'No preview available — the image could not be opened' });
       return;
     }
-    res.sendFile(path.resolve(file));
+    const ext = db
+      .select()
+      .from(extractions)
+      .where(
+        and(
+          eq(extractions.documentId, doc.id),
+          eq(extractions.stage, 'extract'),
+          eq(extractions.status, 'OK'),
+        ),
+      )
+      .orderBy(desc(extractions.createdAt))
+      .get();
+    const size = { width: doc.widthPx, height: doc.heightPx };
+    const redaction = redactionFor(
+      doc.detectedType,
+      (ext?.result as unknown as ExtractedDocument) ?? null,
+      size,
+    );
+    const thumb = req.query.variant === 'thumb' ? 360 : undefined;
+    const body = await renderRedacted(doc.processedPath, redaction, size, thumb);
+    res
+      .set({ 'X-Redaction': redaction.mode, 'Cache-Control': 'no-store' })
+      .type('image/jpeg')
+      .send(body);
   });
 
   return router;
@@ -153,89 +170,4 @@ export function parseSlotType(raw: unknown): ExtractableType | null {
   return typeof raw === 'string' && (EXTRACTABLE_TYPES as readonly string[]).includes(raw)
     ? (raw as ExtractableType)
     : null;
-}
-
-export function caseSummary(row: typeof cases.$inferSelect) {
-  return {
-    id: row.id,
-    reference: row.reference,
-    applicantName: row.applicantName,
-    district: row.district,
-    status: row.status,
-    processingState: row.processingState,
-    priorityScore: row.priorityScore,
-    priorityReasons: row.priorityReasons,
-    aadhaarMasked: row.aadhaarLast4 ? `XXXX XXXX ${row.aadhaarLast4}` : null,
-    applicantDob: row.applicantDob,
-    source: row.source,
-    batchId: row.batchId,
-    packetName: row.packetName,
-    receivedAt: row.receivedAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-  };
-}
-
-export function caseDetail(db: Db, id: string) {
-  const row = db.select().from(cases).where(eq(cases.id, id)).get();
-  if (!row) return null;
-  const docs = db
-    .select()
-    .from(documents)
-    .where(eq(documents.caseId, id))
-    .orderBy(documents.position)
-    .all();
-  const calls = db
-    .select()
-    .from(extractions)
-    .where(eq(extractions.caseId, id))
-    .orderBy(asc(extractions.createdAt))
-    .all();
-  const flagRows = db.select().from(flagsTable).where(eq(flagsTable.caseId, id)).all();
-  const audit = db
-    .select()
-    .from(auditLog)
-    .where(eq(auditLog.caseId, id))
-    .orderBy(asc(auditLog.id))
-    .all();
-  const flagList: Flag[] = flagRows.map((f) => ({
-    code: f.code,
-    severity: f.severity,
-    action: f.action,
-    reason: f.reason,
-    evidence: f.evidence,
-  }));
-  const latest = (docId: string, stage: 'classify' | 'extract') =>
-    calls.filter((c) => c.documentId === docId && c.stage === stage).at(-1) ?? null;
-
-  return {
-    case: caseSummary(row),
-    documents: docs.map((d) => {
-      const cls = latest(d.id, 'classify');
-      const ext = latest(d.id, 'extract');
-      return {
-        id: d.id,
-        originalName: d.originalName,
-        detectedType: d.detectedType,
-        typeConfidence: d.typeConfidence,
-        typeSource: d.typeSource,
-        state: d.state,
-        width: d.widthPx,
-        height: d.heightPx,
-        imageUrl: `/api/documents/${d.id}/image`,
-        thumbUrl: `/api/documents/${d.id}/image?variant=thumb`,
-        classification: cls?.status === 'OK' ? cls.result : null,
-        extraction: ext?.status === 'OK' ? ext.result : null,
-        error: (ext ?? cls)?.status === 'FAILED' ? (ext ?? cls)?.errorMessage : null,
-        cacheHit: Boolean(ext?.cacheHit ?? cls?.cacheHit),
-        latencyMs: (cls?.latencyMs ?? 0) + (ext?.latencyMs ?? 0),
-      };
-    }),
-    flags: flagRows.map((f) => ({
-      ...f,
-      createdAt: f.createdAt.toISOString(),
-      resolvedAt: f.resolvedAt?.toISOString() ?? null,
-    })),
-    notice: noticeEligibility(flagList),
-    audit: audit.map((a) => ({ ...a, createdAt: a.createdAt.toISOString() })),
-  };
 }

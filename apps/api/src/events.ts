@@ -1,7 +1,15 @@
 import { EventEmitter } from 'node:events';
 import type { DetectedType } from './db/schema.js';
 
-export type CaseStage = 'uploaded' | 'classifying' | 'extracting' | 'screening' | 'done' | 'error';
+export type CaseStage =
+  | 'uploaded'
+  | 'classifying'
+  | 'extracting'
+  | 'screening'
+  | 'done'
+  | 'error'
+  /** An officer decision changed the case (flag resolved, field edited, approved …). */
+  | 'updated';
 export type DocumentStage =
   'classifying' | 'classified' | 'extracting' | 'extracted' | 'failed' | 'skipped';
 
