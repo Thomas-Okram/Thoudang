@@ -211,7 +211,8 @@ html {
 html.presentation {
   font-size: 19.5px;
 }
-html.presentation .dev-noise {
+html.presentation .dev-noise,
+html.presentation .presentation-hide {
   display: none !important;
 }
 

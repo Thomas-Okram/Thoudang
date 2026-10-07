@@ -33,7 +33,7 @@
     "test:synth": "vitest run --root tools/synth",
     "synth": "tsx tools/synth/src/cli.ts",
     "e2e": "playwright test",
-    "demo:record": "node scripts/demo-record.mjs"
+    "demo:record": "DEMO_RECORD=1 playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

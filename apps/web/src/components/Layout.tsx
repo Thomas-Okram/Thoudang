@@ -114,7 +114,7 @@ export function Layout() {
       </aside>
       <main id="main" className="flex min-w-0 flex-1 flex-col">
         <div className="no-print sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-line bg-white/85 px-6 backdrop-blur-md">
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3 overflow-hidden">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-navy-50 text-navy-700">
               <Icon name="building" size={19} />
             </span>
@@ -124,8 +124,10 @@ export function Layout() {
               </div>
               <div className="truncate text-xs text-ink-muted">Government of Manipur</div>
             </div>
+            {/* Presentation mode's larger type has no room for it beside the toggle (documents
+                and notices still carry SPECIMEN). */}
             <span
-              className="ml-1 hidden shrink-0 rounded-full bg-warm-100 px-2.5 py-0.5 text-[0.7rem] font-bold uppercase tracking-wider text-warm-900 lg:inline"
+              className="ml-1 hidden shrink-0 rounded-full bg-warm-100 px-2.5 py-0.5 text-[0.7rem] font-bold uppercase tracking-wider text-warm-900 lg:inline presentation-hide"
               title="Prototype — synthetic SPECIMEN data only"
             >
               Prototype · Specimen data

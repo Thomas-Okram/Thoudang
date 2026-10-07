@@ -64,3 +64,39 @@ test('signed-out visitors are sent to sign-in; API reads need a session', async 
   expect((await page.request.get('/api/cases')).status()).toBe(401);
   await ctx.close();
 });
+
+for (const width of [1440, 1280]) {
+  test(`header groups never overlap at ${width}px, normal and Presentation mode`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page);
+    await page.goto('/cases');
+    for (const presentation of [false, true]) {
+      const toggle = page.getByRole('switch');
+      if ((await toggle.getAttribute('aria-checked')) !== String(presentation))
+        await toggle.click();
+      await page.waitForTimeout(300); // font-size transition
+      // Right edge of anything visible in the left group (an overflowing badge counts) vs the
+      // left edge of the right group.
+      const gap = await page.evaluate(() => {
+        const bar = document.querySelector('main#main > div')!;
+        const [left, right] = [...bar.children] as HTMLElement[];
+        const edge = Math.max(
+          ...[left!, ...left!.querySelectorAll<HTMLElement>('*')]
+            .filter((el) => el.offsetParent !== null || el === left)
+            .map((el) => el.getBoundingClientRect())
+            .filter((r) => r.width > 0 && r.height > 0)
+            .map((r) => r.right),
+        );
+        return right!.getBoundingClientRect().left - edge;
+      });
+      expect(gap, `presentation=${presentation}`).toBeGreaterThanOrEqual(0);
+      await page.screenshot({
+        path: info.outputPath(`header-${width}-${presentation ? 'presentation' : 'normal'}.png`),
+        clip: { x: 0, y: 0, width, height: 120 },
+      });
+    }
+    await page.getByRole('switch').click(); // leave it off for other tests
+  });
+}
