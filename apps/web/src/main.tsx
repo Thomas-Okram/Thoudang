@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfficerProvider } from './lib/officer';
+import { PresentationProvider } from './lib/presentation';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -20,7 +21,9 @@ createRoot(root).render(
       <BrowserRouter>
         <ErrorBoundary>
           <OfficerProvider>
-            <App />
+            <PresentationProvider>
+              <App />
+            </PresentationProvider>
           </OfficerProvider>
         </ErrorBoundary>
       </BrowserRouter>

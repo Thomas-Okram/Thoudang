@@ -3,10 +3,14 @@ import { fetchHealth } from '../lib/api';
 
 function Dot({ ok }: { ok: boolean }) {
   return (
-    <span
-      aria-hidden
-      className={`inline-block h-2.5 w-2.5 rounded-full ${ok ? 'bg-emerald-400' : 'bg-rose-400'}`}
-    />
+    <span aria-hidden className="relative inline-flex h-2.5 w-2.5">
+      {ok && (
+        <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/60 [animation-duration:2.4s]" />
+      )}
+      <span
+        className={`relative inline-block h-2.5 w-2.5 rounded-full ${ok ? 'bg-emerald-400' : 'bg-warm-400'}`}
+      />
+    </span>
   );
 }
 
@@ -19,23 +23,30 @@ export function HealthBadge() {
 
   const apiOk = !isError && data?.status === 'ok';
   return (
-    <div className="space-y-1.5 rounded-lg bg-navy-800/70 px-3 py-2.5 text-sm" data-testid="health">
-      <div className="flex items-center gap-2">
+    <div
+      className="space-y-2 rounded-xl border border-white/[0.07] bg-white/[0.04] px-3.5 py-3 text-sm"
+      data-testid="health"
+      aria-live="polite"
+    >
+      <div className="text-overline font-bold uppercase text-navy-300">System</div>
+      <div className="flex items-center gap-2.5">
         <Dot ok={apiOk} />
-        <span className="text-slate-200">
+        <span className="text-slate-100">
           {isPending ? 'Checking API…' : apiOk ? 'API connected' : 'API offline'}
         </span>
       </div>
       {apiOk && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <Dot ok={Boolean(data?.claudeConfigured)} />
-          <span className="text-slate-300">
+          <span className="text-slate-200">
             {data?.claudeConfigured ? 'AI reader ready' : 'AI key missing — cache only'}
           </span>
         </div>
       )}
       {apiOk && data?.demoMode !== 'live' && (
-        <div className="text-xs text-amber-300">Mode: {data?.demoMode.replace('_', ' ')}</div>
+        <div className="dev-noise text-xs font-medium text-warm-200">
+          Mode: {data?.demoMode.replace('_', ' ')}
+        </div>
       )}
     </div>
   );
