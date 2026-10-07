@@ -1,0 +1,69 @@
+{
+  "_note": "Clean packet: all names, DOBs and bank details agree. Widow aged 78 → priority. SYNTHETIC SPECIMEN DATA. Field values are the exact transcription expected; null = blank on the document. Aadhaar numbers are stored masked only.",
+  "expected_status": "READY",
+  "documents": {
+    "form.jpg": {
+      "type": "application_form",
+      "fields": {
+        "applicant_name": "Thokchom Ibemcha Devi",
+        "father_or_husband_name": "Late Thokchom Tomba Singh",
+        "address": "Wangkhei Ayangpalli, Imphal East",
+        "district": "Imphal East",
+        "category": "General",
+        "aadhaar_number": "XXXX XXXX 0124",
+        "mobile": "9876543210",
+        "bank_name": "State Bank of India",
+        "branch": "Imphal Main",
+        "ifsc": "SBIN0001234",
+        "account_number": "30123456789",
+        "date_of_birth": "12/05/1948",
+        "age": "78",
+        "annual_income": "Rs. 24,000/-",
+        "signature_present": "yes",
+        "application_date": "20/09/2026",
+        "marital_status_if_stated": "Widow",
+        "disability_if_stated": "No"
+      }
+    },
+    "aadhaar.jpg": {
+      "type": "aadhaar",
+      "fields": {
+        "name": "Thokchom Ibemcha Devi",
+        "dob_or_yob": "12/05/1948",
+        "gender": "Female",
+        "aadhaar_number": "XXXX XXXX 0124"
+      }
+    },
+    "passbook.jpg": {
+      "type": "bank_passbook",
+      "fields": {
+        "account_holder_name": "THOKCHOM IBEMCHA DEVI",
+        "account_number": "30123456789",
+        "ifsc": "SBIN0001234",
+        "bank_name": "State Bank of India",
+        "branch": "Imphal Main"
+      }
+    },
+    "epic.jpg": {
+      "type": "epic",
+      "fields": {
+        "name": "Thokchom Ibemcha Devi",
+        "relative_name": "Thokchom Tomba Singh",
+        "epic_number": "MNP1234567",
+        "dob_or_age": "Age as on 01.01.2026: 77"
+      }
+    }
+  },
+  "name_checks": [
+    {
+      "a": "form.jpg:applicant_name",
+      "b": "aadhaar.jpg:name",
+      "expected": "SAME"
+    },
+    {
+      "a": "form.jpg:applicant_name",
+      "b": "passbook.jpg:account_holder_name",
+      "expected": "SAME"
+    }
+  ]
+}

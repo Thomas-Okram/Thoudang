@@ -12,3 +12,4 @@ apps/api/logs/
 coverage/
 eval-report.json
 apps/api/data/eval.db*
+apps/api/data/eval-uploads/

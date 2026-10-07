@@ -18,7 +18,10 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "eval": "npm run eval -w @thoudang/api --",
+    "smoke": "npm run smoke -w @thoudang/api --",
+    "make-specimens": "npm run make-specimens -w @thoudang/api --"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,0 +1,55 @@
+{
+  "_note": "\"Kh.\" could be Khuraijam, Khwairakpam, Khumanthem … and nothing in the packet disambiguates → officer. No voter ID (optional). SYNTHETIC SPECIMEN DATA. Field values are the exact transcription expected; null = blank on the document. Aadhaar numbers are stored masked only.",
+  "expected_status": "OFFICER_ATTENTION",
+  "documents": {
+    "form.jpg": {
+      "type": "application_form",
+      "fields": {
+        "applicant_name": "Kh. Loken Singh",
+        "father_or_husband_name": "Kh. Ibomcha Singh",
+        "address": "Sagolband Tera, Imphal West",
+        "district": "Imphal West",
+        "category": "OBC",
+        "aadhaar_number": "XXXX XXXX 1238",
+        "mobile": "9612345678",
+        "bank_name": "Manipur Rural Bank",
+        "branch": "Sagolband",
+        "ifsc": "MRBA0000123",
+        "account_number": "41020300456",
+        "date_of_birth": "03/02/1950",
+        "age": "76",
+        "annual_income": "Rs. 30,000/-",
+        "signature_present": "yes",
+        "application_date": "18/09/2026",
+        "marital_status_if_stated": "Married",
+        "disability_if_stated": "No"
+      }
+    },
+    "aadhaar.jpg": {
+      "type": "aadhaar",
+      "fields": {
+        "name": "Khuraijam Loken Singh",
+        "dob_or_yob": "03/02/1950",
+        "gender": "Male",
+        "aadhaar_number": "XXXX XXXX 1238"
+      }
+    },
+    "passbook.jpg": {
+      "type": "bank_passbook",
+      "fields": {
+        "account_holder_name": "KHURAIJAM LOKEN SINGH",
+        "account_number": "41020300456",
+        "ifsc": "MRBA0000123",
+        "bank_name": "Manipur Rural Bank",
+        "branch": "Sagolband"
+      }
+    }
+  },
+  "name_checks": [
+    {
+      "a": "form.jpg:applicant_name",
+      "b": "aadhaar.jpg:name",
+      "expected": "AMBIGUOUS"
+    }
+  ]
+}
