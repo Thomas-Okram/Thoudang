@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import type { CaseDocument, ExtractedValue, Reason } from '../../lib/api';
 import { DOC_LABEL, prettyField } from '../../lib/labels';
+import { Icon } from '../ui/Icon';
 
 const CONF_DOT: Record<ExtractedValue['confidence'], string> = {
   high: 'bg-emerald-500',
-  medium: 'bg-amber-400',
+  medium: 'bg-warm-400',
   low: 'bg-rose-500',
 };
 
@@ -35,13 +36,17 @@ export function FieldsTable({
   return (
     <section
       aria-labelledby="fields-title"
-      className="rounded-xl border border-slate-200 bg-white shadow-sm"
+      className="overflow-hidden rounded-card border border-line bg-surface shadow-card"
     >
-      <header className="flex items-baseline justify-between border-b border-slate-100 px-5 py-3">
-        <h2 id="fields-title" className="text-base font-bold text-navy-900">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-6 py-4">
+        <h2 id="fields-title" className="flex items-center gap-2.5 text-lg font-bold text-navy-900">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy-50 text-navy-700">
+            <Icon name="template" size={19} />
+          </span>
           Extracted fields
         </h2>
-        <span className="flex items-center gap-3 text-xs text-slate-500">
+        <span className="flex items-center gap-3 text-xs font-medium text-ink-muted">
+          <span>AI confidence:</span>
           {(['high', 'medium', 'low'] as const).map((c) => (
             <span key={c} className="flex items-center gap-1">
               <span className={`h-2 w-2 rounded-full ${CONF_DOT[c]}`} /> {c}
@@ -50,13 +55,13 @@ export function FieldsTable({
         </span>
       </header>
       {!withFields.length && (
-        <p className="px-5 py-4 text-sm text-slate-500">
+        <p className="px-6 py-4 text-sm text-ink-muted">
           No fields could be read from these documents — review the images manually.
         </p>
       )}
       {withFields.map((d) => (
-        <div key={d.id} className="border-b border-slate-100 last:border-0">
-          <h3 className="flex items-center justify-between bg-slate-50 px-5 py-1.5 text-xs font-bold uppercase tracking-wide text-slate-500">
+        <div key={d.id} className="border-b border-line last:border-0">
+          <h3 className="flex items-center justify-between gap-3 bg-slate-50 px-6 py-2 text-overline font-bold uppercase text-ink-muted">
             <span>
               {d.detectedType ? DOC_LABEL[d.detectedType] : d.originalName}
               {d.model?.startsWith('fixture') && (
@@ -70,14 +75,14 @@ export function FieldsTable({
             </span>
             {d.extraction?.notes && (
               <span
-                className="max-w-[60%] truncate font-normal normal-case text-slate-400"
+                className="max-w-[60%] truncate font-normal normal-case tracking-normal text-ink-muted"
                 title={d.extraction.notes}
               >
                 Note: {d.extraction.notes}
               </span>
             )}
           </h3>
-          <table className="w-full text-sm">
+          <table className="w-full text-[0.92rem]">
             <tbody>
               {Object.entries(d.extraction!.fields).map(([name, v]) => {
                 const isEditing = editing?.documentId === d.id && editing.field === name;
@@ -104,15 +109,15 @@ export function FieldsTable({
                   <tr
                     key={name}
                     data-testid={`field-${name}`}
-                    className={`group border-t border-slate-100 first:border-0 ${low ? 'bg-amber-50/70' : ''} hover:bg-teal-soft/30`}
+                    className={`group cursor-pointer border-t border-line first:border-0 ${low ? 'bg-warm-50/70' : ''} transition-colors hover:bg-teal-wash`}
                     onMouseEnter={() => onHover({ documentId: d.id, field: name })}
                     onMouseLeave={() => onHover(null)}
                     onClick={() => onFocusField({ documentId: d.id, field: name })}
                   >
-                    <td className="w-44 py-1.5 pl-5 pr-3 text-slate-500">{prettyField(name)}</td>
-                    <td className="py-1.5 pr-2 font-medium text-navy-900">
+                    <td className="w-48 py-2 pl-6 pr-3 text-ink-muted">{prettyField(name)}</td>
+                    <td className="py-2 pr-2 font-semibold text-navy-900">
                       {v.value ?? (
-                        <span className="font-normal italic text-slate-400">{v.status}</span>
+                        <span className="font-normal italic text-ink-muted">{v.status}</span>
                       )}
                       {v.editedBy && (
                         <span className="ml-2 rounded bg-navy-900/5 px-1.5 text-[11px] font-semibold text-navy-700">
@@ -120,16 +125,16 @@ export function FieldsTable({
                         </span>
                       )}
                     </td>
-                    <td className="w-8 py-1.5">
+                    <td className="w-8 py-2">
                       <span
                         title={`${v.confidence} confidence`}
                         className={`inline-block h-2.5 w-2.5 rounded-full ${CONF_DOT[v.confidence]}`}
                       />
                     </td>
-                    <td className="w-16 py-1.5 pr-4 text-right">
+                    <td className="w-20 py-2 pr-5 text-right">
                       {name === 'aadhaar_number' ? (
                         <span
-                          className="text-xs text-slate-400"
+                          className="inline-flex items-center gap-1 text-xs text-ink-muted"
                           title="Only the masked number is stored"
                         >
                           masked
@@ -141,7 +146,7 @@ export function FieldsTable({
                               e.stopPropagation();
                               setEditing({ documentId: d.id, field: name });
                             }}
-                            className="rounded px-2 py-0.5 text-xs font-semibold text-teal-deep opacity-0 transition group-hover:opacity-100 focus:opacity-100"
+                            className="rounded-md px-2 py-0.5 text-xs font-semibold text-teal-deep opacity-0 transition hover:bg-white group-hover:opacity-100 focus:opacity-100"
                           >
                             Edit
                           </button>
@@ -181,8 +186,8 @@ function EditRow({
     code && (code !== 'other' || text.trim().length >= 3) && value.trim() !== (current ?? '');
 
   return (
-    <tr className="border-t border-teal-accent/40 bg-teal-soft/30">
-      <td colSpan={4} className="px-5 py-3">
+    <tr className="border-t border-teal-accent/40 bg-teal-wash">
+      <td colSpan={4} className="px-6 py-4">
         <form
           className="space-y-2"
           onSubmit={async (e) => {
@@ -244,7 +249,7 @@ function EditRow({
               <button
                 type="submit"
                 disabled={!valid || busy}
-                className="rounded-md bg-navy-900 px-3 py-1.5 text-sm font-semibold text-white disabled:bg-slate-300"
+                className="rounded-md bg-navy-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-navy-700 disabled:bg-slate-300 disabled:text-slate-600"
               >
                 {busy ? 'Re-checking…' : 'Save & re-check'}
               </button>

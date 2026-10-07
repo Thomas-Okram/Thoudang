@@ -8,7 +8,8 @@ import {
 } from 'react';
 import type { CaseDocument } from '../../lib/api';
 import type { Highlight } from '../../lib/highlight';
-import { DOC_LABEL } from '../../lib/labels';
+import { DOC_LABEL, prettyField } from '../../lib/labels';
+import { Icon, type IconName } from '../ui/Icon';
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 5;
@@ -37,7 +38,7 @@ export function DocumentViewer({
       <div
         role="tablist"
         aria-label="Documents"
-        className="flex gap-2 overflow-x-auto border-b border-slate-200 bg-white px-3 pt-3"
+        className="flex gap-2 overflow-x-auto border-b border-line bg-white px-3 py-2.5"
       >
         {documents.map((d) => {
           const active = d.id === doc?.id;
@@ -47,21 +48,23 @@ export function DocumentViewer({
               role="tab"
               aria-selected={active}
               onClick={() => onSelect(d.id)}
-              className={`group flex shrink-0 items-center gap-2 rounded-t-lg border border-b-0 px-2.5 py-2 text-left text-sm transition ${
+              className={`group flex shrink-0 items-center gap-2.5 rounded-xl border py-1.5 pl-1.5 pr-3 text-left text-sm transition ${
                 active
-                  ? 'border-slate-200 bg-slate-50 font-semibold text-navy-900'
-                  : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-navy-900'
+                  ? 'border-navy-900 bg-navy-900 font-semibold text-white shadow-raised'
+                  : 'border-line bg-white text-ink-soft hover:border-navy-300 hover:text-navy-900'
               }`}
             >
               <img
                 src={d.thumbUrl}
                 alt=""
-                className="h-9 w-9 rounded border border-slate-200 bg-white object-cover"
+                className={`h-10 w-10 rounded-lg border object-cover ${active ? 'border-white/30' : 'border-line'} bg-white`}
                 loading="lazy"
               />
               <span className="flex flex-col leading-tight">
                 <span>{d.detectedType ? DOC_LABEL[d.detectedType] : 'Unidentified'}</span>
-                <span className="text-[11px] font-normal text-slate-400">
+                <span
+                  className={`text-[11px] font-normal ${active ? 'text-slate-300' : 'text-ink-muted'} ${d.state === 'FAILED' || d.typeSource === 'officer' ? '' : 'dev-noise'}`}
+                >
                   {d.state === 'FAILED'
                     ? 'needs manual review'
                     : d.typeSource === 'officer'
@@ -151,7 +154,7 @@ export function ImagePane({ doc, highlight }: { doc: CaseDocument; highlight: Hi
   };
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col bg-slate-50">
+    <div className="relative flex min-h-0 flex-1 flex-col bg-[#e7ebf1] bg-[radial-gradient(#d3dae4_1px,transparent_1px)] [background-size:18px_18px]">
       <div
         ref={box}
         data-testid="image-viewport"
@@ -179,7 +182,7 @@ export function ImagePane({ doc, highlight }: { doc: CaseDocument; highlight: Hi
             <img
               src={doc.imageUrl}
               alt={`${doc.detectedType ? DOC_LABEL[doc.detectedType] : 'Document'} (${doc.originalName})`}
-              className="block w-full select-none shadow-sm"
+              className="block w-full select-none shadow-[0_8px_30px_-8px_rgb(10_27_51/0.35)]"
               draggable={false}
               onError={() => setBroken(true)}
             />
@@ -190,27 +193,82 @@ export function ImagePane({ doc, highlight }: { doc: CaseDocument; highlight: Hi
               aria-hidden={!bbox}
             >
               {bbox && (
-                <rect
-                  data-testid="bbox-highlight"
-                  x={bbox[0] - 6}
-                  y={bbox[1] - 6}
-                  width={bbox[2] - bbox[0] + 12}
-                  height={bbox[3] - bbox[1] + 12}
-                  rx={6}
-                  fill="rgb(15 158 142 / 0.16)"
-                  stroke="#0f9e8e"
-                  strokeWidth={3}
-                  vectorEffect="non-scaling-stroke"
-                  className="animate-pulse-ring"
-                />
+                <>
+                  <defs>
+                    <mask id={`spot-${doc.id}`}>
+                      <rect width={doc.width} height={doc.height} fill="white" />
+                      <rect
+                        x={bbox[0] - 6}
+                        y={bbox[1] - 6}
+                        width={bbox[2] - bbox[0] + 12}
+                        height={bbox[3] - bbox[1] + 12}
+                        rx={6}
+                        fill="black"
+                      />
+                    </mask>
+                  </defs>
+                  {/* Spotlight: dim everything except the field, so it reads from the back row. */}
+                  <rect
+                    width={doc.width}
+                    height={doc.height}
+                    fill="#0a1b33"
+                    fillOpacity={highlight?.mode === 'click' ? 0.5 : 0.28}
+                    mask={`url(#spot-${doc.id})`}
+                    className="animate-fade"
+                  />
+                  <rect
+                    x={bbox[0] - 6}
+                    y={bbox[1] - 6}
+                    width={bbox[2] - bbox[0] + 12}
+                    height={bbox[3] - bbox[1] + 12}
+                    rx={6}
+                    fill="none"
+                    stroke="#2dd4bf"
+                    strokeOpacity={0.45}
+                    strokeWidth={14}
+                    vectorEffect="non-scaling-stroke"
+                    className="animate-pulse-ring"
+                  />
+                  <rect
+                    data-testid="bbox-highlight"
+                    x={bbox[0] - 6}
+                    y={bbox[1] - 6}
+                    width={bbox[2] - bbox[0] + 12}
+                    height={bbox[3] - bbox[1] + 12}
+                    rx={6}
+                    fill="rgb(45 212 191 / 0.12)"
+                    stroke="#14b8a6"
+                    strokeWidth={4}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </>
               )}
             </svg>
+            {bbox && highlight?.field && (
+              <div
+                className="pointer-events-none absolute"
+                style={{
+                  left: `${((bbox[0] - 6) / doc.width) * 100}%`,
+                  top: `${((bbox[1] - 6) / doc.height) * 100}%`,
+                }}
+              >
+                <span
+                  className="absolute bottom-1.5 left-0 block origin-bottom-left"
+                  style={{ transform: `scale(${1 / view.zoom})` }}
+                >
+                  <span className="flex origin-bottom-left animate-pop items-center gap-1.5 whitespace-nowrap rounded-lg bg-teal-deep px-3 py-1 text-base font-bold text-white shadow-raised">
+                    <Icon name="eye" size={14} strokeWidth={2.4} />
+                    {prettyField(highlight.field)}
+                  </span>
+                </span>
+              </div>
+            )}
           </div>
         )}
 
         {doc.redaction !== 'none' && (
-          <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-navy-900/90 px-3 py-1 text-xs font-semibold text-white shadow">
-            <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="currentColor" aria-hidden>
+          <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-navy-900/90 px-3 py-1.5 text-xs font-semibold text-white shadow-raised backdrop-blur">
+            <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 text-teal-soft" fill="currentColor" aria-hidden>
               <path d="M10 2 4 4.5v4.8c0 4 2.6 7.3 6 8.7 3.4-1.4 6-4.7 6-8.7V4.5L10 2Z" />
             </svg>
             {doc.redaction === 'bbox'
@@ -221,36 +279,33 @@ export function ImagePane({ doc, highlight }: { doc: CaseDocument; highlight: Hi
         {missingLocation && (
           <div
             data-testid="no-location"
-            className="pointer-events-none absolute bottom-14 left-3 rounded-md bg-white/95 px-2.5 py-1 text-xs text-slate-500 shadow"
+            className="pointer-events-none absolute bottom-4 left-3 flex items-center gap-1.5 rounded-lg bg-white/95 px-3 py-1.5 text-sm font-medium text-ink-soft shadow-raised"
           >
             Location not available for this field
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-2 border-t border-slate-200 bg-white px-3 py-2 text-sm">
-        <span className="truncate text-slate-500">
-          {doc.originalName}
+      <div className="flex items-center justify-between gap-2 border-t border-line bg-white px-3 py-2 text-sm">
+        <span className="flex min-w-0 items-center truncate text-ink-muted">
+          <span className="dev-noise truncate">{doc.originalName}</span>
           {doc.extraction?.legibility === 'poor' && (
-            <span className="ml-2 rounded bg-amber-100 px-1.5 text-xs font-semibold text-amber-900">
+            <span className="ml-2 rounded-full bg-warm-100 px-2 py-0.5 text-xs font-semibold text-warm-900">
               poor legibility
             </span>
           )}
         </span>
-        <div className="flex items-center gap-1">
-          <ZoomButton label="Zoom out" onClick={() => zoomAt(1 / 1.3)}>
-            −
-          </ZoomButton>
-          <span className="w-12 text-center tabular-nums text-slate-600">
+        <div className="flex items-center gap-1 rounded-xl border border-line bg-slate-50 p-0.5">
+          <ZoomButton label="Zoom out" icon="zoomOut" onClick={() => zoomAt(1 / 1.3)} />
+          <span className="w-12 text-center text-[0.85rem] font-semibold tabular-nums text-ink-soft">
             {Math.round(view.zoom * 100)}%
           </span>
-          <ZoomButton label="Zoom in" onClick={() => zoomAt(1.3)}>
-            +
-          </ZoomButton>
+          <ZoomButton label="Zoom in" icon="zoomIn" onClick={() => zoomAt(1.3)} />
           <button
             onClick={() => setView(FIT)}
-            className="ml-1 rounded-md px-2 py-1 font-medium text-slate-600 hover:bg-slate-100"
+            className="ml-0.5 flex h-8 items-center gap-1 rounded-lg px-2 font-semibold text-ink-soft hover:bg-white hover:text-navy-900"
           >
+            <Icon name="fit" size={15} />
             Fit
           </button>
         </div>
@@ -261,20 +316,20 @@ export function ImagePane({ doc, highlight }: { doc: CaseDocument; highlight: Hi
 
 function ZoomButton({
   label,
+  icon,
   onClick,
-  children,
 }: {
   label: string;
+  icon: IconName;
   onClick: () => void;
-  children: string;
 }) {
   return (
     <button
       aria-label={label}
       onClick={onClick}
-      className="h-8 w-8 rounded-md text-lg font-semibold text-slate-600 hover:bg-slate-100"
+      className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft hover:bg-white hover:text-navy-900"
     >
-      {children}
+      <Icon name={icon} size={17} />
     </button>
   );
 }

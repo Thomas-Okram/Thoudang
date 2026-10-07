@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
 import type { CaseDetail } from '../../lib/api';
+import { Button, ButtonLink } from '../ui/Button';
+import { Icon } from '../ui/Icon';
 
 export function ActionBar({
   d,
@@ -53,71 +54,83 @@ export function ActionBar({
   };
 
   return (
-    <div className="sticky bottom-0 z-20 -mx-1 rounded-xl border border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-6px_20px_-12px_rgba(10,27,51,0.35)] backdrop-blur">
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          disabled={Boolean(approveWhy) || busy !== null}
+    <div className="sticky bottom-3 z-20 rounded-card border border-line bg-white/95 px-4 py-3 shadow-[0_10px_40px_-12px_rgba(10,27,51,0.45)] backdrop-blur">
+      <div className="flex flex-wrap items-center gap-2.5">
+        <Button
+          variant="success"
+          size="md"
+          icon="check"
+          disabled={Boolean(approveWhy)}
+          loading={busy === 'approve'}
+          loadingLabel="Approving…"
           onClick={() => run('approve', onApprove)}
           title={approveWhy ?? 'Approve for sanction'}
-          className="rounded-lg bg-emerald-600 px-4 py-2.5 font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
-          {busy === 'approve' ? 'Approving…' : 'Approve for sanction'}
-        </button>
-        <button
-          disabled={Boolean(correctWhy) || busy !== null}
+          Approve for sanction
+        </Button>
+        <Button
+          variant="attention"
+          size="md"
+          icon="user"
+          disabled={Boolean(correctWhy) || busy === 'approve'}
+          loading={busy === 'correct'}
+          loadingLabel="Sending…"
           onClick={() => run('correct', onSendForCorrection)}
           title={correctWhy ?? 'Send for citizen correction'}
-          className="rounded-lg border border-amber-500 bg-white px-4 py-2.5 font-semibold text-amber-900 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
         >
-          {busy === 'correct' ? 'Sending…' : 'Send for citizen correction'}
-        </button>
+          Send for citizen correction
+        </Button>
         {d.notice.allowed ? (
-          <Link
-            to={`/cases/${d.case.id}/notice`}
-            className="rounded-lg border border-navy-900 bg-white px-4 py-2.5 font-semibold text-navy-900 transition hover:bg-slate-50"
-          >
+          <ButtonLink to={`/cases/${d.case.id}/notice`} variant="secondary" size="md" icon="notice">
             {d.case.noticeSentAt ? 'View notice' : 'Generate notice'}
-          </Link>
+          </ButtonLink>
         ) : (
-          <button
+          <Button
+            size="md"
+            icon="notice"
             disabled
             title={d.notice.reasons[0] ?? 'No notice needed'}
-            className="cursor-not-allowed rounded-lg border border-dashed border-slate-300 px-4 py-2.5 font-semibold text-slate-400"
+            className="border-dashed"
           >
             Generate notice
-          </button>
+          </Button>
         )}
         {d.case.noticeSentAt && (
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-ink-muted">
             Notice sent on{' '}
             {new Date(d.case.noticeSentAt).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
           </span>
         )}
         <span className="ml-auto flex gap-1">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="note"
             onClick={() => setNoteOpen((o) => !o)}
             disabled={!hasOfficer}
-            className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 disabled:text-slate-300"
           >
             Add note
-          </button>
-          <button
-            onClick={onOpenAudit}
-            className="rounded-lg px-3 py-2 text-sm font-semibold text-navy-900 hover:bg-slate-100"
-          >
+          </Button>
+          <Button variant="ghost" size="sm" icon="history" onClick={onOpenAudit}>
             Audit trail ({d.audit.length})
-          </button>
+          </Button>
         </span>
       </div>
       {(approveWhy || correctWhy) && !approved && (
-        <p className="mt-1.5 text-xs text-slate-500" data-testid="action-hints">
-          {approveWhy && <span>Approve: {approveWhy}. </span>}
-          {correctWhy && <span>Correction: {correctWhy}</span>}
+        <p
+          className="mt-2.5 flex items-start gap-1.5 text-[0.82rem] text-ink-muted"
+          data-testid="action-hints"
+        >
+          <Icon name="info" size={15} className="mt-0.5 shrink-0" />
+          <span>
+            {approveWhy && <span>Approve: {approveWhy}. </span>}
+            {correctWhy && <span>Correction: {correctWhy}</span>}
+          </span>
         </p>
       )}
       {noteOpen && (
         <form
-          className="mt-2 flex gap-2"
+          className="mt-3 flex gap-2"
           onSubmit={async (e) => {
             e.preventDefault();
             if (!note.trim()) return;
@@ -131,11 +144,11 @@ export function ActionBar({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Note for the file (visible in the audit trail)"
-            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="flex-1 rounded-control border border-line-strong px-3 py-2 text-[0.95rem] focus:border-teal-accent focus:outline-none focus:ring-2 focus:ring-teal-accent/40"
           />
-          <button className="rounded-lg bg-navy-900 px-4 py-2 text-sm font-semibold text-white">
+          <Button type="submit" variant="navy">
             Save note
-          </button>
+          </Button>
         </form>
       )}
     </div>
