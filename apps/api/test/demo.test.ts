@@ -44,3 +44,38 @@ describe('demo:prime type guessing', () => {
     ['IMG_1234.jpg', null],
   ])('%s → %s', (name, type) => expect(typeFromName(name)).toBe(type));
 });
+
+describe('fixture rows never block real priming', () => {
+  it('purgeFixtures removes only fixture rows for that image', async () => {
+    const { purgeFixtures, FIXTURE_MODEL } = await import('../src/demo/fixture-model.js');
+    const { extractionCache } = await import('../src/db/schema.js');
+    const row = (key: string, sha256: string, model: string) => ({
+      key,
+      sha256,
+      stage: 'classify',
+      model,
+      promptVersion: 'v1',
+      result: {},
+      latencyMs: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+    });
+    handle.db
+      .insert(extractionCache)
+      .values([
+        row('a', 'img1', FIXTURE_MODEL),
+        row('b', 'img1', 'claude-sonnet-5-5'),
+        row('c', 'img2', FIXTURE_MODEL),
+      ])
+      .run();
+    expect(purgeFixtures(handle.db, 'img1')).toBe(1);
+    expect(
+      handle.db
+        .select()
+        .from(extractionCache)
+        .all()
+        .map((r) => r.key)
+        .sort(),
+    ).toEqual(['b', 'c']);
+  });
+});

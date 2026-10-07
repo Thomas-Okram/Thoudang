@@ -25,8 +25,8 @@ import { silentLogger } from '../logger.js';
 import { preprocessImage } from '../services/images.js';
 import { TruthSchema } from '../eval/score.js';
 import { fromInvocationDir, parseArgs } from '../eval/cli-args.js';
+import { FIXTURE_MODEL } from './fixture-model.js';
 
-export const FIXTURE_MODEL = 'fixture-truth';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..');
 
 async function main() {

@@ -24,6 +24,7 @@ import { preprocessImage } from '../services/images.js';
 import { isImageName } from '../upload.js';
 import { fromInvocationDir, parseArgs } from '../eval/cli-args.js';
 import { typeFromName } from './type-from-name.js';
+import { purgeFixtures } from './fixture-model.js';
 
 function truthTypes(folder: string): Record<string, string> {
   const file = path.join(folder, 'truth.json');
@@ -82,6 +83,9 @@ async function main() {
       files.map(async (file) => {
         images += 1;
         const image = await preprocessImage(fs.readFileSync(path.join(folder, file)));
+        // Fixture rows (npm run dev:fixtures) must not stop real results from being primed.
+        if (purgeFixtures(handle.db, image.sha256))
+          console.log(`  ${file}: replacing fixture data with real AI results`);
         const cls = await extraction.classify(image, file);
         if (!cls.cacheHit && cls.ok) calls += 1;
         const known = truth[file];
