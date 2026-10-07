@@ -38,12 +38,19 @@ export type PipelineEvent =
       at: string;
     };
 
-/** Subscribes to GET /api/events (Server-Sent Events). EventSource reconnects automatically. */
-export function usePipelineEvents(onEvent: (e: PipelineEvent) => void, query = ''): void {
+/**
+ * Subscribes to GET /api/events (Server-Sent Events). EventSource reconnects automatically.
+ * `path` overrides the stream (the phone page uses its public /api/sessions/:id/events).
+ */
+export function usePipelineEvents(
+  onEvent: (e: PipelineEvent) => void,
+  query = '',
+  path = '/api/events',
+): void {
   const handler = useRef(onEvent);
   handler.current = onEvent;
   useEffect(() => {
-    const source = new EventSource(`/api/events${query}`);
+    const source = new EventSource(`${path}${query}`);
     source.onmessage = (msg) => {
       try {
         handler.current(JSON.parse(msg.data as string) as PipelineEvent);
@@ -52,5 +59,5 @@ export function usePipelineEvents(onEvent: (e: PipelineEvent) => void, query = '
       }
     };
     return () => source.close();
-  }, [query]);
+  }, [path, query]);
 }

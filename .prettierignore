@@ -8,3 +8,7 @@ apps/api/drizzle/meta
 # generated data (JSON written by tools/synth and the eval harness)
 eval-data/
 demo-packets/
+e2e/.data
+e2e/.results
+e2e/.report
+demo-recording

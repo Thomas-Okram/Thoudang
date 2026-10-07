@@ -6,7 +6,9 @@ import request from 'supertest';
 import { lanAddresses } from '../src/network.js';
 import { groupIntoPackets, type RelativeFile } from '../src/upload.js';
 import { makeImage, packetVision } from './helpers.js';
-import { setupApp, type TestApp } from './setup.js';
+import { setupApp, testSecurity, type TestApp } from './setup.js';
+
+const DA = 'da-imphal-west';
 
 let t: TestApp;
 afterEach(() => t?.cleanup());
@@ -224,6 +226,61 @@ describe('GET /api/events (SSE)', () => {
     expect(body).toContain(': connected');
     expect(body).toMatch(/data: \{"type":"case","caseId":"wanted".*"stage":"done"/);
     expect(body).not.toContain('"caseId":"other"');
+  });
+});
+
+describe('GET /api/sessions/:id/events (phone SSE)', () => {
+  it('is public under REQUIRE_SIGN_IN=1 but only ever streams that upload session', async () => {
+    t = setupApp(packetVision(), 'live', {
+      security: testSecurity({ REQUIRE_SIGN_IN: '1' }),
+    });
+    const s = await request(t.app).post('/api/sessions').set('Cookie', t.cookie(DA));
+    const id = s.body.sessionId as string;
+    expect((await request(t.app).get('/api/sessions/nope/events')).status).toBe(404);
+
+    const server = t.app.listen(0);
+    const { port } = server.address() as AddressInfo;
+    const chunks: string[] = [];
+    await new Promise<void>((resolve, reject) => {
+      const req = http.get(`http://127.0.0.1:${port}/api/sessions/${id}/events`, (res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.headers['content-type']).toBe('text/event-stream');
+        res.setEncoding('utf8');
+        res.on('data', (c: string) => {
+          chunks.push(c);
+          if (chunks.join('').includes('"action":"submitted"')) {
+            req.destroy();
+            resolve();
+          }
+        });
+        setTimeout(() => {
+          t.bus.publish({
+            type: 'case',
+            caseId: 'c1',
+            reference: 'X',
+            batchId: null,
+            stage: 'uploaded',
+          });
+          t.bus.publish({ type: 'session', sessionId: 'other', action: 'file-added' });
+          t.bus.publish({
+            type: 'session',
+            sessionId: id,
+            action: 'submitted',
+            caseId: 'c9',
+          });
+        }, 30);
+      });
+      req.on('error', (e) =>
+        e.message.includes('aborted') || e.message.includes('socket hang up')
+          ? resolve()
+          : reject(e),
+      );
+    });
+    server.close();
+    const body = chunks.join('');
+    expect(body).toContain(`"sessionId":"${id}"`);
+    expect(body).not.toContain('"type":"case"');
+    expect(body).not.toContain('"sessionId":"other"');
   });
 });
 

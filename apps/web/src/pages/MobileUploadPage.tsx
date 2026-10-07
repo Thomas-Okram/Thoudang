@@ -45,7 +45,8 @@ export function MobileUploadPage() {
           .then(setSession)
           .catch(() => undefined);
     }, []),
-    `?sessionId=${sessionId}`,
+    '',
+    `/api/sessions/${encodeURIComponent(sessionId)}/events`,
   );
 
   const upload = async (list: FileList | null) => {

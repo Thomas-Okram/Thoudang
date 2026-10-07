@@ -8,6 +8,7 @@ import { MAX_FILES_PER_PACKET, type SessionStore, type UploadSession } from '../
 import { toDecodable } from '../services/images.js';
 import { createUploader } from '../upload.js';
 import { parseSlotType } from './cases.js';
+import { streamEvents } from './events.js';
 
 export function sessionsRouter(deps: {
   sessions: SessionStore;
@@ -59,6 +60,15 @@ export function sessionsRouter(deps: {
 
   router.get('/sessions/:id', (req, res) => {
     res.json(view(find(req.params.id)));
+  });
+
+  /**
+   * Live updates for the phone page. Public like the rest of /sessions/:id (the id is the QR
+   * capability) — so it streams ONLY this session's events, never case events.
+   */
+  router.get('/sessions/:id/events', (req, res) => {
+    const id = find(req.params.id).id;
+    streamEvents(req, res, bus, (e) => e.type === 'session' && e.sessionId === id);
   });
 
   /** ?from=phone|desk  ?type=application_form|aadhaar|bank_passbook|epic (omit = unsorted) */

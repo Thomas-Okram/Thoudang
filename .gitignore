@@ -14,3 +14,6 @@ eval-report.json
 apps/api/data/eval.db*
 apps/api/data/eval-uploads/
 .claude/worktrees/
+e2e/.data/
+e2e/.results/
+e2e/.report/
