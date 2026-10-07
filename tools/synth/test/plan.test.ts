@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { containsFullAadhaar, verhoeffValidate } from '@thoudang/core';
+import { containsFullAadhaar, identityMatrix, matchNames, verhoeffValidate } from '@thoudang/core';
 import { DISTRICTS } from '../src/data.js';
 import { DEMO_PACKETS, DEMO_SEED } from '../src/demo.js';
 import { DEFAULT_MIX, allocate, arrange, parseMix, plan } from '../src/plan.js';
@@ -154,19 +154,80 @@ describe('people and identifiers', () => {
 
 describe('demo set', () => {
   const demo = plan({ count: 0, seed: DEMO_SEED, scenarios: DEMO_PACKETS });
-  it('has the six hand-picked stories in order', () => {
+  type Planned = (typeof demo)[number];
+  const byId = (id: string) => demo.find((p) => p.id === id)!;
+  const names = (p: Planned) => ({
+    form: p.spec.form!.fields.applicant_name,
+    father: p.spec.form!.fields.father_or_husband_name,
+    aadhaar: p.spec.aadhaar!.name,
+    passbook: p.spec.passbook!.holder,
+  });
+  /** The case page's identity card: every pair, with the form's relative name as context. */
+  const matrix = (p: Planned) =>
+    identityMatrix(
+      [
+        { key: 'form', value: names(p).form! },
+        { key: 'aadhaar', value: names(p).aadhaar },
+        { key: 'passbook', value: names(p).passbook },
+      ],
+      { relativeNames: [names(p).father] },
+    );
+
+  it('has the seven hand-picked stories in folder (= processing) order', () => {
     expect(demo.map((p) => p.id)).toEqual(DEMO_PACKETS.map((d) => d.id));
-    expect(demo.map((p) => p.expectation.status)).toEqual([
-      'READY',
-      'READY',
-      'READY',
-      'OFFICER_ATTENTION',
-      'NEEDS_CITIZEN_CORRECTION',
-      'OFFICER_ATTENTION',
+    expect(demo.map((p) => [p.id, p.expectation.status])).toEqual([
+      ['demo-01-clean', 'READY'],
+      ['demo-02-clean', 'READY'],
+      ['demo-03-ongbi-married-name', 'READY'],
+      ['demo-04-kh-loken-ambiguous', 'OFFICER_ATTENTION'],
+      ['demo-05-dob-mismatch', 'NEEDS_CITIZEN_CORRECTION'],
+      ['demo-06-duplicate-of-01', 'OFFICER_ATTENTION'],
+      ['demo-07-thomas-o-resolved-by-father', 'READY'],
     ]);
     expect(demo[2]!.spec.form!.fields.applicant_name).toMatch(/ Ongbi /i);
-    expect(demo[3]!.spec.form!.fields.applicant_name).toMatch(/^Kh\. /i);
+    expect(demo[4]!.expectation.flags.map((f) => f.code)).toContain('DOB_MISMATCH');
     expect(demo[5]!.expectation.flags.map((f) => f.code)).toContain('DUPLICATE_SUSPECTED');
     expect(demo[5]!.spec.duplicateOf).toBe(0);
+  });
+
+  it('Thomas packet: "O." is resolved to Okram by the father\'s full yumnak on the form', () => {
+    const p = byId('demo-07-thomas-o-resolved-by-father');
+    expect(names(p)).toEqual({
+      form: 'O. Thomas Meitei',
+      father: 'Okram Ibomcha Singh',
+      aadhaar: 'Okram Thomas Meitei',
+      passbook: 'THOMAS OKRAM',
+    });
+    expect(p.spec.epic).toBeNull();
+    expect(p.spec.person).toMatchObject({
+      community: 'Meitei',
+      gender: 'male',
+      district: 'Imphal West',
+    });
+    expect(p.expectation.flags.filter((f) => f.action !== 'none')).toEqual([]);
+    const m = matrix(p);
+    expect(m.knownYumnaks).toEqual(['Okram']);
+    expect(m.pairs.map((x) => x.verdict)).toEqual(['SAME', 'SAME', 'SAME']);
+    // Without the father's name the same names are ambiguous (Okram / Oinam).
+    expect(matchNames(names(p).form!, names(p).aadhaar).verdict).toBe('AMBIGUOUS');
+    expect(nameChecks(p.spec).map((c) => [c.expected, c.same_person])).toEqual([
+      ['AMBIGUOUS', true],
+      ['AMBIGUOUS', true],
+    ]);
+  });
+
+  it('Kh. Loken Singh packet: nothing in the packet narrows "Kh." → ambiguous → officer', () => {
+    const p = byId('demo-04-kh-loken-ambiguous');
+    expect(names(p)).toEqual({
+      form: 'Kh. Loken Singh',
+      father: null,
+      aadhaar: 'Khuraijam Loken Singh',
+      passbook: 'KHURAIJAM LOKEN SINGH',
+    });
+    const m = matrix(p);
+    expect(m.knownYumnaks).toEqual([]);
+    expect(m.pairs.map((x) => x.verdict)).toEqual(['AMBIGUOUS', 'AMBIGUOUS', 'SAME']);
+    expect(m.pairs[0]!.candidates).toEqual(expect.arrayContaining(['Khuraijam', 'Khwairakpam']));
+    expect(p.expectation.flags.map((f) => f.code)).toContain('NAME_AMBIGUOUS');
   });
 });

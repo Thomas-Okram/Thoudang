@@ -6,7 +6,7 @@
  *
  * --mix: JSON file of scenario weights, e.g. {"clean": 0.5, "duplicate": 0.1}; unspecified
  *        scenarios keep their default weight (see DEFAULT_MIX in plan.ts).
- * --demo: the 6 hand-picked live-demo packets (fixed seed, good captures only).
+ * --demo: the 7 hand-picked live-demo packets (fixed seed, good captures only).
  */
 import fs from 'node:fs';
 import path from 'node:path';
