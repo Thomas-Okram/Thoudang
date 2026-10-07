@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Page } from '../components/Page';
+import { Badge, Button, Card, CardHeader, Icon, Skeleton, Spinner, Tabs } from '../components/ui';
 import { CaseProgressCard } from '../components/CaseProgressCard';
 import { BatchPanel } from '../components/BatchPanel';
 import { SlotBoard } from '../components/SlotBoard';
@@ -27,42 +28,38 @@ export function IntakePage() {
   return (
     <Page
       title="Intake"
+      eyebrow="Step 1 · Receive the packet"
       subtitle="Upload an application packet: form, Aadhaar, bank passbook (voter ID optional)."
+      width="max-w-[1320px]"
+      actions={
+        <Tabs
+          label="Intake mode"
+          size="lg"
+          value={tab}
+          onChange={setTab}
+          items={[
+            { value: 'packet', label: 'Single packet' },
+            { value: 'batch', label: 'Batch mode' },
+          ]}
+        />
+      }
     >
-      <div className="mb-6 inline-flex rounded-lg bg-slate-200 p-1" role="tablist">
-        {(
-          [
-            ['packet', 'Single packet'],
-            ['batch', 'Batch mode'],
-          ] as const
-        ).map(([key, label]) => (
-          <button
-            key={key}
-            role="tab"
-            aria-selected={tab === key}
-            onClick={() => setTab(key)}
-            className={`rounded-md px-5 py-2 font-semibold transition ${
-              tab === key
-                ? 'bg-white text-navy-900 shadow-sm'
-                : 'text-slate-600 hover:text-navy-900'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
       {tab === 'packet' ? (
         <>
-          <PacketIntake onSubmitted={(c) => track(c)} />
           {single.length > 0 && (
-            <section className="mt-8 space-y-4">
-              <h2 className="text-xl font-bold text-navy-900">Screening progress</h2>
+            <section className="mb-8 space-y-4" aria-labelledby="progress-title">
+              <h2
+                id="progress-title"
+                className="flex items-center gap-2 text-title font-bold text-navy-900"
+              >
+                Screening progress
+              </h2>
               {single.map((c) => (
                 <CaseProgressCard key={c.caseId} c={c} />
               ))}
             </section>
           )}
+          <PacketIntake onSubmitted={(c) => track(c)} />
         </>
       ) : (
         <BatchPanel progress={cases} onCreated={(list) => list.forEach((c) => track(c))} />
@@ -148,54 +145,88 @@ function PacketIntake({
   const files = session?.files ?? [];
   const labelled = files.filter((f) => f.docType).length;
 
+  const have = (t: string) => files.some((f) => f.docType === t);
+  const required = [
+    { key: 'application_form', label: 'Form' },
+    { key: 'aadhaar', label: 'Aadhaar' },
+    { key: 'bank_passbook', label: 'Passbook' },
+  ];
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
-      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-lg font-bold text-navy-900">Drop each document into its slot</h2>
-          <p className="text-sm text-slate-500">
-            Labelled slots skip AI identification (faster). Not sure? Use “Other / unsorted”.
-          </p>
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
+      <Card>
+        <CardHeader
+          icon="upload"
+          title="Drop each document into its slot"
+          subtitle="Labelled slots skip AI identification (faster). Not sure? Use “Other / unsorted”."
+          actions={
+            <ul className="flex gap-1.5" aria-label="Required documents">
+              {required.map((r) => (
+                <li key={r.key}>
+                  <Badge
+                    tone={have(r.key) ? 'teal' : 'neutral'}
+                    icon={have(r.key) ? 'check' : undefined}
+                  >
+                    {r.label}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          }
+        />
+        <div className="p-5">
+          {session ? (
+            <SlotBoard
+              session={session}
+              busy={busy !== null}
+              onUpload={(list, type) =>
+                void guard('uploading', () =>
+                  uploadToSession(session.sessionId, list, 'desk', type),
+                )
+              }
+              onMove={(id, type) =>
+                void guard(null, () => setSessionFileType(session.sessionId, id, type))
+              }
+              onRemove={(id) => void guard(null, () => removeSessionFile(session.sessionId, id))}
+            />
+          ) : (
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-56" />
+              ))}
+            </div>
+          )}
+
+          {error && (
+            <p className="mt-4 flex items-center gap-2 rounded-xl bg-rose-50 px-4 py-2.5 text-rose-800">
+              <Icon name="alert" size={18} />
+              {error}
+            </p>
+          )}
         </div>
-        {session ? (
-          <SlotBoard
-            session={session}
-            busy={busy !== null}
-            onUpload={(list, type) =>
-              void guard('uploading', () => uploadToSession(session.sessionId, list, 'desk', type))
-            }
-            onMove={(id, type) =>
-              void guard(null, () => setSessionFileType(session.sessionId, id, type))
-            }
-            onRemove={(id) => void guard(null, () => removeSessionFile(session.sessionId, id))}
-          />
-        ) : (
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="skeleton h-48" />
-            ))}
-          </div>
-        )}
 
-        {error && <p className="mt-4 rounded-lg bg-rose-50 px-4 py-2 text-rose-800">{error}</p>}
-
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
-          <p className="text-slate-500">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-b-card border-t border-line bg-slate-50/70 px-6 py-4">
+          <p className="flex items-center gap-2 text-ink-muted">
+            {busy === 'uploading' && <Spinner size={15} className="text-teal-deep" />}
             {busy === 'uploading'
               ? 'Uploading…'
               : files.length
                 ? `${files.length} image${files.length > 1 ? 's' : ''} · ${labelled} labelled, ${files.length - labelled} for the AI to identify`
                 : 'No images yet — form, Aadhaar and passbook are required'}
           </p>
-          <button
+          <Button
+            variant="primary"
+            size="xl"
+            icon="sparkle"
             onClick={() => void submit()}
             disabled={!files.length || busy !== null}
-            className="rounded-lg bg-teal-accent px-6 py-3 text-lg font-bold text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-slate-300"
+            loading={busy === 'submitting'}
+            loadingLabel="Submitting…"
           >
-            {busy === 'submitting' ? 'Submitting…' : 'Screen application'}
-          </button>
+            Screen application
+          </Button>
         </div>
-      </section>
+      </Card>
 
       <PhonePanel session={session} />
     </div>
@@ -208,7 +239,7 @@ function PhonePanel({ session }: { session: UploadSession | null }) {
     if (!session) return;
     QRCode.toDataURL(session.mobileUrl, {
       margin: 1,
-      width: 240,
+      width: 480,
       color: { dark: '#0A1B33', light: '#ffffff' },
     })
       .then(setQr)
@@ -217,27 +248,58 @@ function PhonePanel({ session }: { session: UploadSession | null }) {
   const localhost = session?.mobileUrl.includes('//localhost');
 
   return (
-    <aside className="rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm">
-      <h2 className="text-lg font-bold text-navy-900">Phone upload</h2>
-      <p className="mt-1 text-sm text-slate-600">
-        Scan with a phone on the same Wi-Fi or hotspot to photograph documents straight into this
-        packet.
-      </p>
-      <div className="mx-auto mt-4 flex h-[240px] w-[240px] items-center justify-center rounded-lg border border-slate-200">
+    <aside className="flex flex-col overflow-hidden rounded-card bg-navy-900 text-white shadow-raised">
+      <div className="px-6 pb-4 pt-6">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-accent/20 text-teal-soft">
+            <Icon name="phone" size={19} />
+          </span>
+          <h2 className="text-lg font-bold">Phone upload</h2>
+        </div>
+        <p className="mt-2 text-sm leading-relaxed text-slate-300">
+          Scan with a phone on the same Wi-Fi or hotspot to photograph documents straight into this
+          packet.
+        </p>
+      </div>
+      <div className="mx-6 flex aspect-square items-center justify-center rounded-2xl bg-white p-3 shadow-inner">
         {qr ? (
-          <img src={qr} alt="QR code for phone upload" width={240} height={240} />
+          <img
+            src={qr}
+            alt="QR code for phone upload"
+            width={240}
+            height={240}
+            className="h-full w-full"
+          />
         ) : (
-          <span className="text-slate-400">Preparing…</span>
+          <span className="flex items-center gap-2 text-ink-muted">
+            <Spinner size={16} /> Preparing…
+          </span>
         )}
       </div>
-      {session && (
-        <p className="mt-3 break-all font-mono text-xs text-slate-500">{session.mobileUrl}</p>
-      )}
-      {localhost && (
-        <p className="mt-2 rounded bg-amber-50 px-2 py-1 text-xs text-amber-900">
-          No LAN address found — connect this laptop to Wi-Fi or a phone hotspot.
-        </p>
-      )}
+      <ol className="space-y-2 px-6 pb-2 pt-5 text-sm text-slate-200">
+        {['Scan the code', 'Pick the document type', 'Photograph it flat, in good light'].map(
+          (t, i) => (
+            <li key={t} className="flex items-center gap-2.5">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-teal-soft">
+                {i + 1}
+              </span>
+              {t}
+            </li>
+          ),
+        )}
+      </ol>
+      <div className="mt-auto px-6 pb-5 pt-3">
+        {session && (
+          <p className="dev-noise break-all font-mono text-[0.7rem] text-slate-400">
+            {session.mobileUrl}
+          </p>
+        )}
+        {localhost && (
+          <p className="mt-2 rounded-lg bg-warm-100 px-3 py-2 text-xs font-medium text-warm-900">
+            No LAN address found — connect this laptop to Wi-Fi or a phone hotspot.
+          </p>
+        )}
+      </div>
     </aside>
   );
 }

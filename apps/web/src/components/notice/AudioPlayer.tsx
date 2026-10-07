@@ -12,7 +12,7 @@ export function AudioPlayer({ caseId, audio }: { caseId: string; audio: NoticeAu
   if (!state.available) {
     return (
       <p
-        className="rounded-lg bg-slate-100 px-4 py-3 text-sm text-slate-500"
+        className="flex max-w-sm items-center rounded-card border border-dashed border-line-strong bg-white/60 px-5 py-4 text-sm text-ink-muted"
         data-testid="audio-unavailable"
       >
         Audio unavailable
@@ -52,12 +52,12 @@ export function AudioPlayer({ caseId, audio }: { caseId: string; audio: NoticeAu
   };
 
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-teal-accent/40 bg-teal-soft/30 px-4 py-3">
+    <div className="flex items-center gap-4 rounded-card border border-teal-accent/40 bg-teal-wash px-5 py-4 shadow-card">
       <button
         onClick={() => void play()}
         disabled={busy}
         aria-label={playing ? 'Pause' : 'Listen in Manipuri'}
-        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-teal-accent text-white shadow-md transition hover:brightness-110 disabled:bg-slate-400"
+        className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-teal-deep text-white shadow-raised transition hover:bg-teal-darker disabled:bg-slate-400 ${playing ? 'animate-halo' : ''}`}
       >
         {busy ? (
           <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -74,8 +74,8 @@ export function AudioPlayer({ caseId, audio }: { caseId: string; audio: NoticeAu
       </button>
       <div>
         <div className="text-lg font-bold text-navy-900">Listen in Manipuri</div>
-        <div className="font-beng text-sm text-slate-600">মণিপুরীদা তাবীয়ু</div>
-        <div className="text-xs text-slate-500">
+        <div className="font-beng text-sm text-ink-soft">মণিপুরীদা তাবীয়ু</div>
+        <div className="text-xs text-ink-muted">
           {busy
             ? 'Preparing audio…'
             : state.cached

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Identity, IdentityPair, NameVerdict } from '../../lib/api';
+import { Icon, type IconName } from '../ui/Icon';
 
 export const VERDICT_LABEL: Record<NameVerdict, string> = {
   SAME: 'Same',
@@ -9,20 +10,50 @@ export const VERDICT_LABEL: Record<NameVerdict, string> = {
 };
 
 export const VERDICT_STYLE: Record<NameVerdict, string> = {
-  SAME: 'bg-emerald-100 text-emerald-900 ring-emerald-600/30',
-  LIKELY_SAME: 'bg-teal-soft text-teal-deep ring-teal-accent/40',
-  AMBIGUOUS: 'bg-amber-100 text-amber-900 ring-amber-500/40',
-  DIFFERENT: 'bg-rose-100 text-rose-900 ring-rose-600/30',
+  SAME: 'bg-emerald-100 text-emerald-900 ring-emerald-600/40',
+  LIKELY_SAME: 'bg-teal-soft text-teal-darker ring-teal-accent/50',
+  AMBIGUOUS: 'bg-warm-100 text-warm-900 ring-warm-500/60',
+  DIFFERENT: 'bg-rose-100 text-rose-900 ring-rose-600/40',
 };
 
-export function VerdictPill({ verdict, score }: { verdict: NameVerdict; score?: number }) {
+const VERDICT_ICON: Record<NameVerdict, IconName> = {
+  SAME: 'equal',
+  LIKELY_SAME: 'approx',
+  AMBIGUOUS: 'question',
+  DIFFERENT: 'notEqual',
+};
+
+/** Left rule + tint for a whole comparison row. */
+const VERDICT_ROW: Record<NameVerdict, string> = {
+  SAME: 'border-l-emerald-500',
+  LIKELY_SAME: 'border-l-teal-accent',
+  AMBIGUOUS: 'border-l-warm-500 bg-warm-50/50',
+  DIFFERENT: 'border-l-rose-500 bg-rose-50/40',
+};
+
+export function VerdictPill({
+  verdict,
+  score,
+  size = 'md',
+}: {
+  verdict: NameVerdict;
+  score?: number;
+  size?: 'md' | 'lg';
+}) {
   return (
     <span
       data-verdict={verdict}
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide ring-1 ring-inset ${VERDICT_STYLE[verdict]}`}
+      className={`inline-flex items-center whitespace-nowrap rounded-full font-bold uppercase tracking-wide ring-1 ring-inset ${VERDICT_STYLE[verdict]} ${
+        size === 'lg' ? 'gap-2 px-3.5 py-1.5 text-[0.85rem]' : 'gap-1.5 px-2.5 py-1 text-[0.75rem]'
+      }`}
     >
+      <Icon name={VERDICT_ICON[verdict]} size={size === 'lg' ? 17 : 14} strokeWidth={2.6} />
       {VERDICT_LABEL[verdict]}
-      {score !== undefined && <span className="font-mono font-semibold opacity-70">{score}</span>}
+      {score !== undefined && (
+        <span className="rounded-full bg-white/70 px-1.5 font-mono font-semibold tabular-nums">
+          {score}
+        </span>
+      )}
     </span>
   );
 }
@@ -43,6 +74,13 @@ function overall(pairs: IdentityPair[]): { verdict: NameVerdict; text: string } 
   return { verdict: worst, text };
 }
 
+const SUMMARY_TONE: Record<NameVerdict, string> = {
+  SAME: 'bg-emerald-50 text-emerald-900',
+  LIKELY_SAME: 'bg-teal-wash text-teal-darker',
+  AMBIGUOUS: 'bg-warm-50 text-warm-900',
+  DIFFERENT: 'bg-rose-50 text-rose-900',
+};
+
 export function IdentityCard({
   identity,
   onHover,
@@ -57,39 +95,52 @@ export function IdentityCard({
   return (
     <section
       aria-labelledby="identity-title"
-      className="overflow-hidden rounded-xl border border-navy-800/20 bg-white shadow-sm ring-1 ring-navy-900/5"
+      className="overflow-hidden rounded-card border border-navy-900/15 bg-surface shadow-raised"
     >
-      <header className="flex items-start justify-between gap-3 bg-gradient-to-r from-navy-900 to-navy-700 px-5 py-3.5 text-white">
-        <div>
-          <h2 id="identity-title" className="text-base font-bold tracking-tight">
-            Identity across documents
-          </h2>
-          <p className="text-xs text-slate-300">
-            Manipur-aware name engine · rules, not AI · every verdict explained
-          </p>
+      <header className="relative flex items-center justify-between gap-3 overflow-hidden bg-navy-900 bg-[radial-gradient(90%_140%_at_100%_0%,#1b4a7a_0%,transparent_60%)] px-6 py-4 text-white">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-accent/20 text-teal-soft">
+            <Icon name="users" size={21} />
+          </span>
+          <div>
+            <h2 id="identity-title" className="text-lg font-bold tracking-tight">
+              Identity across documents
+            </h2>
+            <p className="text-[0.8rem] text-slate-300">
+              Manipur-aware name engine · rules, not AI · every verdict explained
+            </p>
+          </div>
         </div>
-        <VerdictPill verdict={summary.verdict} />
+        <VerdictPill verdict={summary.verdict} size="lg" />
       </header>
 
-      <div className="px-5 pb-4 pt-3">
-        <p className="text-sm text-slate-600">{summary.text}</p>
+      <p
+        className={`flex items-center gap-2.5 px-6 py-3 text-[0.98rem] font-semibold ${SUMMARY_TONE[summary.verdict]}`}
+      >
+        <Icon name={VERDICT_ICON[summary.verdict]} size={18} strokeWidth={2.6} />
+        {summary.text}
+      </p>
 
-        <ul
-          className="mt-3 divide-y divide-slate-100 rounded-lg border border-slate-200"
-          aria-label="Names as written"
-        >
+      <div className="px-6 pb-5 pt-4">
+        <h3 className="text-overline font-bold uppercase text-ink-muted">Names as written</h3>
+        <ul className="mt-2 grid gap-2 sm:grid-cols-2" aria-label="Names as written">
           {identity.entries.map((e) => (
             <li
               key={e.key}
-              className="flex items-baseline justify-between gap-4 px-3 py-2 hover:bg-teal-soft/30"
+              className="group cursor-default rounded-xl border border-line bg-slate-50/60 px-3.5 py-2.5 transition hover:border-teal-accent/60 hover:bg-teal-wash"
               onMouseEnter={() => onHover?.({ documentId: e.documentId, field: e.field })}
               onMouseLeave={() => onHover?.(null)}
             >
-              <span className="w-32 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <span className="flex items-center gap-1.5 text-overline font-bold uppercase text-ink-muted group-hover:text-teal-darker">
                 {e.label}
+                <Icon
+                  name="eye"
+                  size={13}
+                  className="opacity-0 transition-opacity group-hover:opacity-100"
+                />
               </span>
               <span
-                className="flex-1 text-right font-medium text-navy-900"
+                className="mt-0.5 block text-[1.08rem] font-semibold leading-snug text-navy-900"
                 data-testid="name-as-written"
               >
                 “{e.value}”
@@ -97,24 +148,30 @@ export function IdentityCard({
             </li>
           ))}
           {!identity.entries.length && (
-            <li className="px-3 py-3 text-sm text-slate-500">
+            <li className="rounded-xl border border-dashed border-line-strong px-3.5 py-3 text-sm text-ink-muted sm:col-span-2">
               No names could be read from the documents.
             </li>
           )}
         </ul>
 
         {identity.pairs.length > 0 && (
-          <ul className="mt-3 space-y-2" aria-label="Pairwise comparisons">
-            {identity.pairs.map((p) => (
-              <PairRow key={`${p.a}-${p.b}`} pair={p} a={label(p.a)} b={label(p.b)} />
-            ))}
-          </ul>
+          <>
+            <h3 className="mt-5 text-overline font-bold uppercase text-ink-muted">Comparisons</h3>
+            <ul className="mt-2 space-y-2" aria-label="Pairwise comparisons">
+              {identity.pairs.map((p) => (
+                <PairRow key={`${p.a}-${p.b}`} pair={p} a={label(p.a)} b={label(p.b)} />
+              ))}
+            </ul>
+          </>
         )}
         {identity.knownYumnaks.length > 0 && (
-          <p className="mt-3 text-xs text-slate-500">
-            Relative’s full yumnak in packet:{' '}
-            <strong className="text-navy-900">{identity.knownYumnaks.join(', ')}</strong> — used to
-            resolve abbreviations.
+          <p className="mt-4 flex items-start gap-2 rounded-xl bg-navy-50 px-3.5 py-2.5 text-sm text-ink-soft">
+            <Icon name="info" size={17} className="mt-0.5 text-navy-500" />
+            <span>
+              Relative’s full yumnak in packet:{' '}
+              <strong className="text-navy-900">{identity.knownYumnaks.join(', ')}</strong> — used
+              to resolve abbreviations.
+            </span>
           </p>
         )}
       </div>
@@ -125,41 +182,52 @@ export function IdentityCard({
 function PairRow({ pair, a, b }: { pair: IdentityPair; a: string; b: string }) {
   const [open, setOpen] = useState(pair.verdict === 'AMBIGUOUS' || pair.verdict === 'DIFFERENT');
   return (
-    <li className="rounded-lg border border-slate-200" data-testid="identity-pair">
+    <li
+      className={`overflow-hidden rounded-xl border border-l-4 border-line ${VERDICT_ROW[pair.verdict]}`}
+      data-testid="identity-pair"
+    >
       <button
-        className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm"
+        className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-navy-50/60"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
-        <span className="flex-1 text-slate-700">
-          {a} <span className="text-slate-400">↔</span> {b}
+        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 text-[0.95rem] font-medium text-ink-soft">
+          {a} <Icon name="arrowsLR" size={15} className="text-ink-muted" /> {b}
         </span>
         <VerdictPill verdict={pair.verdict} score={pair.score} />
-        <span className="w-10 text-right text-xs font-semibold text-teal-deep">
+        <span className="flex w-14 items-center justify-end gap-0.5 text-sm font-semibold text-teal-deep">
           {open ? 'Hide' : 'Why'}
+          <Icon
+            name="chevronDown"
+            size={15}
+            className={`transition-transform ${open ? 'rotate-180' : ''}`}
+          />
         </span>
       </button>
       {open && (
-        <div className="border-t border-slate-100 bg-slate-50/70 px-3 py-2.5">
+        <div className="animate-enter border-t border-line bg-white/80 px-4 py-3">
           {pair.candidates.length > 0 && (
-            <div
-              className="mb-2 flex flex-wrap items-center gap-1.5"
-              aria-label="Candidate yumnaks"
-            >
-              <span className="text-xs font-semibold text-amber-900">Could be:</span>
+            <div className="mb-3 flex flex-wrap items-center gap-2" aria-label="Candidate yumnaks">
+              <span className="text-sm font-bold text-warm-900">Could be:</span>
               {pair.candidates.map((c) => (
                 <span
                   key={c}
-                  className="rounded-md bg-white px-2 py-0.5 text-xs font-semibold text-navy-900 ring-1 ring-amber-400/60"
+                  className="rounded-lg border-2 border-dashed border-warm-400 bg-warm-50 px-3 py-1 text-[0.95rem] font-bold text-navy-900"
                 >
                   {c}
                 </span>
               ))}
             </div>
           )}
-          <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
+          <ul className="space-y-1.5 text-[0.95rem] leading-snug text-ink-soft">
             {pair.reasons.map((r, i) => (
-              <li key={i}>{r}</li>
+              <li key={i} className="flex gap-2">
+                <span
+                  aria-hidden
+                  className="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-navy-400"
+                />
+                {r}
+              </li>
             ))}
           </ul>
         </div>

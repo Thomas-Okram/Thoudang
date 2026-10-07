@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CaseDocument, CaseFlag, FlagEvidence, Reason, Severity } from '../../lib/api';
 import { DOC_SHORT, documentFor, wireField } from '../../lib/highlight';
+import { Icon, type IconName } from '../ui/Icon';
+import { Button } from '../ui/Button';
+import { Dialog } from '../ui/Dialog';
 
 /** Show evidence as written on the document (raw extraction), falling back to the rule value. */
 function asWritten(e: FlagEvidence, documents: CaseDocument[]): string | null {
@@ -11,10 +14,38 @@ function asWritten(e: FlagEvidence, documents: CaseDocument[]): string | null {
   return e.value === null ? null : String(e.value);
 }
 
-const GROUPS: { severity: Severity; title: string; dot: string; card: string }[] = [
-  { severity: 'critical', title: 'Critical', dot: 'bg-rose-500', card: 'border-l-rose-500' },
-  { severity: 'warn', title: 'Needs review', dot: 'bg-amber-500', card: 'border-l-amber-500' },
-  { severity: 'info', title: 'For information', dot: 'bg-slate-400', card: 'border-l-slate-300' },
+const GROUPS: {
+  severity: Severity;
+  title: string;
+  dot: string;
+  card: string;
+  icon: IconName;
+  iconTone: string;
+}[] = [
+  {
+    severity: 'critical',
+    title: 'Critical',
+    dot: 'bg-rose-600',
+    card: 'border-l-rose-600',
+    icon: 'alert',
+    iconTone: 'bg-rose-50 text-rose-700',
+  },
+  {
+    severity: 'warn',
+    title: 'Needs review',
+    dot: 'bg-warm-500',
+    card: 'border-l-warm-500',
+    icon: 'eye',
+    iconTone: 'bg-warm-50 text-warm-700',
+  },
+  {
+    severity: 'info',
+    title: 'For information',
+    dot: 'bg-slate-400',
+    card: 'border-l-slate-300',
+    icon: 'info',
+    iconTone: 'bg-slate-100 text-slate-600',
+  },
 ];
 
 const ACTION_LABEL: Record<CaseFlag['action'], string> = {
@@ -94,32 +125,39 @@ export function FlagsPanel({
   return (
     <section
       aria-labelledby="flags-title"
-      className="rounded-xl border border-slate-200 bg-white shadow-sm"
+      className="rounded-card border border-line bg-surface shadow-card"
     >
-      <header className="flex items-baseline justify-between gap-3 border-b border-slate-100 px-5 py-3">
-        <h2 id="flags-title" className="text-base font-bold text-navy-900">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-6 py-4">
+        <h2 id="flags-title" className="flex items-center gap-2.5 text-lg font-bold text-navy-900">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy-50 text-navy-700">
+            <Icon name="alert" size={19} />
+          </span>
           Flags{' '}
-          <span className="ml-1 font-semibold text-slate-400">
+          <span className="rounded-full bg-slate-100 px-2 text-[0.9rem] font-bold tabular-nums text-ink-soft">
             {flags.filter((f) => f.severity !== 'info').length}
           </span>
+          <span
+            className={`ml-1 rounded-full px-2.5 py-0.5 text-[0.78rem] font-semibold ${open ? 'bg-warm-50 text-warm-900' : 'bg-emerald-50 text-emerald-800'}`}
+          >
+            {open ? `${open} open` : 'All reviewed'}
+          </span>
         </h2>
-        <span className="text-xs text-slate-500">
-          {open ? `${open} open` : 'All reviewed'} · <kbd className="font-mono">J</kbd>/
-          <kbd className="font-mono">K</kbd> move · <kbd className="font-mono">A</kbd> accept ·{' '}
-          <kbd className="font-mono">O</kbd> override
+        <span className="dev-noise flex items-center gap-1.5 text-xs text-ink-muted">
+          <kbd>J</kbd>/<kbd>K</kbd> move · <kbd>A</kbd> accept · <kbd>O</kbd> override
         </span>
       </header>
       {readOnlyReason && (
-        <p className="border-b border-slate-100 bg-slate-50 px-5 py-2 text-xs text-slate-500">
+        <p className="flex items-center gap-2 border-b border-line bg-slate-50 px-6 py-2.5 text-sm text-ink-muted">
+          <Icon name="lock" size={15} />
           {readOnlyReason}
         </p>
       )}
 
-      <div className="space-y-4 px-5 py-4">
+      <div className="space-y-5 px-6 py-5">
         {!flags.length && (
-          <div className="flex items-center gap-3 rounded-lg bg-emerald-50 px-4 py-3 text-emerald-900">
-            <span className="text-xl" aria-hidden>
-              ✓
+          <div className="flex items-center gap-3 rounded-xl bg-emerald-50 px-4 py-3.5 font-medium text-emerald-900">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-700 text-white">
+              <Icon name="check" size={18} strokeWidth={2.8} />
             </span>
             Every check passed — nothing to review.
           </div>
@@ -130,12 +168,12 @@ export function FlagsPanel({
           const collapsed = g.severity === 'info' && !showInfo;
           return (
             <div key={g.severity}>
-              <h3 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
-                <span className={`h-2 w-2 rounded-full ${g.dot}`} />
+              <h3 className="mb-2.5 flex items-center gap-2 text-overline font-bold uppercase text-ink-muted">
+                <span className={`h-2.5 w-2.5 rounded-full ${g.dot}`} />
                 {g.title} · {list.length}
                 {g.severity === 'info' && (
                   <button
-                    className="ml-auto text-xs font-semibold normal-case text-teal-deep hover:underline"
+                    className="ml-auto rounded-md px-2 py-0.5 text-xs font-semibold normal-case tracking-normal text-teal-deep hover:bg-teal-wash"
                     onClick={() => setShowInfo((s) => !s)}
                   >
                     {showInfo ? 'Hide' : 'Show'}
@@ -143,13 +181,15 @@ export function FlagsPanel({
                 )}
               </h3>
               {!collapsed && (
-                <ul className="space-y-2">
+                <ul className="space-y-2.5">
                   {list.map((f) => (
                     <FlagCard
                       key={f.id}
                       flag={f}
                       documents={documents}
                       accent={g.card}
+                      icon={g.icon}
+                      iconTone={g.iconTone}
                       selected={f.id === selectedId}
                       onSelect={() => onSelect(f)}
                       canResolve={canResolve}
@@ -184,6 +224,8 @@ function FlagCard({
   flag,
   documents,
   accent,
+  icon,
+  iconTone,
   selected,
   onSelect,
   canResolve,
@@ -194,6 +236,8 @@ function FlagCard({
   flag: CaseFlag;
   documents: CaseDocument[];
   accent: string;
+  icon: IconName;
+  iconTone: string;
   selected: boolean;
   onSelect: () => void;
   canResolve: boolean;
@@ -208,89 +252,110 @@ function FlagCard({
       data-testid="flag"
       aria-selected={selected}
       onClick={onSelect}
-      className={`cursor-pointer rounded-lg border border-l-4 border-slate-200 p-3.5 transition ${accent} ${
-        selected ? 'bg-teal-soft/30 ring-2 ring-teal-accent' : 'hover:bg-slate-50'
+      className={`group cursor-pointer rounded-xl border border-l-4 p-4 transition-all duration-200 ${accent} ${
+        selected
+          ? 'border-teal-accent bg-teal-wash shadow-raised ring-2 ring-teal-accent'
+          : 'border-line bg-white hover:border-navy-200 hover:shadow-card'
       } ${flag.resolution === 'OVERRIDDEN' ? 'opacity-60' : ''}`}
     >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-semibold text-navy-900">{flag.title}</span>
-        <span className="text-xs text-slate-500">· {ACTION_LABEL[flag.action]}</span>
-        {flag.resolution === 'ACCEPTED' && (
-          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-bold uppercase text-white">
-            Accepted
-          </span>
-        )}
-        {flag.resolution === 'OVERRIDDEN' && (
-          <span className="rounded-full bg-teal-deep px-2 py-0.5 text-[11px] font-bold uppercase text-white">
-            Overridden
-          </span>
-        )}
-      </div>
-      <p className="mt-1 text-sm leading-relaxed text-slate-700">{flag.reason}</p>
-
-      {flag.evidence.some((e) => e.field !== 'document') && (
-        <div
-          className="mt-2 flex flex-wrap items-stretch gap-0 overflow-hidden rounded-md border border-slate-200 text-sm"
-          data-testid="evidence"
+      <div className="flex items-start gap-3">
+        <span
+          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconTone}`}
         >
-          {flag.evidence
-            .filter((e) => e.field !== 'document')
-            .map((e, i) => (
-              <span
-                key={i}
-                className={`flex items-baseline gap-1.5 bg-white px-2.5 py-1 ${i ? 'border-l border-slate-200' : ''}`}
-              >
-                <span className="text-xs font-semibold text-slate-500">
-                  {DOC_SHORT[e.document]}:
-                </span>
-                <span className="font-medium text-navy-900">
-                  {(() => {
-                    const v = asWritten(e, documents);
-                    return v === null ? '—' : `“${v}”`;
-                  })()}
-                </span>
-                {e.confidence !== undefined && e.confidence < 0.75 && (
-                  <span className="text-[11px] font-semibold text-amber-700">low confidence</span>
-                )}
-              </span>
-            ))}
-        </div>
-      )}
-
-      {resolved && flag.resolvedByName && (
-        <p className="mt-2 text-xs text-slate-500">
-          {flag.resolution === 'ACCEPTED' ? 'Accepted' : 'Overridden'} by {flag.resolvedByName}
-          {flag.resolutionReason ? ` — ${flag.resolutionReason}` : ''}
-        </p>
-      )}
-
-      {flag.severity !== 'info' && canResolve && (
-        <div className="mt-3 flex gap-2" onClick={(e) => e.stopPropagation()}>
-          {flag.resolution === 'OPEN' ? (
-            <>
-              <button
-                onClick={onAccept}
-                className="rounded-md border border-slate-300 bg-white px-3 py-1 text-sm font-semibold text-navy-900 hover:bg-slate-50"
-              >
-                Accept
-              </button>
-              <button
-                onClick={onOverride}
-                className="rounded-md border border-slate-300 bg-white px-3 py-1 text-sm font-semibold text-navy-900 hover:bg-slate-50"
-              >
-                Override…
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={onReopen}
-              className="text-sm font-semibold text-teal-deep hover:underline"
+          <Icon name={icon} size={17} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[1.02rem] font-semibold text-navy-900">{flag.title}</span>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[0.72rem] font-semibold ${
+                flag.action === 'citizen'
+                  ? 'bg-warm-50 text-warm-900'
+                  : flag.action === 'officer'
+                    ? 'bg-indigo-50 text-indigo-900'
+                    : 'bg-slate-100 text-slate-700'
+              }`}
             >
-              Reopen
-            </button>
+              {ACTION_LABEL[flag.action]}
+            </span>
+            {flag.resolution === 'ACCEPTED' && (
+              <span className="flex items-center gap-1 rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-bold uppercase text-white">
+                <Icon name="check" size={11} strokeWidth={3} />
+                Accepted
+              </span>
+            )}
+            {flag.resolution === 'OVERRIDDEN' && (
+              <span className="rounded-full bg-teal-deep px-2 py-0.5 text-[11px] font-bold uppercase text-white">
+                Overridden
+              </span>
+            )}
+            {selected && (
+              <span className="ml-auto flex items-center gap-1 text-xs font-semibold text-teal-darker">
+                <Icon name="eye" size={14} />
+                shown on document
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-[0.95rem] leading-relaxed text-ink-soft">{flag.reason}</p>
+
+          {flag.evidence.some((e) => e.field !== 'document') && (
+            <div
+              className="mt-2.5 flex flex-wrap items-stretch gap-0 overflow-hidden rounded-lg border border-line bg-white text-[0.92rem]"
+              data-testid="evidence"
+            >
+              {flag.evidence
+                .filter((e) => e.field !== 'document')
+                .map((e, i) => (
+                  <span
+                    key={i}
+                    className={`flex items-baseline gap-1.5 px-3 py-1.5 ${i ? 'border-l border-line' : ''}`}
+                  >
+                    <span className="text-xs font-bold uppercase tracking-wide text-ink-muted">
+                      {DOC_SHORT[e.document]}:
+                    </span>
+                    <span className="font-semibold text-navy-900">
+                      {(() => {
+                        const v = asWritten(e, documents);
+                        return v === null ? '—' : `“${v}”`;
+                      })()}
+                    </span>
+                    {e.confidence !== undefined && e.confidence < 0.75 && (
+                      <span className="text-[11px] font-semibold text-warm-700">
+                        low confidence
+                      </span>
+                    )}
+                  </span>
+                ))}
+            </div>
+          )}
+
+          {resolved && flag.resolvedByName && (
+            <p className="mt-2 text-sm text-ink-muted">
+              {flag.resolution === 'ACCEPTED' ? 'Accepted' : 'Overridden'} by {flag.resolvedByName}
+              {flag.resolutionReason ? ` — ${flag.resolutionReason}` : ''}
+            </p>
+          )}
+
+          {flag.severity !== 'info' && canResolve && (
+            <div className="mt-3 flex gap-2" onClick={(e) => e.stopPropagation()}>
+              {flag.resolution === 'OPEN' ? (
+                <>
+                  <Button size="sm" icon="check" onClick={onAccept}>
+                    Accept
+                  </Button>
+                  <Button size="sm" icon="note" onClick={onOverride}>
+                    Override…
+                  </Button>
+                </>
+              ) : (
+                <Button size="sm" variant="ghost" icon="refresh" onClick={onReopen}>
+                  Reopen
+                </Button>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
     </li>
   );
 }
@@ -310,24 +375,16 @@ export function OverrideDialog({
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const first = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    first.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCancel();
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onCancel]);
   const valid = code && (code !== 'other' || text.trim().length >= 3);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/40 p-4"
-      role="dialog"
-      aria-modal
-      aria-labelledby="override-title"
+    <Dialog
+      title={`Override “${flag.title}”`}
+      description="The flag stays on record. Your reason is written to the audit trail."
+      icon="note"
+      onClose={onCancel}
     >
       <form
-        className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl"
         onSubmit={async (e) => {
           e.preventDefault();
           if (!valid) return;
@@ -341,59 +398,50 @@ export function OverrideDialog({
           }
         }}
       >
-        <h2 id="override-title" className="text-lg font-bold text-navy-900">
-          Override “{flag.title}”
-        </h2>
-        <p className="mt-1 text-sm text-slate-600">
-          The flag stays on record. Your reason is written to the audit trail.
-        </p>
-        <fieldset className="mt-4 space-y-1.5">
+        <fieldset className="space-y-2">
           <legend className="sr-only">Reason</legend>
-          {reasons.map((r, i) => (
+          {reasons.map((r) => (
             <label
               key={r.code}
-              className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm ${code === r.code ? 'border-teal-accent bg-teal-soft/40' : 'border-slate-200 hover:bg-slate-50'}`}
+              className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 text-[0.95rem] transition ${code === r.code ? 'border-teal-accent bg-teal-wash font-semibold text-navy-900' : 'border-line hover:bg-slate-50'}`}
             >
               <input
-                ref={i === 0 ? first : undefined}
                 type="radio"
                 name="reason"
                 value={r.code}
                 checked={code === r.code}
                 onChange={() => setCode(r.code)}
-                className="accent-teal-accent"
+                className="h-4 w-4 accent-teal-deep"
               />
               {r.label}
             </label>
           ))}
         </fieldset>
-        <label className="mt-3 block text-sm font-medium text-slate-700">
+        <label className="mt-4 block text-sm font-semibold text-ink-soft">
           {code === 'other' ? 'Explain (required)' : 'Note (optional)'}
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={2}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-accent"
+            className="mt-1.5 w-full rounded-control border border-line-strong px-3 py-2 text-[0.95rem] font-normal focus:border-teal-accent focus:outline-none focus:ring-2 focus:ring-teal-accent/40"
           />
         </label>
         {error && <p className="mt-2 text-sm text-rose-700">{error}</p>}
-        <div className="mt-5 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-lg px-4 py-2 font-semibold text-slate-600 hover:bg-slate-100"
-          >
+        <div className="mt-6 flex justify-end gap-2">
+          <Button variant="ghost" onClick={onCancel}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={!valid || busy}
-            className="rounded-lg bg-navy-900 px-4 py-2 font-semibold text-white hover:bg-navy-800 disabled:bg-slate-300"
+            variant="navy"
+            disabled={!valid}
+            loading={busy}
+            loadingLabel="Saving…"
           >
-            {busy ? 'Saving…' : 'Override flag'}
-          </button>
+            Override flag
+          </Button>
         </div>
       </form>
-    </div>
+    </Dialog>
   );
 }

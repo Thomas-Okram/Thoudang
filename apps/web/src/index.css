@@ -1,25 +1,95 @@
+/* Fonts are bundled from node_modules — no CDN, works offline at the venue. */
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/noto-sans-bengali';
-@import '@fontsource/noto-sans-meetei-mayek';
+@import '@fontsource/noto-sans-meetei-mayek/meetei-mayek-400.css';
+@import '@fontsource/noto-sans-meetei-mayek/meetei-mayek-600.css';
+@import '@fontsource/noto-sans-meetei-mayek/meetei-mayek-700.css';
 @import 'tailwindcss';
 
+/*
+ * Thoudang design tokens.
+ * Colour: navy = authority/structure, teal = action/confirmation, cool grays = surfaces,
+ * one warm accent (marigold) = "needs attention". Text colours are chosen for WCAG AA on white
+ * (teal-deep 5.1:1, warm-700 5.0:1, ink-muted 4.8:1); teal-accent is decorative only.
+ */
 @theme {
-  --color-navy-950: #050e1c;
-  --color-navy-900: #0a1b33;
-  --color-navy-800: #12284a;
-  --color-navy-700: #1b3762;
+  /* Navy — primary */
+  --color-navy-50: #f2f5fa;
+  --color-navy-100: #e1e8f2;
+  --color-navy-200: #c3d0e3;
+  --color-navy-300: #94a8c7;
+  --color-navy-400: #5f7aa3;
+  --color-navy-500: #3d5a86;
   --color-navy-600: #284b80;
+  --color-navy-700: #1b3762;
+  --color-navy-800: #12284a;
+  --color-navy-900: #0a1b33;
+  --color-navy-950: #050e1c;
+
+  /* Teal — accent / positive action */
   --color-teal-accent: #0f9e8e;
   --color-teal-deep: #0b7a6e;
+  --color-teal-darker: #075e55;
   --color-teal-soft: #ccf3ee;
+  --color-teal-wash: #ebfaf7;
+
+  /* Warm — the single "attention" accent */
+  --color-warm-50: #fff8eb;
+  --color-warm-100: #fdecc8;
+  --color-warm-200: #fbd88c;
+  --color-warm-400: #f2a93b;
+  --color-warm-500: #e08a12;
+  --color-warm-700: #a2560a;
+  --color-warm-900: #5c3105;
+
+  /* Neutrals (semantic) */
+  --color-canvas: #f3f5f8;
+  --color-surface: #ffffff;
+  --color-line: #e3e8ef;
+  --color-line-strong: #cbd3de;
+  --color-ink: #0a1b33;
+  --color-ink-soft: #334155;
+  --color-ink-muted: #5b6878;
+
+  /* Type */
   --font-sans:
     'Inter Variable', 'Inter', 'Segoe UI', system-ui, -apple-system, 'Noto Sans',
-    'Noto Sans Bengali', 'Noto Sans Meetei Mayek', sans-serif;
+    'Noto Sans Bengali Variable', 'Noto Sans Meetei Mayek', sans-serif;
+  --text-display: 2.125rem;
+  --text-display--line-height: 1.15;
+  --text-display--letter-spacing: -0.022em;
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.25;
+  --text-title--letter-spacing: -0.015em;
+  --text-overline: 0.72rem;
+  --text-overline--line-height: 1.2;
+  --text-overline--letter-spacing: 0.08em;
+
+  /* Radius */
+  --radius-control: 0.625rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.25rem;
+
+  /* Elevation */
+  --shadow-card: 0 1px 2px rgb(10 27 51 / 0.05), 0 1px 3px rgb(10 27 51 / 0.06);
+  --shadow-raised: 0 2px 4px rgb(10 27 51 / 0.05), 0 8px 24px -6px rgb(10 27 51 / 0.14);
+  --shadow-overlay: 0 24px 64px -12px rgb(5 14 28 / 0.45);
+  --shadow-focus: 0 0 0 3px rgb(15 158 142 / 0.45);
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   --animate-enter: enter 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-arrive: arrive 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-flash: flash 1600ms ease-out 1;
   --animate-shimmer: shimmer 1.4s linear infinite;
   --animate-pulse-ring: pulse-ring 1.6s ease-out infinite;
+  --animate-pop: pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-halo: halo 1.8s ease-out infinite;
+  --animate-fade: fade 240ms ease-out both;
+  --animate-slide-in: slide-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-march: march 1s linear infinite;
 
   @keyframes enter {
     from {
@@ -31,12 +101,25 @@
       transform: none;
     }
   }
+  @keyframes arrive {
+    0% {
+      opacity: 0;
+      transform: translateY(-28px) scale(0.94);
+    }
+    60% {
+      opacity: 1;
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
   @keyframes flash {
     0% {
-      box-shadow: 0 0 0 0 rgb(15 158 142 / 0.55);
+      box-shadow: 0 0 0 0 rgb(15 158 142 / 0.6);
     }
     100% {
-      box-shadow: 0 0 0 14px rgb(15 158 142 / 0);
+      box-shadow: 0 0 0 16px rgb(15 158 142 / 0);
     }
   }
   @keyframes shimmer {
@@ -58,22 +141,89 @@
       stroke-opacity: 1;
     }
   }
+  @keyframes pop {
+    0% {
+      transform: scale(0.4);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  @keyframes halo {
+    0% {
+      box-shadow: 0 0 0 0 rgb(15 158 142 / 0.5);
+    }
+    100% {
+      box-shadow: 0 0 0 12px rgb(15 158 142 / 0);
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes slide-in {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes march {
+    to {
+      stroke-dashoffset: -24;
+    }
+  }
 }
 
+/* Root size: 17px for readability; presentation mode (+15%) for projectors. */
 html {
-  font-size: 16px;
+  font-size: 17px;
   font-feature-settings: 'cv11', 'ss01';
+  transition: font-size 200ms ease;
+}
+html.presentation {
+  font-size: 19.5px;
+}
+html.presentation .dev-noise {
+  display: none !important;
 }
 
 body {
-  @apply bg-slate-100 text-slate-900 antialiased;
+  @apply bg-canvas text-ink antialiased;
+}
+
+/* One consistent, highly visible keyboard focus ring everywhere. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-teal-accent);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+::selection {
+  background: var(--color-teal-soft);
+  color: var(--color-navy-900);
+}
+
+kbd {
+  @apply inline-flex min-w-[1.4em] items-center justify-center rounded border border-line-strong bg-white px-1 font-mono text-[0.72rem] font-semibold text-ink-soft shadow-[0_1px_0_var(--color-line-strong)];
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #e2e8f0 0px, #f1f5f9 160px, #e2e8f0 320px);
+  background: linear-gradient(90deg, #e4e9f0 0px, #f2f5f9 160px, #e4e9f0 320px);
   background-size: 800px 100%;
   animation: var(--animate-shimmer);
-  border-radius: 0.375rem;
+  border-radius: 0.75rem;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -88,16 +238,21 @@ body {
 /* Manipuri scripts — bundled fonts so they render offline and on any machine. */
 .font-beng {
   font-family: 'Noto Sans Bengali Variable', 'Noto Sans Bengali', 'Bangla Sangam MN', sans-serif;
+  line-height: 1.75;
 }
 .font-mtei {
   font-family: 'Noto Sans Meetei Mayek', sans-serif;
   letter-spacing: 0.01em;
+  line-height: 1.75;
 }
 
 @media print {
   @page {
     size: A4;
     margin: 14mm;
+  }
+  html {
+    font-size: 16px !important;
   }
   body {
     background: #fff !important;
@@ -111,5 +266,9 @@ body {
     margin: 0 !important;
     padding: 0 !important;
     max-width: none !important;
+  }
+  .print-page * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

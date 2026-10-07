@@ -1,61 +1,57 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
 import type { CaseProgress, DocProgress } from '../lib/progress';
 import { STAGE_ORDER } from '../lib/progress';
-import { DOC_LABEL } from '../lib/labels';
+import { DOC_LABEL, STATUS_ACCENT, STATUS_LABEL } from '../lib/labels';
 import { StatusBadge } from './StatusBadge';
+import { ProgressSteps } from './ui/ProgressSteps';
+import { ButtonLink } from './ui/Button';
+import { Icon } from './ui/Icon';
+import { Spinner } from './ui/Spinner';
 
-const STEPS = [
-  { stage: 'uploaded', label: 'Uploaded' },
-  { stage: 'classifying', label: 'Identifying documents' },
-  { stage: 'extracting', label: 'Reading fields' },
-  { stage: 'screening', label: 'Checking rules' },
-  { stage: 'done', label: 'Sorted into queue' },
-] as const;
+const LABELS = {
+  uploaded: 'Uploaded',
+  classifying: 'Identifying documents',
+  extracting: 'Reading fields',
+  screening: 'Checking rules',
+  done: 'Sorted into queue',
+} as const;
 
-function StepIcon({ state }: { state: 'done' | 'active' | 'pending' }) {
-  if (state === 'done') {
-    return (
-      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-accent text-white shadow-sm">
-        <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor" aria-hidden>
-          <path d="M7.6 13.2 4.4 10l-1.2 1.2 4.4 4.4 9.2-9.2-1.2-1.2z" />
-        </svg>
-      </span>
-    );
-  }
-  if (state === 'active') {
-    return (
-      <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-teal-accent bg-white">
-        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-teal-accent border-t-transparent" />
-      </span>
-    );
-  }
-  return <span className="h-7 w-7 rounded-full border-2 border-slate-300 bg-white" />;
-}
-
-function DocChip({ d }: { d: DocProgress }) {
+function DocChip({ d: raw, reading }: { d: DocProgress; reading: boolean }) {
+  // Until the paced stepper reaches "Reading fields", show finished docs as not yet read.
+  const d: DocProgress =
+    !reading && raw.stage === 'extracted' ? { ...raw, stage: 'classified' } : raw;
   const busy = d.stage === 'classifying' || d.stage === 'extracting';
   const tone =
     d.stage === 'failed'
-      ? 'border-rose-300 bg-rose-50 text-rose-800'
+      ? 'border-warm-400/60 bg-warm-50 text-warm-900'
       : d.stage === 'skipped'
-        ? 'border-slate-200 bg-slate-50 text-slate-500'
+        ? 'border-line bg-slate-50 text-ink-muted'
         : d.stage === 'extracted'
-          ? 'border-teal-accent/40 bg-teal-soft/60 text-navy-900'
-          : 'border-slate-200 bg-white text-slate-700';
+          ? 'border-teal-accent/40 bg-teal-wash text-navy-900'
+          : 'border-line bg-white text-ink-soft';
   return (
     <li
-      className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${tone}`}
+      className={`flex animate-enter items-center gap-2 rounded-xl border px-3 py-2 text-sm transition-colors duration-300 ${tone}`}
       title={d.message}
     >
-      {busy && (
-        <span className="h-3 w-3 animate-spin rounded-full border-2 border-teal-accent border-t-transparent" />
-      )}
-      <span className="font-medium">{d.type ? DOC_LABEL[d.type] : d.name}</span>
-      {d.type && <span className="text-xs text-slate-500">{d.name}</span>}
+      <span className="flex h-5 w-5 items-center justify-center">
+        {busy ? (
+          <Spinner size={15} className="text-teal-deep" />
+        ) : d.stage === 'extracted' ? (
+          <span className="flex h-5 w-5 animate-pop items-center justify-center rounded-full bg-teal-deep text-white">
+            <Icon name="check" size={12} strokeWidth={3.2} />
+          </span>
+        ) : d.stage === 'failed' ? (
+          <Icon name="alert" size={17} className="text-warm-700" />
+        ) : (
+          <Icon name="image" size={17} className="text-ink-muted" />
+        )}
+      </span>
+      <span className="font-semibold">{d.type ? DOC_LABEL[d.type] : d.name}</span>
+      {d.type && <span className="dev-noise text-xs text-ink-muted">{d.name}</span>}
       {d.stage === 'failed' && <span className="text-xs font-semibold">needs manual review</span>}
       {d.cacheHit && (
-        <span className="rounded bg-slate-200 px-1.5 text-[11px] font-semibold text-slate-600">
+        <span className="dev-noise rounded bg-slate-200 px-1.5 text-[11px] font-semibold text-slate-700">
           cached
         </span>
       )}
@@ -63,71 +59,113 @@ function DocChip({ d }: { d: DocProgress }) {
   );
 }
 
+const STEP_MS = 420;
+const reducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * Display pacing: the visual stepper advances at most one stage per STEP_MS, so a cached
+ * (instant) run still reads as five confident ticks. Real timings are shown unchanged.
+ */
+function usePacedStep(target: number): number {
+  const [shown, setShown] = useState(() => (reducedMotion() ? target : 0));
+  useEffect(() => {
+    if (shown >= target) return;
+    const t = setTimeout(() => setShown((s) => Math.min(target, s + 1)), STEP_MS);
+    return () => clearTimeout(t);
+  }, [shown, target]);
+  return Math.min(shown, target);
+}
+
 export function CaseProgressCard({ c }: { c: CaseProgress }) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     if (c.finishedAt) return;
-    const t = setInterval(() => setNow(Date.now()), 500);
+    const t = setInterval(() => setNow(Date.now()), 100);
     return () => clearInterval(t);
   }, [c.finishedAt]);
   const elapsed = (((c.finishedAt ?? now) - c.startedAt) / 1000).toFixed(1);
-  const current = STAGE_ORDER.indexOf(c.stage);
+  const actual = STAGE_ORDER.indexOf(c.stage);
+  // "done" is itself a step: pace one extra tick so the final stage visibly completes.
+  const paced = usePacedStep(c.stage === 'done' ? actual + 1 : actual);
+  const done = c.stage === 'done' && paced > actual;
+  const current = Math.min(paced, actual);
   const docs = Object.values(c.docs);
+  const identified = docs.filter((d) => d.type || d.stage !== 'classifying').length;
+  const read = docs.filter((d) => ['extracted', 'failed', 'skipped'].includes(d.stage)).length;
+
+  const steps = STAGE_ORDER.map((stage) => ({
+    key: stage,
+    label: LABELS[stage as keyof typeof LABELS],
+    detail:
+      stage === 'uploaded' && docs.length
+        ? `${docs.length} image${docs.length === 1 ? '' : 's'}`
+        : stage === 'classifying' && docs.length && current >= 1
+          ? `${identified} of ${docs.length} identified`
+          : stage === 'extracting' && docs.length && current >= 2
+            ? `${read} of ${docs.length} read`
+            : stage === 'screening' && current >= 3
+              ? 'rules + name engine'
+              : stage === 'done' && done && c.status
+                ? STATUS_LABEL[c.status]
+                : undefined,
+  }));
 
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="text-lg font-bold text-navy-900">{c.reference}</div>
-          {c.packetName && <div className="text-sm text-slate-500">{c.packetName}</div>}
-        </div>
+    <article
+      className={`animate-enter overflow-hidden rounded-card border bg-surface shadow-raised transition-colors duration-500 ${done ? 'border-teal-accent/40' : 'border-line'}`}
+      aria-live="polite"
+    >
+      <header className="flex flex-wrap items-center justify-between gap-3 px-6 pt-5">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-sm tabular-nums text-slate-500">{elapsed}s</span>
-          {c.stage === 'done' && c.status && <StatusBadge status={c.status} />}
+          <span
+            className={`flex h-10 w-10 items-center justify-center rounded-xl ${done ? 'bg-teal-wash text-teal-deep' : 'bg-navy-50 text-navy-700'}`}
+          >
+            <Icon name={done ? 'check' : 'sparkle'} size={20} strokeWidth={done ? 2.6 : 1.8} />
+          </span>
+          <div>
+            <div className="text-lg font-bold tracking-tight text-navy-900">{c.reference}</div>
+            <div className="text-sm text-ink-muted">
+              {c.packetName ?? (done ? 'Screening complete' : 'Screening in progress…')}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <span
+            className="flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 font-mono text-[0.95rem] font-semibold tabular-nums text-navy-900"
+            aria-label={`Elapsed ${elapsed} seconds`}
+          >
+            <Icon name="clock" size={16} className="text-ink-muted" />
+            {elapsed}s
+          </span>
+          {done && c.status && <StatusBadge status={c.status} large />}
         </div>
       </header>
 
-      <ol className="mt-5 grid grid-cols-5 gap-2">
-        {STEPS.map((s, i) => {
-          const state =
-            i < current || c.stage === 'done' ? 'done' : i === current ? 'active' : 'pending';
-          return (
-            <li key={s.stage} className="flex flex-col items-center text-center">
-              <div className="flex w-full items-center">
-                <span
-                  className={`h-0.5 flex-1 ${i === 0 ? 'invisible' : i <= current ? 'bg-teal-accent' : 'bg-slate-200'}`}
-                />
-                <StepIcon state={state} />
-                <span
-                  className={`h-0.5 flex-1 ${i === STEPS.length - 1 ? 'invisible' : i < current ? 'bg-teal-accent' : 'bg-slate-200'}`}
-                />
-              </div>
-              <span
-                className={`mt-2 text-sm ${state === 'pending' ? 'text-slate-400' : 'font-medium text-navy-900'}`}
-              >
-                {s.label}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+      <div className="px-4 pb-2 pt-6">
+        <ProgressSteps steps={steps} current={current} complete={done} label="Screening progress" />
+      </div>
 
       {docs.length > 0 && (
-        <ul className="mt-5 flex flex-wrap gap-2">
+        <ul className="flex flex-wrap gap-2 px-6 pb-5 pt-3" aria-label="Documents">
           {docs.map((d) => (
-            <DocChip key={d.id} d={d} />
+            <DocChip key={d.id} d={d} reading={current >= 2 || done} />
           ))}
         </ul>
       )}
 
-      {c.stage === 'done' && (
-        <div className="mt-5 flex justify-end">
-          <Link
-            to={`/cases/${c.caseId}`}
-            className="rounded-lg bg-navy-900 px-4 py-2 font-semibold text-white hover:bg-navy-800"
-          >
-            Open case →
-          </Link>
+      {done && (
+        <div className="flex animate-enter flex-wrap items-center justify-between gap-3 border-t border-line bg-slate-50/80 px-6 py-4">
+          <div className="flex items-center gap-3 text-[0.95rem] text-ink-soft">
+            {c.status && (
+              <span aria-hidden className={`h-3 w-3 rounded-full ${STATUS_ACCENT[c.status]}`} />
+            )}
+            Sorted in <strong className="tabular-nums text-navy-900">{elapsed} s</strong> — the
+            officer decides from here.
+          </div>
+          <ButtonLink to={`/cases/${c.caseId}`} variant="navy" iconRight="arrowRight">
+            Open case
+          </ButtonLink>
         </div>
       )}
     </article>

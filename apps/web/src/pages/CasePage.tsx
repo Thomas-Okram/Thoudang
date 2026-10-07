@@ -22,6 +22,7 @@ import {
 import { usePipelineEvents, type PipelineEvent } from '../lib/events';
 import { highlightForEvidence, type Highlight } from '../lib/highlight';
 import { useOfficer } from '../lib/officer';
+import { ButtonLink, Icon, Toast } from '../components/ui';
 
 const DOC_ORDER = ['application_form', 'aadhaar', 'bank_passbook', 'epic', 'other'];
 
@@ -32,13 +33,14 @@ export function CasePage() {
       <Page title="Case" subtitle="Open a case from the Queue or from Intake.">
         <EmptyState
           heading="No case selected"
+          icon="queue"
           body="Pick a case in the Queue to scrutinise its documents, identity checks and flags."
+          action={
+            <ButtonLink to="/queue" variant="navy" iconRight="arrowRight">
+              Go to the queue
+            </ButtonLink>
+          }
         />
-        <div className="mt-6 text-center">
-          <Link to="/queue" className="font-semibold text-teal-deep hover:underline">
-            Go to the queue →
-          </Link>
-        </div>
       </Page>
     );
   }
@@ -154,6 +156,7 @@ function CaseView({ caseId }: { caseId: string }) {
     return (
       <Page title="Case" subtitle="">
         <EmptyState
+          icon="search"
           heading="Case not found"
           body={error instanceof Error ? error.message : 'Unknown case'}
         />
@@ -169,8 +172,8 @@ function CaseView({ caseId }: { caseId: string }) {
       : null;
 
   return (
-    <div className="grid min-h-[calc(100vh-3.5rem)] grid-cols-1 xl:grid-cols-[minmax(0,46fr)_minmax(0,54fr)]">
-      <div className="border-r border-slate-200 bg-white xl:sticky xl:top-14 xl:h-[calc(100vh-3.5rem)]">
+    <div className="grid min-h-[calc(100vh-4rem)] grid-cols-1 xl:grid-cols-[minmax(0,46fr)_minmax(0,54fr)]">
+      <div className="border-r border-line bg-white xl:sticky xl:top-16 xl:h-[calc(100vh-4rem)]">
         <div className="h-[70vh] xl:h-full">
           <DocumentViewer
             documents={documents}
@@ -181,14 +184,17 @@ function CaseView({ caseId }: { caseId: string }) {
         </div>
       </div>
 
-      <div className="min-w-0 space-y-4 px-5 py-5 xl:px-6">
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <Link to="/queue" className="hover:text-navy-900">
+      <div className="min-w-0 space-y-5 px-5 py-5 xl:px-7">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-ink-muted">
+          <Link to="/queue" className="flex items-center gap-1 font-medium hover:text-navy-900">
+            <Icon name="queue" size={15} />
             Queue
           </Link>
-          <span>/</span>
-          <span className="font-medium text-navy-900">{data.case.reference}</span>
-        </div>
+          <Icon name="chevronRight" size={14} />
+          <span className="font-semibold text-navy-900" aria-current="page">
+            {data.case.reference}
+          </span>
+        </nav>
         <StatusBanner d={data} />
         <IdentityCard
           identity={data.identity}
@@ -241,16 +247,7 @@ function CaseView({ caseId }: { caseId: string }) {
       </div>
 
       {auditOpen && <AuditDrawer entries={data.audit} onClose={() => setAuditOpen(false)} />}
-      {toast && (
-        <div
-          role="status"
-          className={`fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-enter rounded-lg px-4 py-2.5 text-sm font-semibold shadow-lg ${
-            toast.tone === 'ok' ? 'bg-navy-900 text-white' : 'bg-rose-600 text-white'
-          }`}
-        >
-          {toast.text}
-        </div>
-      )}
+      {toast && <Toast tone={toast.tone}>{toast.text}</Toast>}
     </div>
   );
 }
@@ -258,10 +255,10 @@ function CaseView({ caseId }: { caseId: string }) {
 function CaseSkeleton() {
   return (
     <div
-      className="grid min-h-[calc(100vh-3.5rem)] grid-cols-1 xl:grid-cols-[minmax(0,46fr)_minmax(0,54fr)]"
+      className="grid min-h-[calc(100vh-4rem)] grid-cols-1 xl:grid-cols-[minmax(0,46fr)_minmax(0,54fr)]"
       aria-busy
     >
-      <div className="border-r border-slate-200 bg-white p-4">
+      <div className="border-r border-line bg-white p-4">
         <div className="flex gap-2">
           {[0, 1, 2].map((i) => (
             <div key={i} className="skeleton h-12 w-36" />

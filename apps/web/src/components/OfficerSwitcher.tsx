@@ -1,49 +1,58 @@
 import { useOfficer } from '../lib/officer';
+import { Icon } from './ui/Icon';
 
 export function OfficerSwitcher() {
   const { officer, officers, choose } = useOfficer();
   return (
-    <div className="flex items-center gap-3">
-      <label htmlFor="officer" className="text-sm text-slate-500">
-        Acting as
-      </label>
-      <div className="relative">
-        <select
-          id="officer"
-          value={officer?.id ?? ''}
-          onChange={(e) => choose(e.target.value || null)}
-          className={`appearance-none rounded-lg border py-2 pl-3 pr-9 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-accent ${
-            officer
-              ? 'border-slate-300 bg-white text-navy-900'
-              : 'border-amber-400 bg-amber-50 text-amber-900'
-          }`}
-        >
-          <option value="">Choose officer…</option>
-          {officers.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.name}
-            </option>
-          ))}
-        </select>
-        <svg
-          className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path
-            d="M5.5 7.5 10 12l4.5-4.5"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            fill="none"
-            strokeLinecap="round"
+    <div className="flex items-center gap-2.5">
+      <span
+        aria-hidden
+        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
+          officer ? 'bg-navy-900 text-white' : 'bg-warm-100 text-warm-900'
+        }`}
+      >
+        {officer ? (
+          officer.name
+            .split(/\s+/)
+            .map((w) => w[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase()
+        ) : (
+          <Icon name="user" size={18} />
+        )}
+      </span>
+      <div className="leading-tight">
+        <label htmlFor="officer" className="block text-[0.7rem] font-semibold text-ink-muted">
+          Acting as
+        </label>
+        <div className="relative">
+          <select
+            id="officer"
+            value={officer?.id ?? ''}
+            onChange={(e) => choose(e.target.value || null)}
+            className={`max-w-[15rem] cursor-pointer appearance-none truncate rounded-md bg-transparent py-0.5 pr-6 text-[0.92rem] font-bold focus:outline-none ${
+              officer ? 'text-navy-900' : 'text-warm-700'
+            }`}
+          >
+            <option value="">Choose officer…</option>
+            {officers.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.name}
+              </option>
+            ))}
+          </select>
+          <Icon
+            name="chevronDown"
+            size={16}
+            className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-ink-muted"
           />
-        </svg>
+        </div>
       </div>
       {officer && (
         <span
-          className={`rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide ${
-            officer.role === 'DSWO' ? 'bg-navy-900 text-white' : 'bg-teal-soft text-navy-900'
+          className={`hidden rounded-full px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-wide xl:inline ${
+            officer.role === 'DSWO' ? 'bg-navy-900 text-white' : 'bg-teal-wash text-teal-darker'
           }`}
           title={officer.roleLabel}
         >

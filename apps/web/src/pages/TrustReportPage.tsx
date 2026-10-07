@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { PageHeader } from '../components/Page';
+import { Badge, EmptyState, Icon, Skeleton, Table, Td, Th, Tr } from '../components/ui';
 import {
   fetchTrust,
   runLeakScan,
@@ -14,27 +16,30 @@ const pct = (x: number | null | undefined, digits = 0) =>
 export function TrustReportPage() {
   const { data, isPending } = useQuery({ queryKey: ['trust'], queryFn: fetchTrust });
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-6">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight text-navy-900">Trust report</h1>
-        <p className="mt-1 max-w-3xl text-slate-600">
-          How accurate Thoudang is, whether it treats every community fairly, and the safeguards
-          that keep the officer in charge. Numbers below are live.
-        </p>
-      </header>
+    <div className="mx-auto max-w-[1240px] px-7 py-8">
+      <PageHeader
+        eyebrow="Oversight"
+        title="Trust report"
+        subtitle="How accurate Thoudang is, whether it treats every community fairly, and the safeguards that keep the officer in charge. Numbers below are live."
+        actions={
+          <Badge tone="teal" icon="shield" size="lg">
+            AI reads · code decides · officer approves
+          </Badge>
+        }
+      />
       {isPending || !data ? (
-        <div className="mt-6 space-y-4">
-          <div className="skeleton h-48" />
-          <div className="skeleton h-64" />
+        <div className="space-y-4">
+          <Skeleton className="h-48" />
+          <Skeleton className="h-64" />
         </div>
       ) : (
-        <div className="mt-6 space-y-6">
+        <div className="space-y-6">
           <Accuracy e={data.evaluation} />
           <Fairness f={data.fairness} />
           <Safeguards s={data.safeguards} />
           <DataFlow />
           <Section n={5} title="Known limitations">
-            <ul className="list-disc space-y-1.5 pl-5 text-slate-700">
+            <ul className="list-disc space-y-1.5 pl-5 text-ink-soft marker:text-navy-300">
               {data.limitations.map((l) => (
                 <li key={l}>{l}</li>
               ))}
@@ -59,27 +64,34 @@ function Section({
 }) {
   return (
     <section
-      className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+      className="rounded-card border border-line bg-surface shadow-card"
       aria-labelledby={`s${n}`}
     >
-      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
-        <h2 id={`s${n}`} className="text-xl font-bold text-navy-900">
-          <span className="mr-2 text-teal-accent">{n}.</span>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-6 py-4">
+        <h2
+          id={`s${n}`}
+          className="flex items-center gap-3 text-xl font-bold tracking-tight text-navy-900"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy-900 text-base text-white">
+            {n}
+          </span>
           {title}
         </h2>
         {aside}
       </div>
-      {children}
+      <div className="p-6">{children}</div>
     </section>
   );
 }
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-lg bg-slate-50 px-4 py-3">
-      <div className="text-2xl font-bold tabular-nums text-navy-900">{value}</div>
-      <div className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</div>
-      {hint && <div className="mt-0.5 text-xs text-slate-400">{hint}</div>}
+    <div className="rounded-xl border border-line bg-slate-50/70 px-4 py-3.5">
+      <div className="text-overline font-bold uppercase text-ink-muted">{label}</div>
+      <div className="mt-1 text-[1.75rem] font-bold leading-tight tabular-nums text-navy-900">
+        {value}
+      </div>
+      {hint && <div className="mt-0.5 text-xs text-ink-muted">{hint}</div>}
     </div>
   );
 }
@@ -87,25 +99,25 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 function RateBars({ rows, label }: { rows: Rate[]; label: string }) {
   return (
     <table className="w-full text-sm">
-      <caption className="mb-1 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <caption className="mb-2 text-left text-overline font-bold uppercase text-ink-muted">
         {label}
       </caption>
       <tbody>
         {rows.map((r) => (
-          <tr key={r.key} className="border-t border-slate-100">
-            <td className="w-1/2 py-1 pr-3 text-slate-700">{r.key.replace(/_/g, ' ')}</td>
+          <tr key={r.key} className="border-t border-line">
+            <td className="w-1/2 py-1.5 pr-3 text-ink-soft">{r.key.replace(/_/g, ' ')}</td>
             <td className="py-1">
               <div className="flex items-center gap-2">
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100">
                   <div
-                    className="h-full rounded-full bg-teal-accent"
+                    className="h-full rounded-full bg-teal-deep"
                     style={{ width: `${r.accuracy * 100}%` }}
                   />
                 </div>
                 <span className="w-12 text-right tabular-nums text-slate-700">
                   {pct(r.accuracy)}
                 </span>
-                <span className="w-12 text-right text-xs text-slate-400">n={r.n}</span>
+                <span className="w-12 text-right text-xs text-ink-muted">n={r.n}</span>
               </div>
             </td>
           </tr>
@@ -119,10 +131,7 @@ function Accuracy({ e }: { e: TrustReport['evaluation'] }) {
   if (!e.available) {
     return (
       <Section n={1} title="Extraction accuracy">
-        <div className="rounded-lg border-2 border-dashed border-slate-300 px-6 py-8 text-center">
-          <p className="font-semibold text-navy-900">No evaluation has been run yet</p>
-          <p className="mt-1 text-sm text-slate-600">{e.howTo}</p>
-        </div>
+        <EmptyState compact icon="scale" heading="No evaluation has been run yet" body={e.howTo} />
       </Section>
     );
   }
@@ -131,7 +140,7 @@ function Accuracy({ e }: { e: TrustReport['evaluation'] }) {
       n={1}
       title="Extraction accuracy"
       aside={
-        <span className="text-sm text-slate-500">
+        <span className="text-sm text-ink-muted">
           {e.packets} labelled packets · {e.model} ·{' '}
           {e.labelled ? 'labelled slots' : 'AI classification'} ·{' '}
           {new Date(e.generatedAt).toLocaleString('en-IN', {
@@ -175,44 +184,54 @@ function Accuracy({ e }: { e: TrustReport['evaluation'] }) {
 function FairnessTable({ f }: { f: FairnessView }) {
   return (
     <div>
-      <h3 className="font-semibold text-navy-900">
-        {f.label} <span className="font-normal text-slate-500">· {f.pairs} pairs</span>
+      <h3 className="text-lg font-semibold text-navy-900">
+        {f.label} <span className="font-normal text-ink-muted">· {f.pairs} pairs</span>
       </h3>
-      <p className="text-sm text-slate-500">{f.description}</p>
-      <div className="mt-2 overflow-x-auto">
-        <table className="w-full text-sm">
+      <p className="text-sm text-ink-muted">{f.description}</p>
+      <div className="mt-3">
+        <Table>
           <thead>
-            <tr className="border-b border-slate-200 text-right text-xs uppercase tracking-wide text-slate-500">
-              <th className="py-2 pr-3 text-left">Community</th>
-              <th className="py-2 pr-3">Pairs</th>
-              <th className="py-2 pr-3">Auto-decided</th>
-              <th className="py-2 pr-3">Accuracy</th>
-              <th className="py-2 pr-3">Referred to officer</th>
-              <th className="py-2 pr-3">False matches</th>
-              <th className="py-2">False non-matches</th>
+            <tr>
+              <Th>Community</Th>
+              <Th align="right">Pairs</Th>
+              <Th align="right">Auto-decided</Th>
+              <Th align="right">Accuracy</Th>
+              <Th align="right">Referred to officer</Th>
+              <Th align="right">False matches</Th>
+              <Th align="right">False non-matches</Th>
             </tr>
           </thead>
           <tbody>
             {[...f.rows, f.overall].map((r) => (
-              <tr
+              <Tr
                 key={r.community}
-                className={`border-b border-slate-100 text-right tabular-nums ${r.community === 'All' ? 'font-semibold' : ''}`}
+                className={r.community === 'All' ? 'bg-slate-50 font-bold' : ''}
               >
-                <td className="py-1.5 pr-3 text-left">{r.community}</td>
-                <td className="py-1.5 pr-3">{r.pairs}</td>
-                <td className="py-1.5 pr-3">{r.decided}</td>
-                <td className="py-1.5 pr-3">{pct(r.accuracy)}</td>
-                <td className="py-1.5 pr-3">
+                <Td className="font-semibold text-navy-900">{r.community}</Td>
+                <Td align="right">{r.pairs}</Td>
+                <Td align="right">{r.decided}</Td>
+                <Td align="right">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-slate-100 sm:inline-block">
+                      <span
+                        className="block h-full rounded-full bg-emerald-600"
+                        style={{ width: `${r.accuracy * 100}%` }}
+                      />
+                    </span>
+                    {pct(r.accuracy)}
+                  </span>
+                </Td>
+                <Td align="right">
                   {r.referred} ({pct(r.referralRate)})
-                </td>
-                <td className={`py-1.5 pr-3 ${r.falseMatches ? 'text-rose-700' : ''}`}>
+                </Td>
+                <Td align="right" className={r.falseMatches ? 'font-bold text-rose-700' : ''}>
                   {r.falseMatches}
-                </td>
-                <td className="py-1.5">{r.falseNonMatches}</td>
-              </tr>
+                </Td>
+                <Td align="right">{r.falseNonMatches}</Td>
+              </Tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       </div>
     </div>
   );
@@ -221,7 +240,7 @@ function FairnessTable({ f }: { f: FairnessView }) {
 function Fairness({ f }: { f: TrustReport['fairness'] }) {
   return (
     <Section n={2} title="Name-engine fairness by community">
-      <p className="mb-4 text-sm text-slate-600">
+      <p className="mb-5 max-w-4xl text-[0.95rem] text-ink-soft">
         The name engine is deterministic code (no AI). A <em>false match</em> — two different people
         treated as one — is the dangerous error; ambiguous cases go to an officer instead of being
         guessed.
@@ -231,7 +250,7 @@ function Fairness({ f }: { f: TrustReport['fairness'] }) {
         {f.holdout ? (
           <FairnessTable f={f.holdout} />
         ) : (
-          <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="rounded-xl border border-warm-200 bg-warm-50 px-4 py-3 text-sm text-warm-900">
             No held-out set yet. Department staff can add one:{' '}
             <code>npm run fairness -- --holdout ./holdout-pairs.csv</code> (columns
             name_a,name_b,community,expected_same).
@@ -252,16 +271,21 @@ function Check({
   children: ReactNode;
 }) {
   return (
-    <li className="flex gap-3 border-b border-slate-100 py-3 last:border-0">
+    <li className="flex gap-4 rounded-xl border border-line p-4">
       <span
-        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-bold ${ok === null ? 'bg-slate-200 text-slate-600' : ok ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${ok === null ? 'bg-slate-200 text-slate-700' : ok ? 'bg-emerald-700 text-white' : 'bg-rose-700 text-white'}`}
+        role="img"
         aria-label={ok === null ? 'not run' : ok ? 'pass' : 'fail'}
       >
-        {ok === null ? '?' : ok ? '✓' : '!'}
+        <Icon
+          name={ok === null ? 'question' : ok ? 'check' : 'alert'}
+          size={18}
+          strokeWidth={2.8}
+        />
       </span>
       <div className="min-w-0">
-        <div className="font-semibold text-navy-900">{title}</div>
-        <div className="text-sm text-slate-600">{children}</div>
+        <div className="text-[1.02rem] font-semibold text-navy-900">{title}</div>
+        <div className="mt-0.5 text-[0.92rem] leading-relaxed text-ink-soft">{children}</div>
       </div>
     </li>
   );
@@ -282,7 +306,7 @@ function Safeguards({ s }: { s: TrustReport['safeguards'] }) {
   };
   return (
     <Section n={3} title="Safeguards — with live proof">
-      <ul>
+      <ul className="grid gap-3 lg:grid-cols-2">
         <Check ok={!s.rejectStatusExists} title="There is no “reject” status">
           The only statuses are {s.statuses.join(', ')}.{' '}
           <a
@@ -313,7 +337,7 @@ function Safeguards({ s }: { s: TrustReport['safeguards'] }) {
           <button
             onClick={() => void runScan()}
             disabled={busy}
-            className="ml-2 rounded-md bg-navy-900 px-2.5 py-1 text-xs font-semibold text-white disabled:bg-slate-400"
+            className="ml-2 mt-1 inline-flex items-center rounded-lg bg-navy-900 px-3 py-1 text-xs font-semibold text-white hover:bg-navy-700 disabled:bg-slate-400"
           >
             {busy ? 'Scanning…' : 'Run leak scan now'}
           </button>
@@ -363,7 +387,7 @@ function DataFlow() {
     sub: string,
     tone: 'navy' | 'teal' | 'slate',
   ) => {
-    const fill = tone === 'navy' ? '#0a1b33' : tone === 'teal' ? '#0f9e8e' : '#f1f5f9';
+    const fill = tone === 'navy' ? '#0a1b33' : tone === 'teal' ? '#0b7a6e' : '#f1f5f9';
     const ink = tone === 'slate' ? '#0a1b33' : '#ffffff';
     return (
       <g>

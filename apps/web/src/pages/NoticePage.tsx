@@ -7,6 +7,7 @@ import { useOfficer } from '../lib/officer';
 import { MODES, NoticeDocument, type NoticeMode } from '../components/notice/NoticeDocument';
 import { AudioPlayer } from '../components/notice/AudioPlayer';
 import { EmptyState } from '../components/Page';
+import { Badge, Button, Icon, Skeleton, Tabs, buttonClass } from '../components/ui';
 
 export function NoticePage() {
   const { caseId = '' } = useParams();
@@ -36,13 +37,14 @@ export function NoticePage() {
   if (isPending)
     return (
       <div className="mx-auto max-w-5xl p-8">
-        <div className="skeleton h-[80vh]" />
+        <Skeleton className="h-[80vh]" />
       </div>
     );
   if (error || !n)
     return (
       <div className="mx-auto max-w-3xl p-8">
         <EmptyState
+          icon="notice"
           heading="Notice not available"
           body={error instanceof Error ? error.message : 'Unknown case'}
         />
@@ -66,108 +68,125 @@ export function NoticePage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1100px] px-6 py-6">
-      <div className="no-print mb-5 flex flex-wrap items-center gap-3">
-        <Link to={`/cases/${caseId}`} className="text-sm text-slate-500 hover:text-navy-900">
-          ← {n.reference}
-        </Link>
-        <h1 className="text-2xl font-bold text-navy-900">Citizen notice</h1>
-        {n.noticeSentAt && (
-          <span className="rounded-full bg-navy-900 px-3 py-1 text-xs font-semibold text-white">
-            Notice sent on{' '}
-            {new Date(n.noticeSentAt).toLocaleString('en-IN', {
-              dateStyle: 'medium',
-              timeStyle: 'short',
-            })}
-          </span>
-        )}
-        <span
-          className="ml-auto rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900"
-          title="Every sentence comes from a reviewed template; values come from the case"
+    <div className="mx-auto max-w-[1180px] px-7 py-8">
+      <div className="no-print mb-6">
+        <Link
+          to={`/cases/${caseId}`}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted hover:text-navy-900"
         >
-          Built from templates · 0 AI calls
-        </span>
+          <Icon name="arrowLeft" size={16} />
+          {n.reference}
+        </Link>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <h1 className="text-display font-bold text-navy-900">Citizen notice</h1>
+          {n.noticeSentAt && (
+            <Badge tone="solid" icon="send">
+              Notice sent on{' '}
+              {new Date(n.noticeSentAt).toLocaleString('en-IN', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })}
+            </Badge>
+          )}
+          <span
+            className="ml-auto"
+            title="Every sentence comes from a reviewed template; values come from the case"
+          >
+            <Badge tone="success" icon="shield" size="lg">
+              Built from templates · 0 AI calls
+            </Badge>
+          </span>
+        </div>
       </div>
 
       {!n.allowed ? (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 px-6 py-5 text-amber-950">
-          <h2 className="text-lg font-bold">No notice can be sent for this case</h2>
-          <p className="mt-1">{n.blockedReason}</p>
-          <Link
-            to={`/cases/${caseId}`}
-            className="mt-3 inline-block font-semibold text-navy-900 underline"
-          >
-            Back to the case
-          </Link>
+        <div className="flex items-start gap-4 rounded-card border border-warm-200 bg-warm-50 px-6 py-5 text-warm-900">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warm-100">
+            <Icon name="info" size={20} />
+          </span>
+          <div>
+            <h2 className="text-lg font-bold">No notice can be sent for this case</h2>
+            <p className="mt-1">{n.blockedReason}</p>
+            <Link
+              to={`/cases/${caseId}`}
+              className="mt-3 inline-flex items-center gap-1 font-semibold text-navy-900 underline"
+            >
+              Back to the case
+            </Link>
+          </div>
         </div>
       ) : (
         <>
-          <div className="no-print mb-4 grid gap-4 lg:grid-cols-[1fr_auto]">
-            <div className="flex flex-wrap items-center gap-3">
-              <div
-                className="inline-flex rounded-lg bg-slate-200 p-1"
-                role="tablist"
-                aria-label="Script"
-              >
-                {MODES.map((m) => (
-                  <button
-                    key={m.key}
-                    role="tab"
-                    aria-selected={mode === m.key}
-                    onClick={() => setMode(m.key)}
-                    className={`rounded-md px-4 py-2 text-sm font-semibold transition ${m.className} ${mode === m.key ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-600 hover:text-navy-900'}`}
-                  >
-                    {m.label}
-                  </button>
-                ))}
+          <div className="no-print mb-4 grid items-stretch gap-4 lg:grid-cols-[1fr_auto]">
+            <div className="flex flex-col justify-center gap-3 rounded-card border border-line bg-white p-4 shadow-card">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-overline font-bold uppercase text-ink-muted">Script</span>
+                <Tabs
+                  label="Script"
+                  value={mode}
+                  onChange={setMode}
+                  items={MODES.map((m) => ({
+                    value: m.key,
+                    label: m.label,
+                    className: m.className,
+                  }))}
+                />
               </div>
-              {(mode === 'mni_mtei' || mode === 'all') &&
-                n.rendered?.review.mni_mtei === 'auto' && (
-                  <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
-                    Meetei Mayek auto-transliterated — pending review
-                  </span>
+              <div className="flex flex-wrap gap-2">
+                {(mode === 'mni_mtei' || mode === 'all') &&
+                  n.rendered?.review.mni_mtei === 'auto' && (
+                    <Badge tone="warn" icon="alert">
+                      Meetei Mayek auto-transliterated — pending review
+                    </Badge>
+                  )}
+                {mode !== 'en' && (n.rendered?.review.pendingCount ?? 0) > 0 && (
+                  <Badge tone="warn" icon="users">
+                    Manipuri draft — {n.rendered?.review.pendingCount} template
+                    {n.rendered?.review.pendingCount === 1 ? '' : 's'} pending native-speaker review
+                  </Badge>
                 )}
-              {mode !== 'en' && (n.rendered?.review.pendingCount ?? 0) > 0 && (
-                <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
-                  Manipuri draft — {n.rendered?.review.pendingCount} template
-                  {n.rendered?.review.pendingCount === 1 ? '' : 's'} pending native-speaker review
-                </span>
-              )}
+              </div>
             </div>
             <AudioPlayer caseId={caseId} audio={n.audio} />
           </div>
 
-          <div className="no-print mb-5 flex flex-wrap gap-2">
-            <button
-              onClick={() => window.print()}
-              className="rounded-lg bg-navy-900 px-4 py-2.5 font-semibold text-white hover:bg-navy-800"
-            >
+          <div className="no-print mb-6 flex flex-wrap items-center gap-2 rounded-card border border-line bg-white p-3 shadow-card">
+            <Button variant="navy" icon="print" onClick={() => window.print()}>
               Print (A4)
-            </button>
+            </Button>
             <a
               href={`https://wa.me/?text=${encodeURIComponent(whatsappText)}`}
               target="_blank"
               rel="noreferrer"
-              className="rounded-lg bg-[#1f9d55] px-4 py-2.5 font-semibold text-white hover:brightness-110"
+              className={`${buttonClass('secondary')} !border-[#178a49] !text-[#126b39] hover:!bg-[#effaf3]`}
             >
+              <Icon name="message" size={18} />
               Share on WhatsApp
             </a>
-            <span className="mx-2 w-px bg-slate-300" />
+            <span aria-hidden className="mx-2 h-7 w-px bg-line" />
+            <span className="text-overline font-bold uppercase text-ink-muted">Mark sent</span>
             {(['print', 'whatsapp', 'in_person'] as const).map((ch) => (
-              <button
+              <Button
                 key={ch}
+                size="sm"
                 onClick={() => void markSent(ch)}
                 disabled={!officer || !can('send_for_correction')}
                 title={!officer ? 'Choose an officer first' : undefined}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-navy-900 hover:bg-slate-50 disabled:text-slate-400"
               >
                 Mark sent · {ch === 'in_person' ? 'handed over' : ch}
-              </button>
+              </Button>
             ))}
-            {message && <span className="self-center text-sm text-slate-600">{message}</span>}
+            {message && (
+              <span className="flex items-center gap-1.5 text-sm font-medium text-teal-darker">
+                <Icon name="check" size={16} />
+                {message}
+              </span>
+            )}
           </div>
 
-          <NoticeDocument notice={n} mode={mode} qrDataUrl={qr} statusUrl={statusUrl} />
+          <div className="rounded-panel bg-[#e4e8ee] p-8 print:bg-transparent print:p-0">
+            <NoticeDocument notice={n} mode={mode} qrDataUrl={qr} statusUrl={statusUrl} />
+          </div>
         </>
       )}
     </div>

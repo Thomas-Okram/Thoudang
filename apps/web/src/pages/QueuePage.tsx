@@ -12,6 +12,8 @@ import {
 import { usePipelineEvents, type PipelineEvent } from '../lib/events';
 import { useOfficer } from '../lib/officer';
 import { priorityChip } from '../components/case/StatusBanner';
+import { PageHeader } from '../components/Page';
+import { Button, Icon, Skeleton, Spinner, StatTile, Toast, type IconName } from '../components/ui';
 
 type PriorityFilter = 'all' | 'age' | 'widow' | 'disability' | 'displaced';
 
@@ -23,23 +25,40 @@ const PRIORITY_FILTERS: { key: PriorityFilter; label: string; test: (r: string) 
   { key: 'displaced', label: 'Displaced (address)', test: (r) => r.startsWith('Displaced') },
 ];
 
-const COLUMNS: { status: CaseStatus; title: string; accent: string; empty: string }[] = [
+const COLUMNS: {
+  status: CaseStatus;
+  title: string;
+  accent: string;
+  rule: string;
+  icon: IconName;
+  iconTone: string;
+  empty: string;
+}[] = [
   {
     status: 'READY',
     title: 'Ready',
-    accent: 'bg-emerald-500',
+    accent: 'bg-emerald-600',
+    rule: 'border-t-emerald-600',
+    icon: 'check',
+    iconTone: 'bg-emerald-50 text-emerald-700',
     empty: 'Cases that pass every check land here.',
   },
   {
     status: 'NEEDS_CITIZEN_CORRECTION',
     title: 'Needs citizen correction',
-    accent: 'bg-amber-500',
+    accent: 'bg-warm-500',
+    rule: 'border-t-warm-500',
+    icon: 'user',
+    iconTone: 'bg-warm-50 text-warm-700',
     empty: 'Missing or inconsistent documents the applicant must fix.',
   },
   {
     status: 'OFFICER_ATTENTION',
     title: 'Officer attention',
-    accent: 'bg-rose-500',
+    accent: 'bg-indigo-600',
+    rule: 'border-t-indigo-600',
+    icon: 'eye',
+    iconTone: 'bg-indigo-50 text-indigo-700',
     empty: 'Ambiguities and unclear readings for an officer.',
   },
 ];
@@ -149,42 +168,45 @@ export function QueuePage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1500px] px-6 py-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-navy-900">Queue</h1>
-          <p className="mt-1 text-slate-600">
-            Old Age Pension applications, sorted by priority. Updates live as packets are screened.
-          </p>
-        </div>
-      </header>
+    <div className="mx-auto max-w-[1560px] px-7 py-8">
+      <PageHeader
+        eyebrow="Step 2 · Scrutinise"
+        title="Queue"
+        subtitle="Old Age Pension applications, sorted by priority. Updates live as packets are screened."
+        actions={
+          <span className="flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-sm font-semibold text-ink-soft shadow-card">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/70" />
+              <span className="relative h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            </span>
+            Live
+          </span>
+        }
+      />
 
       <StatsBar stats={stats.data} loading={stats.isPending} />
 
-      <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-        <div className="relative min-w-64 flex-1">
-          <svg
-            viewBox="0 0 20 20"
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-            aria-hidden
-          >
-            <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="2" fill="none" />
-            <path d="m14 14 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
+      <div className="mt-5 flex flex-wrap items-center gap-3 rounded-card border border-line bg-white p-3 shadow-card">
+        <div className="relative min-w-72 flex-1">
+          <Icon
+            name="search"
+            size={18}
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted"
+          />
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name — e.g. “Thomas Okram” also finds “O. Thomas Meitei”"
             aria-label="Search by name"
-            className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-accent"
+            className="h-11 w-full rounded-control border border-line-strong bg-slate-50/60 pl-10 pr-3 text-[0.95rem] placeholder:text-ink-muted focus:border-teal-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-accent/40"
           />
         </div>
         <select
           aria-label="District"
           value={district}
           onChange={(e) => setDistrict(e.target.value)}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+          className="h-11 rounded-control border border-line-strong bg-white px-3 text-[0.92rem] font-medium text-navy-900"
         >
           <option value="">All districts</option>
           {stats.data?.districts.map((d) => (
@@ -193,21 +215,21 @@ export function QueuePage() {
         </select>
         <select
           aria-label="Scheme"
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+          className="h-11 rounded-control border border-line-strong bg-white px-3 text-[0.92rem] font-medium text-navy-900"
           defaultValue="MOAPS"
         >
           <option value="MOAPS">Old Age Pension (MOAPS)</option>
         </select>
-        <div className="flex flex-wrap gap-1" role="group" aria-label="Priority category">
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Priority category">
           {PRIORITY_FILTERS.map((p) => (
             <button
               key={p.key}
               onClick={() => setPriority(p.key)}
               aria-pressed={priority === p.key}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+              className={`h-9 rounded-full px-3.5 text-[0.82rem] font-semibold transition ${
                 priority === p.key
-                  ? 'bg-navy-900 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-navy-900 text-white shadow-sm'
+                  : 'bg-slate-100 text-ink-soft hover:bg-slate-200'
               }`}
             >
               {p.label}
@@ -216,18 +238,20 @@ export function QueuePage() {
         </div>
       </div>
 
-      {banner && (
-        <p className="mt-3 animate-enter rounded-lg bg-navy-900 px-4 py-2 text-sm font-semibold text-white">
-          {banner}
-        </p>
-      )}
+      {banner && <Toast>{banner}</Toast>}
 
       {processing.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-teal-accent/30 bg-teal-soft/30 px-4 py-2 text-sm text-navy-900">
-          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-teal-accent border-t-transparent" />
+        <div
+          className="mt-4 flex animate-enter flex-wrap items-center gap-2 rounded-card border border-teal-accent/40 bg-teal-wash px-4 py-3 text-[0.95rem] font-medium text-navy-900"
+          aria-live="polite"
+        >
+          <Spinner size={16} className="text-teal-deep" />
           Screening now:
           {processing.map((c) => (
-            <span key={c.id} className="rounded bg-white px-2 py-0.5 font-mono text-xs">
+            <span
+              key={c.id}
+              className="animate-pop rounded-lg border border-teal-accent/30 bg-white px-2.5 py-0.5 font-mono text-xs font-semibold"
+            >
               {c.packetName ?? c.reference}
             </span>
           ))}
@@ -235,10 +259,10 @@ export function QueuePage() {
       )}
 
       {q && !cases.isFetching && screened.length === 0 && (
-        <p className="mt-6 text-center text-slate-500">No applicant matches “{q}”.</p>
+        <p className="mt-6 text-center text-ink-muted">No applicant matches “{q}”.</p>
       )}
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-3">
+      <div className="mt-6 grid gap-5 lg:grid-cols-3">
         {COLUMNS.map((col) => {
           const list = byStatus(col.status);
           const isReady = col.status === 'READY';
@@ -246,29 +270,43 @@ export function QueuePage() {
             <section
               key={col.status}
               aria-label={col.title}
-              className="flex min-w-0 flex-col rounded-xl bg-slate-200/60 p-3"
+              className={`flex min-w-0 flex-col rounded-card border border-t-4 border-line bg-slate-100/80 p-3 ${col.rule}`}
             >
-              <header className="mb-3 flex items-center gap-2 px-1">
-                <span className={`h-2.5 w-2.5 rounded-full ${col.accent}`} />
-                <h2 className="font-bold text-navy-900">{col.title}</h2>
-                <span className="rounded-full bg-white px-2 text-sm font-semibold text-slate-600">
+              <header className="mb-3 flex items-center gap-2.5 px-1 pt-1">
+                <span
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg ${col.iconTone}`}
+                >
+                  <Icon name={col.icon} size={17} strokeWidth={2.2} />
+                </span>
+                <h2 className="text-[1.05rem] font-bold text-navy-900">{col.title}</h2>
+                <span
+                  key={list.length}
+                  className="animate-pop rounded-full bg-white px-2.5 py-0.5 text-[0.9rem] font-bold tabular-nums text-navy-900 shadow-sm ring-1 ring-line"
+                >
                   {list.length}
                 </span>
                 {isReady && readySelectable.length > 0 && officer && can('forward') && (
-                  <button
+                  <Button
+                    size="sm"
+                    variant="navy"
+                    icon="send"
                     onClick={() => void forward()}
                     disabled={selected.size === 0}
-                    className="ml-auto rounded-md bg-navy-900 px-2.5 py-1 text-xs font-semibold text-white disabled:bg-slate-400"
+                    className="ml-auto"
                   >
                     Forward to DSWO{selected.size ? ` (${selected.size})` : ''}
-                  </button>
+                  </Button>
                 )}
               </header>
               <ul className="space-y-2.5">
                 {cases.isPending &&
-                  [0, 1, 2].map((i) => <li key={i} className="skeleton h-28 w-full" />)}
+                  [0, 1, 2].map((i) => (
+                    <li key={i}>
+                      <Skeleton className="h-32 w-full" />
+                    </li>
+                  ))}
                 {!cases.isPending && list.length === 0 && (
-                  <li className="rounded-lg border-2 border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">
+                  <li className="rounded-xl border-2 border-dashed border-line-strong px-4 py-10 text-center text-[0.92rem] text-ink-muted">
                     {col.empty}
                   </li>
                 )}
@@ -295,23 +333,30 @@ export function QueuePage() {
         })}
       </div>
 
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white">
+      <section className="mt-6 overflow-hidden rounded-card border border-line bg-white shadow-card">
         <button
-          className="flex w-full items-center gap-2 px-5 py-3 text-left"
+          className="flex w-full items-center gap-2.5 px-5 py-3.5 text-left hover:bg-slate-50"
           onClick={() => setShowApproved((s) => !s)}
           aria-expanded={showApproved}
         >
-          <span className="h-2.5 w-2.5 rounded-full bg-navy-900" />
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-wash text-teal-deep">
+            <Icon name="star" size={17} />
+          </span>
           <span className="font-bold text-navy-900">Approved by officer</span>
-          <span className="rounded-full bg-slate-100 px-2 text-sm font-semibold text-slate-600">
+          <span className="rounded-full bg-slate-100 px-2.5 text-[0.9rem] font-bold tabular-nums text-ink-soft">
             {byStatus('APPROVED_BY_OFFICER').length}
           </span>
-          <span className="ml-auto text-sm font-semibold text-teal-deep">
+          <span className="ml-auto flex items-center gap-1 text-sm font-semibold text-teal-deep">
             {showApproved ? 'Hide' : 'Show'}
+            <Icon
+              name="chevronDown"
+              size={16}
+              className={`transition-transform ${showApproved ? 'rotate-180' : ''}`}
+            />
           </span>
         </button>
         {showApproved && (
-          <ul className="grid gap-2.5 border-t border-slate-100 p-3 md:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid gap-2.5 border-t border-line bg-slate-50/60 p-3 md:grid-cols-2 xl:grid-cols-3">
             {byStatus('APPROVED_BY_OFFICER').map((c) => (
               <QueueCard
                 key={c.id}
@@ -323,7 +368,7 @@ export function QueuePage() {
               />
             ))}
             {!byStatus('APPROVED_BY_OFFICER').length && (
-              <li className="px-2 py-3 text-sm text-slate-500">Nothing approved yet.</li>
+              <li className="px-2 py-3 text-sm text-ink-muted">Nothing approved yet.</li>
             )}
           </ul>
         )}
@@ -333,24 +378,38 @@ export function QueuePage() {
 }
 
 function StatsBar({ stats, loading }: { stats: Stats | undefined; loading: boolean }) {
-  const items: { label: string; value: string; tone?: string }[] = stats
+  const items: {
+    label: string;
+    value: string;
+    tone?: 'navy' | 'success' | 'warn' | 'teal' | 'muted';
+    icon: IconName;
+    extra?: string;
+  }[] = stats
     ? [
-        { label: 'Total cases', value: String(stats.total) },
-        { label: 'Ready', value: String(stats.byStatus.READY ?? 0), tone: 'text-emerald-700' },
+        { label: 'Total cases', value: String(stats.total), icon: 'folder' },
+        {
+          label: 'Ready',
+          value: String(stats.byStatus.READY ?? 0),
+          tone: 'success',
+          icon: 'check',
+        },
         {
           label: 'Citizen correction',
           value: String(stats.byStatus.NEEDS_CITIZEN_CORRECTION ?? 0),
-          tone: 'text-amber-700',
+          tone: 'warn',
+          icon: 'user',
         },
         {
           label: 'Officer attention',
           value: String(stats.byStatus.OFFICER_ATTENTION ?? 0),
-          tone: 'text-rose-700',
+          icon: 'eye',
+          extra: 'text-indigo-700',
         },
         {
           label: 'Approved',
           value: String(stats.byStatus.APPROVED_BY_OFFICER ?? 0),
-          tone: 'text-navy-900',
+          tone: 'teal',
+          icon: 'star',
         },
         {
           label: 'Avg screening time',
@@ -360,35 +419,32 @@ function StatsBar({ stats, loading }: { stats: Stats | undefined; loading: boole
               : stats.avgScreeningMs < 100
                 ? '<0.1 s'
                 : `${(stats.avgScreeningMs / 1000).toFixed(1)} s`,
+          icon: 'clock',
         },
-        { label: 'Issues caught', value: String(stats.flagsCaught), tone: 'text-teal-deep' },
+        { label: 'Issues caught', value: String(stats.flagsCaught), tone: 'teal', icon: 'shield' },
       ]
     : [];
   return (
     <div
-      className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7"
+      className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7"
       aria-label="Queue statistics"
     >
-      {loading &&
-        Array.from({ length: 7 }, (_, i) => <div key={i} className="skeleton h-[74px]" />)}
+      {loading && Array.from({ length: 7 }, (_, i) => <Skeleton key={i} className="h-[92px]" />)}
       {items.map((s) => (
-        <div
+        <StatTile
           key={s.label}
-          className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
-        >
-          <div className={`text-2xl font-bold tabular-nums ${s.tone ?? 'text-navy-900'}`}>
-            {s.value}
-          </div>
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {s.label}
-          </div>
-        </div>
+          size="sm"
+          label={s.label}
+          value={<span className={s.extra}>{s.value}</span>}
+          tone={s.tone ?? 'navy'}
+          icon={s.icon}
+        />
       ))}
     </div>
   );
 }
 
-const SEV_DOT = { critical: 'bg-rose-500', warn: 'bg-amber-500', info: 'bg-slate-400' } as const;
+const SEV_DOT = { critical: 'bg-rose-600', warn: 'bg-warm-500', info: 'bg-slate-400' } as const;
 
 function QueueCard({
   c,
@@ -405,50 +461,59 @@ function QueueCard({
 }) {
   const issues = c.flagCounts.critical + c.flagCounts.warn;
   return (
-    <li className={`${fresh ? 'animate-enter' : ''}`} data-testid="queue-card">
+    <li className={`${fresh ? 'animate-arrive' : ''}`} data-testid="queue-card">
       <div
-        className={`group relative rounded-lg border bg-white shadow-sm transition hover:shadow-md ${selected ? 'border-navy-900 ring-2 ring-navy-900/20' : 'border-slate-200'} ${fresh ? 'animate-flash' : ''}`}
+        className={`group relative rounded-xl border bg-white shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-raised ${selected ? 'border-navy-900 ring-2 ring-navy-900/20' : 'border-line'} ${fresh ? 'animate-flash ring-2 ring-teal-accent' : ''}`}
       >
+        {fresh && (
+          <span className="absolute -top-2 left-3 z-10 animate-pop rounded-full bg-teal-deep px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-white shadow">
+            New
+          </span>
+        )}
         {selectable && (
           <input
             type="checkbox"
             checked={selected}
             onChange={onToggle}
             aria-label={`Select ${c.applicantName ?? c.reference}`}
-            className="absolute right-3 top-3.5 h-4 w-4 accent-navy-900"
+            className="absolute right-3.5 top-4 h-[18px] w-[18px] accent-navy-900"
           />
         )}
-        <Link to={`/cases/${c.id}`} className="block px-4 py-3">
-          <div className="flex items-baseline justify-between gap-2 pr-6">
-            <span className="truncate font-semibold text-navy-900">
+        <Link to={`/cases/${c.id}`} className="block rounded-xl px-4 py-3.5">
+          <div className={`flex items-start justify-between gap-3 ${selectable ? 'pr-7' : ''}`}>
+            <span className="min-w-0 text-[1.02rem] font-semibold leading-snug text-navy-900">
               {c.applicantName ?? 'Name not read'}
             </span>
             <span
-              className="shrink-0 rounded bg-slate-100 px-1.5 text-xs font-bold tabular-nums text-slate-600"
+              className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg bg-navy-50 px-1.5 text-sm font-bold tabular-nums text-navy-800 ring-1 ring-inset ring-navy-100"
               title="Priority score"
+              aria-label={`Priority score ${c.priorityScore}`}
             >
               {c.priorityScore}
             </span>
           </div>
-          <div className="mt-0.5 flex flex-wrap gap-x-2 text-xs text-slate-500">
+          <div className="mt-1 flex flex-wrap gap-x-2 text-[0.8rem] text-ink-muted">
             <span className="font-mono">{c.reference}</span>
             {c.district && <span>· {c.district}</span>}
             {c.age !== null && <span>· {c.age} yrs</span>}
             <span>· {timeSince(c.receivedAt)}</span>
           </div>
           {c.topFlag && (
-            <div className="mt-2 flex items-center gap-1.5 text-sm text-slate-700">
+            <div className="mt-2.5 flex items-center gap-2 rounded-lg bg-slate-50 px-2.5 py-1.5 text-[0.88rem] text-ink-soft">
               <span className={`h-2 w-2 shrink-0 rounded-full ${SEV_DOT[c.topFlag.severity]}`} />
-              <span className="truncate">{c.topFlag.title}</span>
+              <span className="truncate font-medium">{c.topFlag.title}</span>
               {issues > 1 && (
-                <span className="shrink-0 text-xs text-slate-400">+{issues - 1} more</span>
+                <span className="ml-auto shrink-0 text-xs font-semibold text-ink-muted">
+                  +{issues - 1} more
+                </span>
               )}
             </div>
           )}
           {(c.priorityReasons.some((r) => !r.startsWith('Pending')) || c.forwardedAt) && (
-            <div className="mt-2 flex flex-wrap gap-1">
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
               {c.forwardedAt && (
-                <span className="rounded-full bg-navy-900 px-2 py-0.5 text-[11px] font-semibold text-white">
+                <span className="flex items-center gap-1 rounded-full bg-navy-900 px-2 py-0.5 text-[11px] font-semibold text-white">
+                  <Icon name="send" size={11} strokeWidth={2.2} />
                   Forwarded to DSWO
                 </span>
               )}
