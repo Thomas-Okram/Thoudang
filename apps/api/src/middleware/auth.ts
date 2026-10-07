@@ -39,6 +39,41 @@ export function identity(opts: { mode: AuthMode; signer: SessionSigner }): Reque
 }
 
 /**
+ * Routes reachable without signing in when REQUIRE_SIGN_IN=1: health/meta for the app shell,
+ * sign-in itself, the citizen status page (HMAC-protected), and the phone upload flow — its
+ * session id is an unguessable capability URL shown only as the QR code on the officer's screen.
+ */
+const PUBLIC_ROUTES: { method?: string; pattern: RegExp }[] = [
+  { method: 'GET', pattern: /^\/(health|meta|network)\/?$/ },
+  { pattern: /^\/auth(\/|$)/ },
+  { method: 'GET', pattern: /^\/public\// },
+  { pattern: /^\/sessions\/[^/]+(\/.*)?$/ },
+];
+
+export const isPublicRoute = (path: string, method: string) =>
+  PUBLIC_ROUTES.some((r) => (!r.method || r.method === method) && r.pattern.test(path));
+
+/**
+ * REQUIRE_SIGN_IN=1: every other /api route (reads included — case data, redacted images, SSE,
+ * dashboard, uploads, demo reset) needs a valid session. Off by default until the web app
+ * redirects to the sign-in page on 401.
+ */
+export function requireSignIn(opts: { enabled: boolean }): RequestHandler {
+  return (req, res, next) => {
+    if (
+      !opts.enabled ||
+      req.session ||
+      req.method === 'OPTIONS' ||
+      isPublicRoute(req.path, req.method)
+    ) {
+      next();
+      return;
+    }
+    res.status(401).json({ error: 'Sign in with your officer PIN (open /api/auth/login)' });
+  };
+}
+
+/**
  * Answers 413 AFTER discarding the body (replying mid-upload makes clients see a connection
  * reset instead of the error). Gives up and drops the connection past `hardCapBytes`.
  */

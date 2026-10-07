@@ -3,7 +3,7 @@ import type { Db } from '../db/client.js';
 import type { AppConfig } from '../env.js';
 import type { EventBus } from '../events.js';
 import type { Logger } from '../logger.js';
-import { bodyLimit, identity } from '../middleware/auth.js';
+import { bodyLimit, identity, requireSignIn } from '../middleware/auth.js';
 import { originPolicy } from '../middleware/origin.js';
 import { rateLimit } from '../middleware/rate-limit.js';
 import { securityHeaders } from '../middleware/security-headers.js';
@@ -95,6 +95,7 @@ export function installSecurity(
     isUpload(req.path, req.method) ? uploadLimiter(req, res, next) : next(),
   );
   app.use('/api', identity({ mode: sec.authMode, signer }));
+  app.use('/api', requireSignIn({ enabled: sec.requireSignIn }));
   app.use(
     '/api',
     uploadGuard({
@@ -126,6 +127,11 @@ export function installSecurity(
     warnings: () => [
       ...(sec.authMode === 'header'
         ? ['AUTH_MODE=header — officer identity is NOT authenticated (legacy demo dropdown).']
+        : []),
+      ...(sec.authMode === 'session' && !sec.requireSignIn
+        ? [
+            'REQUIRE_SIGN_IN is off — case data can be READ on the LAN without signing in (actions still need a PIN).',
+          ]
         : []),
       ...(sec.usingDemoPins
         ? ['OFFICER_PINS not set — using the demo PINs from .env.example.']

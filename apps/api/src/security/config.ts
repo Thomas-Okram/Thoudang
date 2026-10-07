@@ -13,6 +13,8 @@ export interface SecurityConfig {
    * header  → legacy demo dropdown (X-Officer-Id trusted). Fallback until the web has a login screen.
    */
   authMode: AuthMode;
+  /** Every /api route except a small public list needs a session (session mode only). */
+  requireSignIn: boolean;
   sessionSecret: Buffer;
   /** true when SESSION_SECRET is unset: a random per-process secret (sessions end on restart). */
   sessionSecretEphemeral: boolean;
@@ -79,6 +81,7 @@ export function loadSecurityConfig(vars: NodeJS.ProcessEnv = process.env): Secur
   const webPort = num(vars.WEB_PORT, 5173);
   return {
     authMode: vars.AUTH_MODE === 'header' ? 'header' : 'session',
+    requireSignIn: vars.AUTH_MODE !== 'header' && vars.REQUIRE_SIGN_IN === '1',
     sessionSecret: secret ? Buffer.from(secret, 'utf8') : crypto.randomBytes(32),
     sessionSecretEphemeral: !secret,
     sessionTtlMs: num(vars.SESSION_TTL_HOURS, 12) * 3_600_000,

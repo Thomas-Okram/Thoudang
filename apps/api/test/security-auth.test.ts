@@ -163,4 +163,34 @@ describe('PIN sign-in and signed session cookie', () => {
     expect(res.body.officers.map((o: { id: string }) => o.id).sort()).toEqual([DA, DSWO]);
     expect(JSON.stringify(res.body)).not.toMatch(/2468|1357/);
   });
+
+  it('REQUIRE_SIGN_IN=1 protects reads and uploads; phone QR flow and citizen status stay public', async () => {
+    t = setupApp(packetVision(), 'live', { security: testSecurity({ REQUIRE_SIGN_IN: '1' }) });
+    for (const [method, url] of [
+      ['get', '/api/cases'],
+      ['get', '/api/dashboard'],
+      ['get', '/api/events'],
+      ['post', '/api/demo/reset'],
+      ['post', '/api/sessions'],
+    ] as const)
+      expect((await request(t.app)[method](url)).status, url).toBe(401);
+    const upload = await request(t.app)
+      .post('/api/cases')
+      .attach('files', await makeImage('#eee'), 'form.jpg');
+    expect(upload.status).toBe(401);
+
+    const cookie = t.cookie(DA);
+    expect((await request(t.app).get('/api/cases').set('Cookie', cookie)).status).toBe(200);
+    const s = await request(t.app).post('/api/sessions').set('Cookie', cookie);
+    expect(s.status).toBe(201);
+    // The phone has no session cookie — its QR capability URL is enough.
+    const phone = await request(t.app)
+      .post(`/api/sessions/${s.body.sessionId}/files?from=phone&type=aadhaar`)
+      .attach('files', await makeImage('#ddd'), 'IMG_1.jpg');
+    expect(phone.status).toBe(201);
+    expect((await request(t.app).get(`/api/sessions/${s.body.sessionId}`)).status).toBe(200);
+    expect((await request(t.app).get('/api/health')).status).toBe(200);
+    expect((await request(t.app).get('/api/meta')).status).toBe(200);
+    expect((await request(t.app).get('/api/public/status/THD-2026-9999?k=x')).status).toBe(404);
+  });
 });
