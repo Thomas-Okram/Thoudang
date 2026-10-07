@@ -1,0 +1,32 @@
+{
+  "name": "thoudang",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI scrutiny desk for welfare officers — Social Welfare Department, Govt of Manipur (AI4SEVA SW-03)",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,green \"npm run dev -w @thoudang/api\" \"npm run dev -w @thoudang/web\"",
+    "test": "npm run test --workspaces --if-present",
+    "seed": "npm run seed -w @thoudang/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^20.19.43",
+    "concurrently": "^9.2.4",
+    "eslint": "^10.12.0",
+    "prettier": "^3.9.9",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.71.1"
+  }
+}

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.env
+.env.local
+apps/api/uploads/*
+!apps/api/uploads/.gitkeep
+apps/api/data/*.db
+apps/api/data/*.db-*
+apps/api/logs/
+.DS_Store
+coverage/
