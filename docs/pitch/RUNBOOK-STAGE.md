@@ -14,10 +14,15 @@ Technical detail for each command is in [../demo-runbook.md](../demo-runbook.md)
 - [ ] `npm run smoke -- eval-data/example-packet-01/aadhaar.jpg` returns masked JSON. Note the latency.
 - [ ] `npm run eval -- --dir ./eval-data` — write the accuracy and cost-per-packet figures on a card
       in your pocket (Q&A A1 and C4). These are the only performance numbers you may quote.
-- [ ] Prime every stage packet: `npm run demo:prime -- --dir ./demo-packets`
-- [ ] Prime the batch with cases: `npm run demo:prime -- --dir ./demo-packets/batch --with-cases`
-      — check the queue has a **Kh. Loken Singh** case in _Officer attention_ and at least one case in
-      _Needs citizen correction_.
+- [ ] Prime every stage packet (cache only, no cases): `npm run demo:prime -- --dir ./demo-packets`
+- [ ] **Prime the queue** — cases for `demo-01` … `demo-06` only, one folder at a time, in order
+      (demo-01 must precede its duplicate demo-06; all cache hits, no API calls):
+      `for d in demo-packets/demo-0[1-6]-*; do npm run demo:prime -- --dir "./$d" --with-cases; done`
+      Never create a case for `demo-07-thomas-o-resolved-by-father` — it is the live upload, and an
+      existing case would make it a _Possible duplicate_.
+      Check the queue: _Ready_ 3, _Needs citizen correction_ 1 (**Gaikhangam Dangmei**),
+      _Officer attention_ 2 (**Kh. Loken Singh**, and **CHABUNGBAM IBOBI SINGH** as a possible
+      duplicate). Expected verdicts per packet: table at the end of [SCRIPT.md](SCRIPT.md).
 - [ ] `npm run notices:prime` — open one notice and press play; audio must work offline afterwards.
 - [ ] `npm run seed:dashboard` — `/dashboard` shows charts.
 - [ ] `npm run fairness -- --holdout ./holdout-pairs.csv` if you have staff-written pairs.
@@ -29,7 +34,8 @@ Technical detail for each command is in [../demo-runbook.md](../demo-runbook.md)
 - [ ] Run [SCRIPT.md](SCRIPT.md) three times with a stopwatch, under 3:00 each.
 - [ ] Rehearse once with Wi-Fi **off** (cache only) so you know what a primed replay looks like.
 - [ ] Press **Ctrl+Shift+R** after each run (demo reset: removes live cases, keeps cache, audio,
-      templates and history).
+      templates and history). The reset also removes the primed queue cases — re-run the
+      "Prime the queue" loop above (instant, cache only) and reload `/queue`.
 
 ### Backup video
 
@@ -40,9 +46,10 @@ Technical detail for each command is in [../demo-runbook.md](../demo-runbook.md)
 
 ### Physical kit
 
-- [ ] Printed SPECIMEN packet for the hook (form, Aadhaar, passbook), printed from the primed image
-      files. Note: a phone photo of the paper is a new image and always calls the API — only the
-      original image **files** replay from the cache. Keep those files in a desktop folder
+- [ ] Printed SPECIMEN packet for the hook (form, Aadhaar, passbook), printed from
+      `demo-packets/demo-07-thomas-o-resolved-by-father/` (`form.jpg`, `aadhaar.jpg`,
+      `passbook.jpg`). Note: a phone photo of the paper is a new image and always calls the API —
+      only the original image **files** replay from the cache. Copy those three files to a desktop folder
       `stage-packet/` ready to drag.
 - [ ] Laptop charger, phone charger, USB-C to HDMI adapter (+ spare), clicker if allowed.
 - [ ] Second phone (or a friend's) for the hotspot plan.
@@ -61,11 +68,12 @@ Technical detail for each command is in [../demo-runbook.md](../demo-runbook.md)
       besides the three demo tabs (Intake, Queue, Trust). Clear any autofill pop-ups.
 - [ ] Start the app: `npm run demo` → wait for "listening" → open http://localhost:5173.
       Health badge in the sidebar shows API OK and **demo mode**.
-- [ ] Officer switcher (top right) = **Dealing Assistant**.
+- [ ] Signed in as **DSWO Imphal West** (officer login: pick officer → PIN 2468).
 - [ ] Network test: phone browser opens `http://<laptop-ip>:5173/api/health` and shows `"status":"ok"`.
 - [ ] Scan the Intake QR on the phone; leave the upload page open on **Form**. Phone: Do Not Disturb,
       brightness max, auto-lock off, battery > 70%.
-- [ ] Do one throwaway live upload, then **Ctrl+Shift+R** to reset.
+- [ ] Do one throwaway live upload, then **Ctrl+Shift+R** to reset and re-run the "Prime the queue"
+      loop (the reset removes the primed queue cases too).
 - [ ] Backup video open in QuickTime, paused on frame 1, in a separate desktop space (swipe-ready).
 - [ ] Water. Card with eval numbers in pocket.
 
@@ -115,5 +123,5 @@ the screen labels it, and judges will see it.
 
 ## After the demo
 
-- [ ] **Ctrl+Shift+R** to reset before the next judge panel.
+- [ ] **Ctrl+Shift+R** to reset before the next judge panel, then re-run the "Prime the queue" loop.
 - [ ] Keep the app running for the Q&A — open `/trust` or `/dashboard` to answer questions on screen.
