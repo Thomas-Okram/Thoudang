@@ -1,0 +1,161 @@
+name_a,name_b,community,expected_same,note
+Laishram Tomba Singh,L. Tomba Singh,Meitei,true,yumnak abbreviated to single initial; given name and suffix identical
+Thokchom Ibemhal Devi,Th. Ibemhal Devi,Meitei,true,yumnak abbreviated to Th.
+Khumanthem Sanatombi Chanu,Kh. Sanatombi Chanu,Meitei,true,yumnak abbreviated to Kh.
+Ningthoujam Chaoba Singh,Chaoba Singh Ningthoujam,Meitei,true,word order swap - yumnak moved to the end (English style)
+Wahengbam Ibochouba Singh,WAHENGBAM IBOCHOUBA SINGH,Meitei,true,ALL CAPS bank passbook style
+Sorokhaibam Memcha Devi,Sorokhaibam Memcha,Meitei,true,Devi suffix dropped
+Yumnam Naoba,Yumnam Naoba Singh,Meitei,true,Singh suffix added
+Konsam Thoibi Chanu,Konsam Thoibi Devi,Meitei,true,Chanu vs Devi - same woman commonly written both ways across documents
+Moirangthem Ibotombi Meitei,Moirangthem Ibotombi Singh,Meitei,true,Meitei used as surname-suffix instead of Singh
+Huidrom Rajen Meetei,Huidrom Rajen Meitei,Meitei,true,Meetei vs Meitei spelling
+Kshetrimayum Bimola Devi,Kshetrimayum Bimola Leima,Meitei,true,Leima suffix instead of Devi
+Elangbam Tombi Devi,Elangbam Ningol Oinam Ongbi Tombi Devi,Meitei,true,maiden name vs full married form (Elangbam Ningol = born Elangbam; Oinam Ongbi = wife of an Oinam)
+Haobam Sanajaoba Singh,Haobam Sana Jaoba Singh,Meitei,true,compound given name split by a space
+Akoijam Ibomcha Singh,Akoijam  Ibomcha  Singh.,Meitei,true,double spaces and trailing full stop
+Chongtham Lukhoi Singh,Ch. Lukhoi Singh,Meitei,true,yumnak abbreviated to Ch.
+Thangjam Premila Devi,THANGJAM PREMILA,Meitei,true,ALL CAPS and Devi dropped
+Maibam Sanatomba Singh,Maibam Sanatomba Singh Meitei,Meitei,true,extra Meitei appended after Singh
+Takhellambam Ibungo Singh,Tekhellambam Ibungo Singh,Meitei,true,romanisation variant of yumnak (a/e)
+Sagolsem Romita Devi,Sagolshem Romita Devi,Meitei,true,romanisation variant of yumnak (s/sh)
+Nongmaithem Achouba Singh,N. Achouba Singh,Meitei,true,yumnak abbreviated to single initial
+Pukhrambam Ngambi Devi,NGAMBI DEVI PUKHRAMBAM,Meitei,true,ALL CAPS plus yumnak moved to the end
+Lairenlakpam Ibohal Singh,Lairellakpam Ibohal Singh,Meitei,true,romanisation variant of yumnak (n/l assimilation)
+Laishram Tomba Singh,Laishram Thoiba Singh,Meitei,false,near-identical given names Tomba vs Thoiba
+Thokchom Ibemcha Devi,Thokchom Ibemhal Devi,Meitei,false,near-identical given names Ibemcha vs Ibemhal (likely sisters)
+Ningthoujam Chaoba Singh,Ningthoujam Naoba Singh,Meitei,false,same yumnak different given name
+Wahengbam Ibochouba Singh,Yumnam Ibochouba Singh,Meitei,false,same given name different yumnak - men do not change yumnak
+Moirangthem Tomba Singh,Moirangthem Tombi Devi,Meitei,false,brother and sister - Tomba (m) vs Tombi (f)
+Huidrom Ibomcha Singh,Huidrom Ibotombi Singh,Meitei,false,father and son - same yumnak and shared Ibo- prefix
+Konsam Sanatombi Chanu,Konsam Sanahanbi Chanu,Meitei,false,sisters - Sanatombi vs Sanahanbi
+Akoijam Memcha Devi,Akoijam Momon Devi,Meitei,false,sisters - same yumnak different given name
+Kshetrimayum Rajen Singh,Kshetrimayum Rajesh Singh,Meitei,false,near-identical given names Rajen vs Rajesh
+Sorokhaibam Ibungo Singh,Soraisam Ibungo Singh,Meitei,false,near-identical but distinct yumnaks (Sorokhaibam vs Soraisam)
+Chongtham Lukhoi Singh,Chingtham Lukhoi Singh,Meitei,false,near-identical but distinct yumnaks (Chongtham vs Chingtham)
+Haobam Sanajaoba Singh,Haobam Sanayaima Singh,Meitei,false,same yumnak and Sana- prefix but different given name
+Elangbam Tombi Devi,Elangbam Thoibi Devi,Meitei,false,near-identical given names Tombi vs Thoibi
+Maibam Ibohal Singh,Maibam Ibohanbi Devi,Meitei,false,brother and sister
+Ningthoujam Ranjit Singh,Ningombam Ranjit Singh,Meitei,false,man - same given name with a different (similar-looking) yumnak
+Thangjam Premila Devi,Thangjam Pramodini Devi,Meitei,false,same yumnak and similar start but different given name
+Salam Tomchou Singh,Salam Tomba Singh,Meitei,false,near-identical given names Tomchou vs Tomba
+Keisham Ibetombi Chanu,Keisham Ibemcha Chanu,Meitei,false,sisters sharing the Ibe- prefix
+Yumnam Naoba Singh,Yumnam Naobi Devi,Meitei,false,brother and sister - Naoba (m) vs Naobi (f)
+Mayengbam Sanjit Singh,Mayengbam Sanjoy Singh,Meitei,false,near-identical given names Sanjit vs Sanjoy
+L. Tomba Singh,L. Thoiba Singh,Meitei,false,both abbreviated and given names differ
+Atom Ibotombi Singh,Atom Ibochaoba Singh,Meitei,false,brothers sharing the Ibo- prefix
+Khumanthem Sanatombi Chanu,Kh. Sanahanbi Chanu,Meitei,false,abbreviation is consistent but given name differs
+Elangbam Tombi Devi,Oinam Ongbi Tombi Devi,Meitei,ambiguous,married name (wife of an Oinam) without the maiden yumnak - cannot link to Elangbam without other evidence
+Soibam Tiken Singh,Soibam Tikendrajit Singh,Meitei,ambiguous,Tiken is a common short form of Tikendrajit but could be a different family member
+Thangjam Premila Devi,Thangjam Pramila Devi,Meitei,ambiguous,Premila/Pramila may be a romanisation variant or two different women
+Tomba Singh,Laishram Tomba Singh,Meitei,ambiguous,yumnak missing entirely and Tomba Singh is extremely common
+Ningthoujam Bimola Devi,Ningombam Bimola Devi,Meitei,ambiguous,woman - different yumnak could be a spelling slip or a marriage-related change; no Ongbi marker
+Md. Abdul Hamid,Mohammad Abdul Hamid,Meitei Pangal,true,Md. vs Mohammad
+Mohd. Fajur Rahman,Md Fajur Rahman,Meitei Pangal,true,Mohd. vs Md without full stop
+Mohammed Ali Hussain,MD ALI HUSSAIN,Meitei Pangal,true,Mohammed vs MD in ALL CAPS bank style
+Md. Nasir Uddin,Md. Nasiruddin,Meitei Pangal,true,Uddin joined to the given name
+Md. Abdul Salam Khan,Md. Abdul Salam,Meitei Pangal,true,family name Khan dropped
+Hasina Begum,Hasina Begam,Meitei Pangal,true,romanisation of Begum
+Sabina Nessa,Sabina Nesa,Meitei Pangal,true,romanisation of Nessa
+Khullakpam Md. Jamal Uddin,Md. Jamal Uddin Khullakpam,Meitei Pangal,true,sagei (clan) name first vs last
+Phundreimayum Md. Abdul Rashid,Ph. Md. Abdul Rashid,Meitei Pangal,true,sagei name abbreviated
+Md. Abdul Latif Shah,Mohd Abdul Latif Shah,Meitei Pangal,true,Md. vs Mohd
+Rahima Bibi,RAHIMA BIBI,Meitei Pangal,true,ALL CAPS
+Md. Kutub Uddin,Md. Qutub Uddin,Meitei Pangal,true,romanisation K vs Q
+Md. Ahmed Ali,Md. Ahamed Ali,Meitei Pangal,true,romanisation Ahmed vs Ahamed
+Md. Abdul Hamid,Md. Abdul Hakim,Meitei Pangal,false,near-identical given names Hamid vs Hakim
+Md. Abdul Salam,Md. Abdul Kalam,Meitei Pangal,false,near-identical given names Salam vs Kalam
+Md. Fajur Rahman,Md. Fajur Rahim,Meitei Pangal,false,near-identical Rahman vs Rahim
+Md. Ali Hussain,Md. Ali Hasan,Meitei Pangal,false,Hussain vs Hasan are distinct names
+Md. Nasir Uddin,Md. Nizam Uddin,Meitei Pangal,false,near-identical Nasir vs Nizam
+Hasina Begum,Hamida Begum,Meitei Pangal,false,same honorific different given name
+Sabina Nessa,Sabana Nessa,Meitei Pangal,false,near-identical given names Sabina vs Sabana
+Khullakpam Md. Jamal Uddin,Khullakpam Md. Kamal Uddin,Meitei Pangal,false,brothers - Jamal vs Kamal under the same sagei
+Md. Abdul Rashid,Md. Rashid Ali,Meitei Pangal,false,father and son sharing the Rashid element
+Md. Abdul Latif Shah,Md. Abdul Majid Shah,Meitei Pangal,false,brothers with the same family name
+Rahima Bibi,Md. Rahim Uddin,Meitei Pangal,false,woman vs man with similar root name
+Md. Abdul Wahid,Md. Abdul Wahab,Meitei Pangal,false,near-identical Wahid vs Wahab
+Md. Sirajuddin,Md. Sirajul Haque,Meitei Pangal,false,shared Siraj- root but different names
+Md. Amir Hussain,Md. Amin Hussain,Meitei Pangal,false,one-letter difference Amir vs Amin
+Md. Abdul Rashid,Md. Rashid,Meitei Pangal,ambiguous,truncated name; Md. Rashid alone is very common
+Mohammad Ali,Md. Ali Hussain,Meitei Pangal,ambiguous,second document adds a name - same man or a different Md. Ali
+Hasina Begum,Hasina Khatun,Meitei Pangal,ambiguous,Begum and Khatun are both honorific endings - could be the same woman
+Ngachonmi Shimray,Shimray Ngachonmi,Naga,true,Tangkhul - surname first vs last
+Ramthing Hungyo,Ramthing H.,Naga,true,Tangkhul - surname reduced to initial; given name intact
+Somingam Zimik,SOMINGAM ZIMIK,Naga,true,Tangkhul - ALL CAPS
+Kasomwung Keishing,Kasomwung Keising,Naga,true,Tangkhul - romanisation sh/s
+Pamreihor Kasar,Pamrei Hor Kasar,Naga,true,Tangkhul - given name split into parts
+Kamei Ramkung,Ramkung Kamei,Naga,true,Rongmei - clan name first vs last
+Gonmei Thaithuilung,G. Thaithuilung,Naga,true,Rongmei - clan name abbreviated
+Pamei Kaikhonlung,Pamei Kaikhonglung,Naga,true,Rongmei - romanisation n/ng
+Haipeu Newmai,Haipeu Newme,Naga,true,Liangmai - romanisation mai/me
+Pheisii Lorho,Pheisi Lorho,Naga,true,Mao - romanisation ii/i
+Rakho Veino,Veino Rakho,Naga,true,Poumai - word order swap
+Thiulung Maram,THIULUNG MARAM.,Naga,true,Maram - ALL CAPS and trailing full stop
+Daniel Haichang Zeme,Daniel Haichang,Naga,true,Zeme - tribe name used as trailing suffix dropped
+Kheshang Thoumai Maring,Kheshang Thoumai,Naga,true,Maring - tribe suffix dropped
+Ruthie Ningam Anal,Ruthie N. Anal,Naga,true,Anal - middle name reduced to initial
+Yarteo Luithui,Yarteo Lui Thui,Naga,true,Tangkhul - surname split by a space
+Shangreiphao Chiphang,Shangreipao Chiphang,Naga,true,Tangkhul - romanisation ph/p
+Riamei Kalung Rongmei,Kalung Riamei,Naga,true,Rongmei - tribe suffix dropped and order swapped
+Ngachonmi Shimray,Ngachonla Shimray,Naga,false,Tangkhul - near-identical given names
+Ramthing Hungyo,Ramthing Zimik,Naga,false,Tangkhul - man; same given name different surname
+Somingam Zimik,Somiwung Zimik,Naga,false,Tangkhul - near-identical given names
+John Shimray,John Hungyo,Naga,false,common Christian given name with different surnames (men)
+Peter Kasar,Paul Kasar,Naga,false,Tangkhul - brothers
+Kamei Ramkung,Kamei Ramkhui,Naga,false,Rongmei - near-identical given names
+Gonmei Thaithuilung,Gonmei Thaithuiliu,Naga,false,Rongmei - male -lung vs female -liu (siblings)
+Pamei Kaikhonlung,Panmei Kaikhonlung,Naga,false,Rongmei - man; Pamei and Panmei are distinct clans
+Haipeu Newmai,Haitung Newmai,Naga,false,Liangmai - brothers
+Pheisii Lorho,Pfosii Lorho,Naga,false,Mao - near-identical given names
+Rakho Veino,Lokho Veino,Naga,false,Poumai - rhyming given names same family
+Thiulung Maram,Thiuliu Maram,Naga,false,Maram - brother and sister
+Daniel Haichang,David Haichang,Naga,false,Zeme - brothers
+Kheshang Thoumai,Kheshang Sakhong,Naga,false,Maring - man; same given name different family
+Thangpu Anal,Thangpi Anal,Naga,false,Anal - father and daughter; one-letter difference
+Yarteo Luithui,Yarteo Lunghar,Naga,false,Tangkhul - man; same given name different surname
+Shangreiphao Chiphang,Shangreiwon Chiphang,Naga,false,Tangkhul - shared Shangrei- prefix
+Kalung Riamei,Kalung Malangmei,Naga,false,Rongmei - man; same given name different clan
+Somingam Zimik,Ngathingkhui Zimik,Naga,false,Tangkhul - father and son same surname
+Mayaso Raleng,Mayaso Shimray,Naga,ambiguous,Tangkhul woman - surname may change to husband's at marriage
+John Shimray,John Ngalaiphi Shimray,Naga,ambiguous,extra native name; John Shimray is a very common combination
+R. Hungyo,Ramthing Hungyo,Naga,ambiguous,only the initial of the given name - could be any Hungyo starting with R
+Thangboi Haokip,Haokip Thangboi,Kuki-Zo,true,Thadou - clan name first (official-document style) vs last
+Lhingneilam Kipgen,Hlingneilam Kipgen,Kuki-Zo,true,Thadou - romanisation Lh/Hl
+Seilen Singsit,SEILEN SINGSIT,Kuki-Zo,true,Thadou - ALL CAPS
+Paolen Touthang,Paolen T.,Kuki-Zo,true,Thadou - clan reduced to initial
+Jangkhosei Doungel,Jangkhosei Dongel,Kuki-Zo,true,Thadou - romanisation ou/o
+Lianzamang Guite,Lian Za Mang Guite,Kuki-Zo,true,Paite - given name written syllable by syllable
+Khamzalian Tonsing,Tonsing Khamzalian,Kuki-Zo,true,Paite - word order swap
+Niangngaihlun Samte,Niangngailun Samte,Kuki-Zo,true,Paite - romanisation h dropped
+Lalremruata Pulamte,Lalremruata Pulamte Hmar,Kuki-Zo,true,Hmar - tribe name added as suffix
+Lalhmingsangi Neitham,Lalhmingsangi N.,Kuki-Zo,true,Hmar - clan reduced to initial
+Thangkhanmuan Vaiphei,Thangkhanmuang Vaiphei,Kuki-Zo,true,Vaiphei - romanisation trailing g
+Pu Thangkhanlian Zou,Thangkhanlian Zou,Kuki-Zo,true,Zou - honorific Pu (Mr) prefix
+Lianminthang Gangte,Lian Minthang Gangte,Kuki-Zo,true,Gangte - given name split
+Sanglen Kom,Kom Sanglen,Kuki-Zo,true,Kom - word order swap
+Pi Ngaihchingdim Simte,Ngaihchingdim Simte,Kuki-Zo,true,Simte - honorific Pi (Mrs/Ms) prefix
+Nengneikim Lhungdim,NENGNEIKIM LHUNGDIM.,Kuki-Zo,true,Thadou - ALL CAPS and trailing full stop
+Thangminlen Chongloi,Thangminlen Chongloih,Kuki-Zo,true,Thadou - romanisation trailing h
+Hemkhosei Hangshing,Hemkhosei Hangsing,Kuki-Zo,true,Thadou - romanisation sh/s
+Thangboi Haokip,Thangboi Kipgen,Kuki-Zo,false,Thadou - man; same given name different clan
+Lhingneilam Kipgen,Lhingneikim Kipgen,Kuki-Zo,false,Thadou - sisters; near-identical given names
+Seilen Singsit,Paolen Singsit,Kuki-Zo,false,Thadou - brothers sharing the -len ending
+Paolen Touthang,Paominlen Touthang,Kuki-Zo,false,Thadou - father and son; shared Pao- and -len
+Jangkhosei Doungel,Jangkholun Doungel,Kuki-Zo,false,Thadou - shared Jangkho- prefix
+Lianzamang Guite,Lianzamung Guite,Kuki-Zo,false,Paite - one-letter difference in given name
+Khamzalian Tonsing,Khamzalian Samte,Kuki-Zo,false,Paite - man; same given name different clan
+Niangngaihlun Samte,Niangngaihching Samte,Kuki-Zo,false,Paite - sisters sharing Niangngaih-
+Lalremruata Pulamte,Lalremruati Pulamte,Kuki-Zo,false,Hmar - brother (-a) and sister (-i)
+Lalhmingsangi Neitham,Lalhmingthangi Neitham,Kuki-Zo,false,Hmar - sisters; near-identical given names
+Thangkhanmuan Vaiphei,Thangkhanpau Vaiphei,Kuki-Zo,false,Vaiphei - brothers sharing Thangkhan-
+Thangkhanlian Zou,Thangkhanlian Gangte,Kuki-Zo,false,man; same given name different tribe/clan
+Lianminthang Gangte,Lianmuanthang Gangte,Kuki-Zo,false,Gangte - near-identical given names
+Sanglen Kom,Sangboi Kom,Kuki-Zo,false,Kom - shared Sang- prefix
+Ngaihchingdim Simte,Ngaihchingmoi Simte,Kuki-Zo,false,Simte - sisters sharing Ngaihching-
+Lalboi Mate,Thanglalboi Mate,Kuki-Zo,false,Thadou - father and son; one name contains the other
+Thangminlen Chongloi,Thangminthang Chongloi,Kuki-Zo,false,Thadou - shared Thangmin- prefix
+Seigoulun Khongsai,Seigoulen Khongsai,Kuki-Zo,false,Thadou - -lun vs -len endings are different names
+Lhingneilam Kipgen,Lhingneilam Haokip,Kuki-Zo,ambiguous,woman - clan name may be written as husband's after marriage
+T. Haokip,Thangboi Haokip,Kuki-Zo,ambiguous,only the initial of the given name and Haokip is a very common clan
+Lalremruata,Lalremruata Pulamte,Kuki-Zo,ambiguous,clan missing on one document and the given name is common
+Mang Guite,Lianzamang Guite,Kuki-Zo,ambiguous,Mang may be a short form of Lianzamang or a different person
