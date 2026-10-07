@@ -13,6 +13,7 @@
     "seed": "tsx src/seed.ts"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/better-sqlite3": "^9.6.0",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.3.0",
@@ -25,11 +26,14 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
     "@thoudang/core": "*",
+    "adm-zip": "^0.6.1",
     "better-sqlite3": "^12.11.1",
     "dotenv": "^18.0.6",
     "drizzle-orm": "^0.45.3",
     "express": "^5.2.1",
     "multer": "^2.4.0",
-    "sharp": "^0.35.5"
+    "p-limit": "^7.3.3",
+    "sharp": "^0.35.5",
+    "zod": "^4.6.5"
   }
 }

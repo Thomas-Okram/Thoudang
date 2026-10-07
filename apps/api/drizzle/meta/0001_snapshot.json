@@ -1,6 +1,6 @@
 {
-  "id": "04f0b539-4ef8-4bc9-b8e3-b152c6895348",
-  "prevId": "62f12f2f-20ae-44aa-a530-8b6132c8a91a",
+  "id": "eb64b220-ef6f-405d-a03c-7587105bef04",
+  "prevId": "4bd9eac2-f2d4-41ed-b7cc-baf9b82115b5",
   "version": "6",
   "dialect": "sqlite",
   "tables": {
@@ -169,6 +169,28 @@
           "notNull": false,
           "autoincrement": false
         },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'desk'"
+        },
+        "batch_id": {
+          "name": "batch_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "packet_name": {
+          "name": "packet_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "received_at": {
           "name": "received_at",
           "type": "integer",
@@ -220,6 +242,13 @@
             "priority_score"
           ],
           "isUnique": false
+        },
+        "cases_batch_idx": {
+          "name": "cases_batch_idx",
+          "columns": [
+            "batch_id"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
@@ -244,12 +273,27 @@
           "notNull": true,
           "autoincrement": false
         },
-        "doc_type": {
-          "name": "doc_type",
+        "detected_type": {
+          "name": "detected_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "type_confidence": {
+          "name": "type_confidence",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "state": {
+          "name": "state",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "'UPLOADED'"
         },
         "original_name": {
           "name": "original_name",
@@ -260,6 +304,13 @@
         },
         "stored_path": {
           "name": "stored_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "processed_path": {
+          "name": "processed_path",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -283,14 +334,14 @@
           "name": "width_px",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "height_px": {
           "name": "height_px",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "sha256": {
@@ -299,6 +350,14 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
         },
         "created_at": {
           "name": "created_at",
@@ -336,6 +395,86 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "extraction_cache": {
+      "name": "extraction_cache",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sha256": {
+          "name": "sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "stage": {
+          "name": "stage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "prompt_version": {
+          "name": "prompt_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "result_json": {
+          "name": "result_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "latency_ms": {
+          "name": "latency_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "input_tokens": {
+          "name": "input_tokens",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "output_tokens": {
+          "name": "output_tokens",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "extractions": {
       "name": "extractions",
       "columns": {
@@ -360,11 +499,18 @@
           "notNull": true,
           "autoincrement": false
         },
-        "doc_type": {
-          "name": "doc_type",
+        "stage": {
+          "name": "stage",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "detected_type": {
+          "name": "detected_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "status": {
@@ -381,8 +527,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "fields_json": {
-          "name": "fields_json",
+        "result_json": {
+          "name": "result_json",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -394,6 +540,14 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "cache_hit": {
+          "name": "cache_hit",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
         },
         "latency_ms": {
           "name": "latency_ms",
@@ -412,13 +566,6 @@
         "output_tokens": {
           "name": "output_tokens",
           "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "mean_confidence": {
-          "name": "mean_confidence",
-          "type": "real",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

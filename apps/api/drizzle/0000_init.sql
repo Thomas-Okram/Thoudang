@@ -23,6 +23,9 @@ CREATE TABLE `cases` (
 	`priority_reasons` text DEFAULT '[]' NOT NULL,
 	`aadhaar_last4` text,
 	`applicant_dob` text,
+	`source` text DEFAULT 'desk' NOT NULL,
+	`batch_id` text,
+	`packet_name` text,
 	`received_at` integer NOT NULL,
 	`decided_by` text,
 	`decided_at` integer,
@@ -32,35 +35,54 @@ CREATE TABLE `cases` (
 --> statement-breakpoint
 CREATE UNIQUE INDEX `cases_reference_unique` ON `cases` (`reference`);--> statement-breakpoint
 CREATE INDEX `cases_status_priority_idx` ON `cases` (`status`,`priority_score`);--> statement-breakpoint
+CREATE INDEX `cases_batch_idx` ON `cases` (`batch_id`);--> statement-breakpoint
 CREATE TABLE `documents` (
 	`id` text PRIMARY KEY NOT NULL,
 	`case_id` text NOT NULL,
-	`doc_type` text NOT NULL,
+	`detected_type` text,
+	`type_confidence` text,
+	`state` text DEFAULT 'UPLOADED' NOT NULL,
 	`original_name` text NOT NULL,
 	`stored_path` text NOT NULL,
+	`processed_path` text NOT NULL,
 	`mime_type` text NOT NULL,
 	`size_bytes` integer NOT NULL,
-	`width_px` integer,
-	`height_px` integer,
+	`width_px` integer NOT NULL,
+	`height_px` integer NOT NULL,
 	`sha256` text NOT NULL,
+	`position` integer DEFAULT 0 NOT NULL,
 	`created_at` integer NOT NULL,
 	FOREIGN KEY (`case_id`) REFERENCES `cases`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE INDEX `documents_case_idx` ON `documents` (`case_id`);--> statement-breakpoint
+CREATE TABLE `extraction_cache` (
+	`key` text PRIMARY KEY NOT NULL,
+	`sha256` text NOT NULL,
+	`stage` text NOT NULL,
+	`model` text NOT NULL,
+	`prompt_version` text NOT NULL,
+	`result_json` text NOT NULL,
+	`latency_ms` integer NOT NULL,
+	`input_tokens` integer NOT NULL,
+	`output_tokens` integer NOT NULL,
+	`created_at` integer NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `extractions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`case_id` text NOT NULL,
 	`document_id` text NOT NULL,
-	`doc_type` text NOT NULL,
+	`stage` text NOT NULL,
+	`detected_type` text,
 	`status` text NOT NULL,
 	`model` text NOT NULL,
-	`fields_json` text,
+	`result_json` text,
 	`error_message` text,
+	`cache_hit` integer DEFAULT false NOT NULL,
 	`latency_ms` integer,
 	`input_tokens` integer,
 	`output_tokens` integer,
-	`mean_confidence` real,
 	`created_at` integer NOT NULL,
 	FOREIGN KEY (`case_id`) REFERENCES `cases`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`document_id`) REFERENCES `documents`(`id`) ON UPDATE no action ON DELETE cascade

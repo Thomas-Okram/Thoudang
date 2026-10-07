@@ -1,5 +1,5 @@
-import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
-import type { CaseStatus, DocType, FlagAction, FlagEvidence, Severity } from '@thoudang/core';
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
+import type { CaseStatus, FlagAction, FlagEvidence, Severity } from '@thoudang/core';
 
 /** The ONLY case statuses. There is deliberately no "rejected" status anywhere in Thoudang. */
 export const CASE_STATUSES = [
@@ -17,12 +17,26 @@ export const PROCESSING_STATES = [
   'EXTRACTION_FAILED',
 ] as const;
 
-export const DOC_TYPES = [
-  'form',
+/** Document labels produced by the classifier (Claude). "other" = not part of the packet. */
+export const DETECTED_TYPES = [
+  'application_form',
   'aadhaar',
-  'passbook',
+  'bank_passbook',
   'epic',
-] as const satisfies readonly DocType[];
+  'other',
+] as const;
+export type DetectedType = (typeof DETECTED_TYPES)[number];
+
+/** Per-document pipeline progress. */
+export const DOCUMENT_STATES = [
+  'UPLOADED',
+  'CLASSIFIED',
+  'EXTRACTED',
+  'FAILED',
+  'SKIPPED',
+] as const;
+
+export const CASE_SOURCES = ['desk', 'phone', 'batch', 'api', 'eval'] as const;
 
 const createdAt = () =>
   integer('created_at', { mode: 'timestamp_ms' })
@@ -48,6 +62,9 @@ export const cases = sqliteTable(
     /** Masked only — last 4 digits of Aadhaar. Full numbers are never stored. */
     aadhaarLast4: text('aadhaar_last4'),
     applicantDob: text('applicant_dob'),
+    source: text('source', { enum: CASE_SOURCES }).notNull().default('desk'),
+    batchId: text('batch_id'),
+    packetName: text('packet_name'),
     receivedAt: integer('received_at', { mode: 'timestamp_ms' })
       .notNull()
       .$defaultFn(() => new Date()),
@@ -58,7 +75,10 @@ export const cases = sqliteTable(
       .notNull()
       .$defaultFn(() => new Date()),
   },
-  (t) => [index('cases_status_priority_idx').on(t.status, t.priorityScore)],
+  (t) => [
+    index('cases_status_priority_idx').on(t.status, t.priorityScore),
+    index('cases_batch_idx').on(t.batchId),
+  ],
 );
 
 export const documents = sqliteTable(
@@ -68,14 +88,21 @@ export const documents = sqliteTable(
     caseId: text('case_id')
       .notNull()
       .references(() => cases.id, { onDelete: 'cascade' }),
-    docType: text('doc_type', { enum: DOC_TYPES }).notNull(),
+    /** Set by the classifier; null until classified. */
+    detectedType: text('detected_type', { enum: DETECTED_TYPES }),
+    typeConfidence: text('type_confidence', { enum: ['high', 'medium', 'low'] }),
+    state: text('state', { enum: DOCUMENT_STATES }).notNull().default('UPLOADED'),
     originalName: text('original_name').notNull(),
     storedPath: text('stored_path').notNull(),
+    processedPath: text('processed_path').notNull(),
     mimeType: text('mime_type').notNull(),
     sizeBytes: integer('size_bytes').notNull(),
-    widthPx: integer('width_px'),
-    heightPx: integer('height_px'),
+    /** Dimensions of the processed image — bbox coordinates refer to these. */
+    widthPx: integer('width_px').notNull(),
+    heightPx: integer('height_px').notNull(),
+    /** SHA-256 of the processed image (cache key). */
     sha256: text('sha256').notNull(),
+    position: integer('position').notNull().default(0),
     uploadedAt: createdAt(),
   },
   (t) => [index('documents_case_idx').on(t.caseId)],
@@ -91,20 +118,38 @@ export const extractions = sqliteTable(
     documentId: text('document_id')
       .notNull()
       .references(() => documents.id, { onDelete: 'cascade' }),
-    docType: text('doc_type', { enum: DOC_TYPES }).notNull(),
+    stage: text('stage', { enum: ['classify', 'extract'] }).notNull(),
+    detectedType: text('detected_type', { enum: DETECTED_TYPES }),
     status: text('status', { enum: ['OK', 'FAILED'] }).notNull(),
     model: text('model').notNull(),
-    /** Extracted fields AFTER Aadhaar masking. Shape is validated by @thoudang/core schemas. */
-    fields: text('fields_json', { mode: 'json' }).$type<Record<string, unknown>>(),
+    /** Output AFTER Aadhaar masking. Never contains a full Aadhaar number. */
+    result: text('result_json', { mode: 'json' }).$type<Record<string, unknown>>(),
     errorMessage: text('error_message'),
+    cacheHit: integer('cache_hit', { mode: 'boolean' }).notNull().default(false),
     latencyMs: integer('latency_ms'),
     inputTokens: integer('input_tokens'),
     outputTokens: integer('output_tokens'),
-    meanConfidence: real('mean_confidence'),
     createdAt: createdAt(),
   },
   (t) => [index('extractions_case_idx').on(t.caseId)],
 );
+
+/**
+ * Local cache of (masked) Claude results keyed by processed-image SHA-256 + stage + prompt version.
+ * Lets the live demo run without the network (DEMO_MODE=cache_first / cache_only).
+ */
+export const extractionCache = sqliteTable('extraction_cache', {
+  key: text('key').primaryKey(),
+  sha256: text('sha256').notNull(),
+  stage: text('stage').notNull(),
+  model: text('model').notNull(),
+  promptVersion: text('prompt_version').notNull(),
+  result: text('result_json', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+  latencyMs: integer('latency_ms').notNull(),
+  inputTokens: integer('input_tokens').notNull(),
+  outputTokens: integer('output_tokens').notNull(),
+  createdAt: createdAt(),
+});
 
 export const flags = sqliteTable(
   'flags',
@@ -147,6 +192,7 @@ export const auditLog = sqliteTable(
       enum: [
         'CASE_CREATED',
         'DOCUMENT_UPLOADED',
+        'AI_CLASSIFICATION',
         'AI_EXTRACTION',
         'RULE_RESULT',
         'STATUS_CHANGE',
@@ -154,6 +200,7 @@ export const auditLog = sqliteTable(
         'OFFICER_OVERRIDE',
         'OFFICER_APPROVE',
         'NOTICE_GENERATED',
+        'PIPELINE_ERROR',
       ],
     }).notNull(),
     entityType: text('entity_type').notNull(),
