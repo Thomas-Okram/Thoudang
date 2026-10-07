@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
-import { fetchSession, uploadToSession, type UploadSession } from '../lib/api';
+import { fetchSession, uploadToSession, type SlotType, type UploadSession } from '../lib/api';
+import { DOC_LABEL } from '../lib/labels';
+
+const TYPES: { type: SlotType | null; label: string }[] = [
+  { type: 'application_form', label: 'Form' },
+  { type: 'aadhaar', label: 'Aadhaar' },
+  { type: 'bank_passbook', label: 'Passbook' },
+  { type: 'epic', label: 'Voter ID' },
+  { type: null, label: 'Not sure' },
+];
 import { usePipelineEvents, type PipelineEvent } from '../lib/events';
 
 /** Opened on a phone via the QR code: photographs go straight into the desk's upload session. */
@@ -11,6 +20,7 @@ export function MobileUploadPage() {
     'loading',
   );
   const [error, setError] = useState<string | null>(null);
+  const [docType, setDocType] = useState<SlotType | null>('application_form');
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
 
@@ -41,7 +51,11 @@ export function MobileUploadPage() {
     setState('uploading');
     setError(null);
     try {
-      setSession(await uploadToSession(sessionId, files, 'phone'));
+      setSession(await uploadToSession(sessionId, files, 'phone', docType));
+      // Suggest the next document in the usual order.
+      const order = TYPES.map((t) => t.type);
+      const next = order[order.indexOf(docType) + 1];
+      if (docType && next !== undefined) setDocType(next);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Upload failed');
     } finally {
@@ -73,8 +87,34 @@ export function MobileUploadPage() {
         )}
         {(state === 'ready' || state === 'uploading' || state === 'loading') && (
           <>
-            <p className="text-lg text-slate-700">
-              Photograph each document flat, in good light, one per photo.
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                1 · Which document?
+              </p>
+              <div
+                className="mt-2 grid grid-cols-3 gap-2"
+                role="radiogroup"
+                aria-label="Document type"
+              >
+                {TYPES.map((t) => (
+                  <button
+                    key={t.label}
+                    role="radio"
+                    aria-checked={docType === t.type}
+                    onClick={() => setDocType(t.type)}
+                    className={`rounded-lg border-2 px-2 py-3 text-base font-semibold ${
+                      docType === t.type
+                        ? 'border-teal-accent bg-teal-soft text-navy-900'
+                        : 'border-slate-200 bg-white text-slate-600'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+              2 · Photograph it flat, in good light
             </p>
             <input
               ref={cameraRef}
@@ -104,7 +144,9 @@ export function MobileUploadPage() {
               onClick={() => cameraRef.current?.click()}
               className="w-full rounded-xl bg-teal-accent py-5 text-xl font-bold text-white shadow disabled:bg-slate-300"
             >
-              {state === 'uploading' ? 'Sending…' : '📷  Take photo'}
+              {state === 'uploading'
+                ? 'Sending…'
+                : `📷  Photograph ${TYPES.find((t) => t.type === docType)?.label ?? 'document'}`}
             </button>
             <button
               disabled={state !== 'ready' || count >= max}
@@ -129,6 +171,9 @@ export function MobileUploadPage() {
                       alt={f.originalName}
                       className="h-24 w-full object-cover"
                     />
+                    <div className="truncate px-1.5 py-0.5 text-[11px] font-semibold text-slate-600">
+                      {f.docType ? DOC_LABEL[f.docType] : 'Unsorted'}
+                    </div>
                   </li>
                 ))}
               </ul>

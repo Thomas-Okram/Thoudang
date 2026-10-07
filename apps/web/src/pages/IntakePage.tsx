@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { Page } from '../components/Page';
 import { CaseProgressCard } from '../components/CaseProgressCard';
 import { BatchPanel } from '../components/BatchPanel';
+import { SlotBoard } from '../components/SlotBoard';
 import {
   createSession,
   fetchSession,
   removeSessionFile,
+  setSessionFileType,
   submitSession,
   uploadToSession,
   type UploadSession,
@@ -77,8 +79,6 @@ function PacketIntake({
   const [session, setSession] = useState<UploadSession | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<'uploading' | 'submitting' | null>(null);
-  const [dragOver, setDragOver] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const creating = useRef(false);
 
   const newSession = useCallback(async () => {
@@ -117,19 +117,15 @@ function PacketIntake({
     session ? `?sessionId=${session.sessionId}` : '',
   );
 
-  const addFiles = async (list: FileList | File[] | null) => {
-    const files = [...(list ?? [])].filter(
-      (f) => f.type.startsWith('image/') || /\.(jpe?g|png|webp|heic)$/i.test(f.name),
-    );
-    if (!session || !files.length) return;
-    setBusy('uploading');
+  const guard = async (kind: 'uploading' | null, fn: () => Promise<UploadSession>) => {
+    if (kind) setBusy(kind);
     setError(null);
     try {
-      setSession(await uploadToSession(session.sessionId, files, 'desk'));
+      setSession(await fn());
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Upload failed');
     } finally {
-      setBusy(null);
+      if (kind) setBusy(null);
     }
   };
 
@@ -149,106 +145,47 @@ function PacketIntake({
     }
   };
 
-  const onDrop = (e: DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    void addFiles(e.dataTransfer.files);
-  };
-
   const files = session?.files ?? [];
-  const full = files.length >= (session?.maxFiles ?? 6);
+  const labelled = files.filter((f) => f.docType).length;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={onDrop}
-          onClick={() => !full && inputRef.current?.click()}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.click()}
-          className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition ${
-            dragOver
-              ? 'border-teal-accent bg-teal-soft/40'
-              : 'border-slate-300 hover:border-teal-accent hover:bg-slate-50'
-          } ${full ? 'pointer-events-none opacity-50' : ''}`}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-10 w-10 text-teal-accent"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            aria-hidden
-          >
-            <path
-              d="M12 16V4m0 0-4 4m4-4 4 4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <p className="mt-3 text-lg font-semibold text-navy-900">
-            {busy === 'uploading' ? 'Uploading…' : 'Drop document photos here, or click to choose'}
+    <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
+      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-lg font-bold text-navy-900">Drop each document into its slot</h2>
+          <p className="text-sm text-slate-500">
+            Labelled slots skip AI identification (faster). Not sure? Use “Other / unsorted”.
           </p>
-          <p className="mt-1 text-slate-500">1–6 images per applicant · JPG or PNG · any order</p>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            hidden
-            onChange={(e) => {
-              void addFiles(e.target.files);
-              e.target.value = '';
-            }}
-          />
         </div>
-
-        {files.length > 0 && (
-          <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {files.map((f) => (
-              <li
-                key={f.id}
-                className="group relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50"
-              >
-                <img src={f.thumbUrl} alt={f.originalName} className="h-36 w-full object-contain" />
-                <div className="flex items-center justify-between gap-2 border-t border-slate-200 bg-white px-2 py-1.5 text-xs">
-                  <span className="truncate text-slate-600">{f.originalName}</span>
-                  {f.from === 'phone' && (
-                    <span className="rounded bg-teal-soft px-1.5 font-semibold text-navy-900">
-                      phone
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={() =>
-                    session &&
-                    removeSessionFile(session.sessionId, f.id)
-                      .then(setSession)
-                      .catch(() => undefined)
-                  }
-                  className="absolute right-1.5 top-1.5 rounded-full bg-white/90 px-2 text-sm font-bold text-slate-600 shadow hover:text-rose-600"
-                  aria-label={`Remove ${f.originalName}`}
-                >
-                  ×
-                </button>
-              </li>
+        {session ? (
+          <SlotBoard
+            session={session}
+            busy={busy !== null}
+            onUpload={(list, type) =>
+              void guard('uploading', () => uploadToSession(session.sessionId, list, 'desk', type))
+            }
+            onMove={(id, type) =>
+              void guard(null, () => setSessionFileType(session.sessionId, id, type))
+            }
+            onRemove={(id) => void guard(null, () => removeSessionFile(session.sessionId, id))}
+          />
+        ) : (
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="skeleton h-48" />
             ))}
-          </ul>
+          </div>
         )}
 
         {error && <p className="mt-4 rounded-lg bg-rose-50 px-4 py-2 text-rose-800">{error}</p>}
 
-        <div className="mt-6 flex items-center justify-between gap-4">
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
           <p className="text-slate-500">
-            {files.length
-              ? `${files.length} image${files.length > 1 ? 's' : ''} ready`
-              : 'No images yet'}
+            {busy === 'uploading'
+              ? 'Uploading…'
+              : files.length
+                ? `${files.length} image${files.length > 1 ? 's' : ''} · ${labelled} labelled, ${files.length - labelled} for the AI to identify`
+                : 'No images yet — form, Aadhaar and passbook are required'}
           </p>
           <button
             onClick={() => void submit()}
