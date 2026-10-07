@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   screenCase,
   getSchemeRules,
+  noticeEligibility,
   FlagSchema,
   type ExtractedCase,
   type FormFields,
@@ -491,5 +492,66 @@ describe('fallbacks', () => {
     expect(r.facts.applicantName).toBeNull();
     expect(r.flags.filter((x) => x.code.startsWith('NAME_'))).toEqual([]);
     expect(r.status).toBe('NEEDS_CITIZEN_CORRECTION');
+  });
+});
+
+describe('owner decisions (Phase 3)', () => {
+  it('EPIC is optional: missing voter ID is an info flag and the case stays READY', () => {
+    const r = screenCase(makeCase({ epic: null }), opts);
+    const flag = r.flags.find((x) => x.code === 'OPTIONAL_DOCUMENT_NOT_PROVIDED');
+    expect(flag).toMatchObject({ severity: 'info', action: 'none' });
+    expect(flag?.evidence[0]).toMatchObject({ document: 'epic' });
+    expect(r.flags.map((x) => x.code)).not.toContain('MISSING_DOCUMENT');
+    expect(r.status).toBe('READY');
+  });
+
+  it('required documents are form, Aadhaar and passbook', () => {
+    expect(getSchemeRules().requiredDocuments).toEqual(['form', 'aadhaar', 'passbook']);
+    expect(getSchemeRules().optionalDocuments).toEqual(['epic']);
+  });
+
+  it('a suspected duplicate forces OFFICER_ATTENTION even when citizen corrections exist', () => {
+    const existing = {
+      caseId: 'case-0',
+      aadhaarLast4: '4821',
+      dob: '1948-05-12',
+      applicantName: 'Thokchom Ibemcha Devi',
+    };
+    const r = screenCase(makeCase({ passbook: ok(passbook({ ifsc: f('BAD') })) }), {
+      ...opts,
+      existingCases: [existing],
+    });
+    expect(r.flags.some((x) => x.action === 'citizen' && x.severity === 'critical')).toBe(true);
+    expect(r.status).toBe('OFFICER_ATTENTION');
+  });
+
+  it('a suspected duplicate blocks citizen notice generation', () => {
+    const existing = {
+      caseId: 'case-0',
+      aadhaarLast4: '4821',
+      dob: '1948-05-12',
+      applicantName: 'Thokchom Ibemcha Devi',
+    };
+    const r = screenCase(makeCase({ passbook: ok(passbook({ ifsc: f('BAD') })) }), {
+      ...opts,
+      existingCases: [existing],
+    });
+    const n = noticeEligibility(r.flags);
+    expect(n.allowed).toBe(false);
+    expect(n.blockedBy).toEqual(['DUPLICATE_SUSPECTED']);
+    expect(n.reasons[0]).toMatch(/duplicate/i);
+  });
+
+  it('notices are allowed when there are citizen corrections and no blockers', () => {
+    const r = screenCase(makeCase({ passbook: ok(passbook({ ifsc: f('BAD') })) }), opts);
+    expect(noticeEligibility(r.flags)).toEqual({ allowed: true, blockedBy: [], reasons: [] });
+  });
+
+  it('no citizen corrections → nothing to notify', () => {
+    const r = screenCase(makeCase(), opts);
+    const n = noticeEligibility(r.flags);
+    expect(n.allowed).toBe(false);
+    expect(n.blockedBy).toEqual([]);
+    expect(n.reasons[0]).toMatch(/no citizen corrections/i);
   });
 });

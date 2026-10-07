@@ -7,6 +7,7 @@ const SchemeSchema = z.object({
   minAge: z.number().int().positive(),
   annualIncomeCeiling: z.number().nonnegative(),
   requiredDocuments: z.array(DocTypeSchema).min(1),
+  optionalDocuments: z.array(DocTypeSchema).default([]),
   verified: z.boolean(),
   sourceNote: z.string(),
 });

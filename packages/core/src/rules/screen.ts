@@ -159,6 +159,17 @@ export function screenCase(extracted: ExtractedCase, opts: ScreenOptions = {}): 
       });
     }
   }
+  for (const doc of rules.optionalDocuments) {
+    if (!docs[doc]) {
+      add({
+        code: 'OPTIONAL_DOCUMENT_NOT_PROVIDED',
+        severity: 'info',
+        action: 'none',
+        reason: `The ${DOC_LABEL[doc]} was not provided. It is optional for this scheme.`,
+        evidence: [{ document: doc, field: 'document', value: null }],
+      });
+    }
+  }
   for (const doc of Object.keys(docs) as DocType[]) {
     const result = docs[doc];
     if (result?.status === 'failed') {
@@ -423,13 +434,50 @@ export function screenCase(extracted: ExtractedCase, opts: ScreenOptions = {}): 
   };
 }
 
+/** Flag codes that must be resolved by an officer before anything goes to the citizen. */
+export const NOTICE_BLOCKING_CODES = ['DUPLICATE_SUSPECTED'] as const;
+
 export function deriveStatus(flags: Flag[]): ScreeningStatus {
-  if (flags.some((f) => f.action === 'citizen' && f.severity === 'critical')) {
+  const blocked = flags.some((f) => (NOTICE_BLOCKING_CODES as readonly string[]).includes(f.code));
+  if (!blocked && flags.some((f) => f.action === 'citizen' && f.severity === 'critical')) {
     return 'NEEDS_CITIZEN_CORRECTION';
   }
   if (flags.some((f) => f.action === 'officer' || f.action === 'citizen'))
     return 'OFFICER_ATTENTION';
   return 'READY';
+}
+
+export interface NoticeEligibility {
+  allowed: boolean;
+  blockedBy: string[];
+  reasons: string[];
+}
+
+/**
+ * Whether a citizen deficiency notice may be generated from these flags.
+ * A suspected duplicate blocks notices until an officer resolves it.
+ */
+export function noticeEligibility(flags: Flag[]): NoticeEligibility {
+  const blockers = flags.filter((f) =>
+    (NOTICE_BLOCKING_CODES as readonly string[]).includes(f.code),
+  );
+  if (blockers.length) {
+    return {
+      allowed: false,
+      blockedBy: [...new Set(blockers.map((f) => f.code))],
+      reasons: [
+        'A possible duplicate application must be resolved by an officer before any notice is sent to the citizen.',
+      ],
+    };
+  }
+  if (!flags.some((f) => f.action === 'citizen')) {
+    return {
+      allowed: false,
+      blockedBy: [],
+      reasons: ['There are no citizen corrections to notify.'],
+    };
+  }
+  return { allowed: true, blockedBy: [], reasons: [] };
 }
 
 function nameFlag(

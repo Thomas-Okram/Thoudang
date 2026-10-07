@@ -6,9 +6,10 @@
       "name": "Manipur Old Age Pension Scheme",
       "minAge": 60,
       "annualIncomeCeiling": 60000,
-      "requiredDocuments": ["form", "aadhaar", "passbook", "epic"],
+      "requiredDocuments": ["form", "aadhaar", "passbook"],
+      "optionalDocuments": ["epic"],
       "verified": false,
-      "sourceNote": "Age 60+ is consistent across sources; the income ceiling is a placeholder pending department confirmation."
+      "sourceNote": "Age 60+ is consistent across sources; the income ceiling is a placeholder pending department confirmation. EPIC is optional — the official MOAPS form does not ask for it."
     }
   },
   "screening": {
