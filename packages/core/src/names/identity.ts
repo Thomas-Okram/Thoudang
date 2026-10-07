@@ -1,5 +1,5 @@
 import { defaultGazetteer, type Gazetteer } from './gazetteer.js';
-import { matchNames, type NameVerdict } from './match.js';
+import { explainMatch, type NameVerdict } from './match.js';
 import { parseName } from './parse.js';
 
 /** Full yumnaks written in relatives' names (father/husband) — used to disambiguate "Th." etc. */
@@ -27,6 +27,10 @@ export interface IdentityPair {
   verdict: NameVerdict;
   score: number;
   reasons: string[];
+  /** One-line verdict for officers, e.g. "Unclear — an officer should check before deciding." */
+  headline: string;
+  /** Short plain-English versions of `reasons` (≤ 12 words each). */
+  points: string[];
   /** Candidate yumnaks when an abbreviation is ambiguous; empty otherwise. */
   candidates: string[];
 }
@@ -43,13 +47,15 @@ export function identityMatrix(
     for (let j = i + 1; j < entries.length; j++) {
       const a = entries[i]!;
       const b = entries[j]!;
-      const r = matchNames(a.value, b.value, { gazetteer, knownYumnaks });
+      const r = explainMatch(a.value, b.value, { gazetteer, knownYumnaks });
       pairs.push({
         a: a.key,
         b: b.key,
         verdict: r.verdict,
         score: r.score,
-        reasons: r.reasons,
+        reasons: r.details,
+        headline: r.headline,
+        points: r.points,
         candidates: r.ambiguousYumnaks ?? [],
       });
     }
