@@ -3,13 +3,14 @@ import { openDb } from './db/client.js';
 import { createApp } from './app.js';
 import { createLogger } from './logger.js';
 import { lanAddresses } from './network.js';
-import { createAnthropicVisionClient } from './services/claude.js';
+import { createVisionClient, resolveProvider } from './services/providers/index.js';
 
 const logger = createLogger({ file: env.logFile });
 const { db, close } = openDb();
-const vision = env.anthropicConfigured
-  ? createAnthropicVisionClient({
-      model: env.claude.model,
+const provider = resolveProvider();
+const vision = provider.configured
+  ? createVisionClient({
+      provider,
       timeoutMs: env.claude.timeoutMs,
       maxRetries: env.claude.maxRetries,
       onRetry: (_err, attempt, delayMs) =>
@@ -22,7 +23,9 @@ const server = app.listen(env.port, '0.0.0.0', () => {
   logger.info(`Thoudang API on http://localhost:${env.port}`, {
     db: env.dbPath,
     demoMode: env.demoMode,
-    model: env.claude.model,
+    aiProvider: provider.provider,
+    model: provider.model,
+    region: provider.region,
   });
   const ip = lanAddresses()[0];
   if (env.serveWeb)
@@ -30,7 +33,12 @@ const server = app.listen(env.port, '0.0.0.0', () => {
       `Demo UI: http://localhost:${env.port}  (LAN: http://${ip ?? 'localhost'}:${env.port})`,
     );
   if (ip) logger.info(`Phone upload base: http://${ip}:${env.webPort}`);
-  if (!vision) logger.warn('ANTHROPIC_API_KEY not set — serving cached extractions only.');
+  if (!vision)
+    logger.warn(
+      provider.provider === 'bedrock'
+        ? 'AI_PROVIDER=bedrock but no AWS credentials found — serving cached extractions only.'
+        : 'ANTHROPIC_API_KEY not set — serving cached extractions only.',
+    );
 });
 
 function shutdown(): void {
