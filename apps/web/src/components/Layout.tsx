@@ -53,7 +53,7 @@ export function Layout() {
             <div className="mt-1 text-[0.8rem] font-medium text-teal-soft/90">AI Scrutiny Desk</div>
           </div>
         </div>
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-2" aria-label="Main">
+        <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-2" aria-label="Main">
           {NAV.map((g) => (
             <div key={g.group}>
               <div className="px-3 pb-1.5 text-overline font-bold uppercase text-navy-300">
@@ -89,7 +89,7 @@ export function Layout() {
                           </span>
                           <span className="min-w-0 leading-tight">
                             <span className="block font-semibold">{item.label}</span>
-                            <span className="block truncate text-xs text-slate-400">
+                            <span className="block truncate text-xs text-slate-400 [@media(max-height:820px)]:hidden">
                               {item.hint}
                             </span>
                           </span>
@@ -102,7 +102,7 @@ export function Layout() {
             </div>
           ))}
         </nav>
-        <div className="space-y-3 px-3 pb-5">
+        <div className="shrink-0 space-y-3 px-3 pb-4 pt-2">
           <HealthBadge />
           <p className="px-2 text-xs leading-relaxed text-slate-400">
             <span className="font-semibold text-slate-200">AI reads</span> ·{' '}

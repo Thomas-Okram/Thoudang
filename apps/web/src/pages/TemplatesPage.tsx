@@ -4,6 +4,7 @@ import { bengaliToMeeteiMayek, flagTitle } from '@thoudang/core';
 import { fetchTemplates, patchTemplate, type TemplateEntry } from '../lib/api';
 import { useOfficer } from '../lib/officer';
 import { Page } from '../components/Page';
+import { Badge, Icon, Skeleton } from '../components/ui';
 
 const BLOCK_LABEL: Record<string, string> = {
   title: 'Title',
@@ -23,36 +24,41 @@ export function TemplatesPage() {
   return (
     <Page
       title="Notice templates"
+      eyebrow="Administration"
+      width="max-w-[1320px]"
       subtitle="Review the citizen-facing wording in all three scripts. Every edit is audited and saved to the template file."
     >
       {data && (
-        <div className="mb-5 flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 bg-white px-5 py-3 shadow-sm">
-          <div className="text-2xl font-bold text-navy-900">
+        <div className="mb-5 flex flex-wrap items-center gap-4 rounded-card border border-line bg-white px-6 py-4 shadow-card">
+          <div className="text-[2rem] font-bold leading-none tabular-nums text-navy-900">
             {data.summary.reviewed} / {data.summary.total}
           </div>
-          <div className="text-sm text-slate-600">
+          <div className="text-sm text-ink-soft">
             entries reviewed by a native speaker · {data.summary.manualMeetei} with hand-written
             Meetei Mayek
           </div>
-          <div className="h-2 min-w-48 flex-1 overflow-hidden rounded-full bg-slate-100">
+          <div className="h-2.5 min-w-48 flex-1 overflow-hidden rounded-full bg-slate-100">
             <div
-              className="h-full bg-teal-accent"
+              className="h-full rounded-full bg-teal-deep"
               style={{
                 width: `${(data.summary.reviewed / Math.max(1, data.summary.total)) * 100}%`,
               }}
             />
           </div>
           {!canEdit && (
-            <span className="text-sm text-amber-800">Choose an officer (top right) to edit.</span>
+            <span className="flex items-center gap-1.5 text-sm font-medium text-warm-700">
+              <Icon name="lock" size={15} />
+              Choose an officer (top right) to edit.
+            </span>
           )}
         </div>
       )}
-      <p className="mb-4 text-sm text-slate-600">
+      <p className="mb-5 text-[0.92rem] text-ink-soft">
         Placeholders such as <code>{'{document}'}</code>, <code>{'{value_a}'}</code>,{' '}
         <code>{'{office}'}</code> are filled from the case. Leave Meetei Mayek empty to use the
         automatic transliteration of the Bengali-script text.
       </p>
-      {isPending && <div className="skeleton h-96" />}
+      {isPending && <Skeleton className="h-96" />}
       <div className="space-y-4">
         {data?.blocks.map((b) => (
           <TemplateRow
@@ -121,39 +127,39 @@ function TemplateRow({
     placeholder?: string,
   ) => (
     <label className="block">
-      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="text-overline font-bold uppercase text-ink-muted">{label}</span>
       <textarea
         value={draft[key]}
         readOnly={!canEdit}
         placeholder={placeholder}
         onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}
         rows={4}
-        className={`mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-[15px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-teal-accent ${className} ${canEdit ? 'bg-white' : 'bg-slate-50'}`}
+        className={`mt-1.5 w-full rounded-control border border-line-strong px-3 py-2 text-[15px] leading-relaxed focus:border-teal-accent focus:outline-none focus:ring-2 focus:ring-teal-accent/40 ${className} ${canEdit ? 'bg-white' : 'bg-slate-50 text-ink-soft'}`}
       />
     </label>
   );
 
   return (
     <section
-      className={`rounded-xl border bg-white p-4 shadow-sm ${entry.reviewed ? 'border-emerald-300' : 'border-slate-200'}`}
+      className={`rounded-card border border-l-4 bg-white p-5 shadow-card ${entry.reviewed ? 'border-line border-l-emerald-600' : 'border-line border-l-warm-400'}`}
       data-testid={`template-${id}`}
     >
       <header className="mb-3 flex flex-wrap items-center gap-2">
         <h2 className="font-bold text-navy-900">{title}</h2>
-        <code className="text-xs text-slate-400">{id}</code>
+        <code className="dev-noise text-xs text-ink-muted">{id}</code>
         {entry.reviewed ? (
-          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-900">
+          <Badge tone="success" icon="check" size="sm">
             Reviewed
-          </span>
+          </Badge>
         ) : (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">
+          <Badge tone="warn" size="sm">
             Pending review
-          </span>
+          </Badge>
         )}
         {!draft.mni_mtei.trim() && (
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+          <Badge tone="neutral" size="sm">
             Meetei Mayek: auto-transliterated
-          </span>
+          </Badge>
         )}
         <label className="ml-auto flex items-center gap-2 text-sm font-semibold text-navy-900">
           <input
@@ -161,19 +167,19 @@ function TemplateRow({
             checked={draft.reviewed}
             disabled={!canEdit}
             onChange={(e) => setDraft({ ...draft, reviewed: e.target.checked })}
-            className="h-4 w-4 accent-teal-accent"
+            className="h-4 w-4 accent-teal-deep"
           />
           Reviewed
         </label>
         <button
           onClick={() => void save()}
           disabled={!canEdit || !dirty || state === 'saving'}
-          className="rounded-lg bg-navy-900 px-3 py-1.5 text-sm font-semibold text-white disabled:bg-slate-300"
+          className="rounded-lg bg-navy-900 px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-navy-700 disabled:bg-slate-300 disabled:text-slate-600"
         >
           {state === 'saving' ? 'Saving…' : 'Save'}
         </button>
         {state === 'saved' && !dirty && (
-          <span className="text-xs text-emerald-700">Saved · audited</span>
+          <span className="text-xs font-medium text-emerald-700">Saved · audited</span>
         )}
         {state === 'error' && <span className="text-xs text-rose-700">Could not save</span>}
       </header>
