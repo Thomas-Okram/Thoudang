@@ -4,3 +4,7 @@ coverage
 package-lock.json
 apps/api/drizzle/meta
 *.db
+.claude
+# generated data (JSON written by tools/synth and the eval harness)
+eval-data/
+demo-packets/

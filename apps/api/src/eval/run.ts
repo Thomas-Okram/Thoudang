@@ -6,17 +6,20 @@
  *
  * Each sub-folder of --dir is one packet: images + truth.json. Runs the REAL pipeline (Claude unless
  * cached) against a separate eval database (apps/api/data/eval.db) so the demo queue stays clean.
+ * Every run starts with a FRESH eval database (cases from earlier runs would be flagged as
+ * duplicates); the extraction cache is carried over. --keep-db skips the reset.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createApp } from '../app.js';
 import { openDb } from '../db/client.js';
+import { openFreshEvalDb } from './fresh-db.js';
 import { extractions } from '../db/schema.js';
 import { loadConfig, type DemoMode } from '../env.js';
 import { createLogger } from '../logger.js';
 import { caseDetail } from '../read-model.js';
-import { createAnthropicVisionClient } from '../services/claude.js';
+import { createVisionClient, resolveProvider } from '../services/providers/index.js';
 import { EXTRACTABLE_TYPES, PROMPT_VERSION, type ExtractableType } from '../extraction/schemas.js';
 import { isImageName } from '../upload.js';
 import { eq } from 'drizzle-orm';
@@ -60,17 +63,27 @@ async function main() {
     LOG_FILE: path.join(apiRoot, 'logs/eval.log'),
     DEMO_MODE: mode,
   });
-  const vision = config.anthropicConfigured
-    ? createAnthropicVisionClient({
-        model: config.claude.model,
+  const provider = resolveProvider();
+  const vision = provider.configured
+    ? createVisionClient({
+        provider,
         timeoutMs: config.claude.timeoutMs,
         maxRetries: config.claude.maxRetries,
       })
     : null;
   if (!vision && mode !== 'cache_only') {
-    console.warn('ANTHROPIC_API_KEY not set — only cached results can be used.');
+    console.warn(
+      `${provider.provider === 'bedrock' ? 'AWS credentials' : 'ANTHROPIC_API_KEY'} not set — only cached results can be used.`,
+    );
   }
-  const handle = openDb(config.dbPath);
+  let handle;
+  if (flags['keep-db'] === true) {
+    handle = openDb(config.dbPath);
+  } else {
+    const fresh = openFreshEvalDb(config.dbPath, config.uploadsDir);
+    handle = fresh.handle;
+    console.log(`Fresh eval database (${fresh.carriedCacheRows} cached extraction(s) kept).`);
+  }
   const logger = createLogger({ file: config.logFile, console: false });
   const { pipeline, bus } = createApp({ db: handle.db, config, vision, logger });
 
