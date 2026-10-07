@@ -101,6 +101,8 @@ export const IDENTITY: Identity = {
       reasons: [
         'Kh. could stand for Khuraijam, Khwairakpam — the documents do not show which. Officer to confirm the yumnak.',
       ],
+      headline: 'Unclear — an officer should check before deciding.',
+      points: ['Kh. could be Khuraijam, Khwairakpam; officer to confirm.'],
       candidates: ['Khuraijam', 'Khwairakpam'],
     },
     {
@@ -117,6 +119,8 @@ export const IDENTITY: Identity = {
       verdict: 'SAME',
       score: 100,
       reasons: ['All name parts match.'],
+      headline: 'Same person — the names match.',
+      points: ['All name parts match.'],
       candidates: [],
     },
   ],

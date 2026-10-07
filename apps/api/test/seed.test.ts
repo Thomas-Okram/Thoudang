@@ -19,6 +19,24 @@ describe('seedGazetteer', () => {
     });
   });
 
+  it('stores source, confidence and tribe from the gazetteer metadata', () => {
+    seedGazetteer(handle.db);
+    const rows = handle.db.select().from(nameGazetteer).all();
+    const withTribe = gazetteerEntries.find((e) => e.tribe);
+    expect(withTribe).toBeDefined();
+    expect(rows.find((r) => r.surname === withTribe!.surname)).toMatchObject({
+      tribe: withTribe!.tribe,
+      source: withTribe!.source ?? 'starter',
+      confidence: withTribe!.confidence ?? null,
+    });
+    const khuraijam = gazetteerEntries.find((e) => e.surname === 'Khuraijam')!;
+    expect(rows.find((r) => r.surname === 'Khuraijam')).toMatchObject({
+      source: khuraijam.source,
+      confidence: khuraijam.confidence,
+      tribe: null,
+    });
+  });
+
   it('updates existing rows on re-seed', () => {
     seedGazetteer(handle.db, [
       { surname: 'Okram', community: 'Meitei', abbreviations: ['o', 'ok'] },

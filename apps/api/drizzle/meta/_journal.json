@@ -36,6 +36,13 @@
       "when": 1791398117242,
       "tag": "0004_notices_dashboard",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791402908395,
+      "tag": "0005_perpetual_silver_samurai",
+      "breakpoints": true
     }
   ]
 }

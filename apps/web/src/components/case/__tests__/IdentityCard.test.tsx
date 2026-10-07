@@ -43,10 +43,35 @@ describe('IdentityCard', () => {
     const chips = within(ambiguous!).getByLabelText('Candidate yumnaks');
     expect(within(chips).getByText('Khuraijam')).toBeTruthy();
     expect(within(chips).getByText('Khwairakpam')).toBeTruthy();
-    expect(within(ambiguous!).getByText(/Officer to confirm the yumnak/)).toBeTruthy();
+    expect(
+      within(ambiguous!).getByText('Kh. could be Khuraijam, Khwairakpam; officer to confirm.'),
+    ).toBeTruthy();
     expect(within(same!).queryByText('All name parts match.')).toBeNull();
     fireEvent.click(within(same!).getByRole('button'));
     expect(within(same!).getByText('All name parts match.')).toBeTruthy();
+  });
+
+  it('shows each pair’s one-line headline without expanding it', () => {
+    render(<IdentityCard identity={IDENTITY} />);
+    const [ambiguous, , same] = screen.getAllByTestId('identity-pair');
+    expect(within(ambiguous!).getByTestId('pair-headline').textContent).toBe(
+      'Unclear — an officer should check before deciding.',
+    );
+    expect(within(same!).getByTestId('pair-headline').textContent).toBe(
+      'Same person — the names match.',
+    );
+  });
+
+  it('keeps the long reasoning one click away, and falls back to it when there are no short points', () => {
+    render(<IdentityCard identity={IDENTITY} />);
+    const [ambiguous, noPoints] = screen.getAllByTestId('identity-pair');
+    const full = within(ambiguous!).getByText('Full reasoning').closest('details')!;
+    expect(full.open).toBe(false);
+    expect(within(full).getByText(/Officer to confirm the yumnak/)).toBeTruthy();
+    // pair 2 has no headline/points (older cached data) → the long reasons are the bullets
+    expect(within(noPoints!).queryByTestId('pair-headline')).toBeNull();
+    expect(within(noPoints!).getByText('…')).toBeTruthy();
+    expect(within(noPoints!).queryByText('Full reasoning')).toBeNull();
   });
 
   it('hovering a name reports its document and field (for the image highlight)', () => {

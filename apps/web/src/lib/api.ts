@@ -118,7 +118,12 @@ export interface IdentityPair {
   b: string;
   verdict: NameVerdict;
   score: number;
+  /** Full explanations (officer detail). */
   reasons: string[];
+  /** One-line verdict summary from the name engine (absent on older cached data). */
+  headline?: string;
+  /** Short plain-English reasons, ≤ 12 words each (absent on older cached data). */
+  points?: string[];
   candidates: string[];
 }
 

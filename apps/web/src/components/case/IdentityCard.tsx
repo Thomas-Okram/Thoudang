@@ -181,6 +181,9 @@ export function IdentityCard({
 
 function PairRow({ pair, a, b }: { pair: IdentityPair; a: string; b: string }) {
   const [open, setOpen] = useState(pair.verdict === 'AMBIGUOUS' || pair.verdict === 'DIFFERENT');
+  // Short reasons from the name engine; older cached cases only have the long ones.
+  const short = pair.points?.length ? pair.points : null;
+  const moreDetail = short !== null && pair.reasons.join('\n') !== short.join('\n');
   return (
     <li
       className={`overflow-hidden rounded-xl border border-l-4 border-line ${VERDICT_ROW[pair.verdict]}`}
@@ -191,8 +194,18 @@ function PairRow({ pair, a, b }: { pair: IdentityPair; a: string; b: string }) {
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
-        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 text-[0.95rem] font-medium text-ink-soft">
-          {a} <Icon name="arrowsLR" size={15} className="text-ink-muted" /> {b}
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-center gap-x-2 text-[0.95rem] font-medium text-ink-soft">
+            {a} <Icon name="arrowsLR" size={15} className="text-ink-muted" /> {b}
+          </span>
+          {pair.headline && (
+            <span
+              className="mt-0.5 block text-[0.85rem] leading-snug text-ink-muted"
+              data-testid="pair-headline"
+            >
+              {pair.headline}
+            </span>
+          )}
         </span>
         <VerdictPill verdict={pair.verdict} score={pair.score} />
         <span className="flex w-14 items-center justify-end gap-0.5 text-sm font-semibold text-teal-deep">
@@ -220,7 +233,7 @@ function PairRow({ pair, a, b }: { pair: IdentityPair; a: string; b: string }) {
             </div>
           )}
           <ul className="space-y-1.5 text-[0.95rem] leading-snug text-ink-soft">
-            {pair.reasons.map((r, i) => (
+            {(short ?? pair.reasons).map((r, i) => (
               <li key={i} className="flex gap-2">
                 <span
                   aria-hidden
@@ -230,6 +243,23 @@ function PairRow({ pair, a, b }: { pair: IdentityPair; a: string; b: string }) {
               </li>
             ))}
           </ul>
+          {moreDetail && (
+            <details className="group/full mt-2.5">
+              <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-md text-sm font-semibold text-teal-deep hover:text-teal-darker [&::-webkit-details-marker]:hidden">
+                <Icon
+                  name="chevronRight"
+                  size={14}
+                  className="transition-transform group-open/full:rotate-90"
+                />
+                Full reasoning
+              </summary>
+              <ul className="mt-1.5 space-y-1 border-l-2 border-line pl-3 text-sm leading-snug text-ink-muted">
+                {pair.reasons.map((r, i) => (
+                  <li key={i}>{r}</li>
+                ))}
+              </ul>
+            </details>
+          )}
         </div>
       )}
     </li>

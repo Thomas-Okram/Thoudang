@@ -240,6 +240,10 @@ export const nameGazetteer = sqliteTable('name_gazetteer', {
   community: text('community').notNull(),
   abbreviations: text('abbreviations_json', { mode: 'json' }).$type<string[]>().notNull(),
   source: text('source').notNull().default('starter'),
+  /** high | medium | low — how sure the starter list is (department review pending). */
+  confidence: text('confidence'),
+  /** Naga / Kuki-Zo tribe, e.g. "Tangkhul", "Thadou". */
+  tribe: text('tribe'),
 });
 
 /** Desk/phone upload staging (persisted so an API restart does not invalidate the QR code). */
