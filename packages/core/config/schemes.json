@@ -1,0 +1,28 @@
+{
+  "_note": "Scheme rules are DATA, not code. Values marked verified:false are placeholders — official sources (state rules, IGNOAPS guidelines, district practice) disagree. Confirm with the Social Welfare Department before relying on them.",
+  "defaultScheme": "MOAPS",
+  "schemes": {
+    "MOAPS": {
+      "name": "Manipur Old Age Pension Scheme",
+      "minAge": 60,
+      "annualIncomeCeiling": 60000,
+      "requiredDocuments": ["form", "aadhaar", "passbook", "epic"],
+      "verified": false,
+      "sourceNote": "Age 60+ is consistent across sources; the income ceiling is a placeholder pending department confirmation."
+    }
+  },
+  "screening": {
+    "minFieldConfidence": 0.75
+  },
+  "priority": {
+    "advancedAge": 80,
+    "weights": {
+      "advancedAge": 30,
+      "widowed": 20,
+      "disability": 20,
+      "internallyDisplaced": 25,
+      "perDayPending": 1,
+      "maxDaysPendingPoints": 25
+    }
+  }
+}
