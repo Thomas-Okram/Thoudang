@@ -8,6 +8,7 @@ import { CaseStatusSchema, noticeEligibility, type Flag } from '@thoudang/core';
 import type { Db } from '../db/client.js';
 import { auditLog, cases, documents, extractions, flags as flagsTable } from '../db/schema.js';
 import type { Pipeline } from '../pipeline/pipeline.js';
+import { EXTRACTABLE_TYPES, type ExtractableType } from '../extraction/schemas.js';
 import { PacketError } from '../pipeline/pipeline.js';
 import {
   createUploader,
@@ -26,7 +27,15 @@ export function casesRouter(deps: { db: Db; pipeline: Pipeline; uploadsDir: stri
   router.post('/cases', packetUpload.array('files', 6), async (req, res) => {
     const files = (req.files as Express.Multer.File[] | undefined) ?? [];
     if (!files.length) throw new PacketError('Upload 1–6 images (field name "files")');
-    const created = await pipeline.createCase({ files: files.map(toIncoming), source: 'api' });
+    // Optional parallel "types" field: one per file ("" = let the AI classify).
+    const types = listField((req.body as Record<string, unknown> | undefined)?.types);
+    const created = await pipeline.createCase({
+      files: files.map((f, i) => ({
+        ...toIncoming(f),
+        docType: types.length === files.length ? parseSlotType(types[i]) : null,
+      })),
+      source: 'api',
+    });
     res.status(202).json(created);
   });
 
@@ -136,6 +145,16 @@ export function casesRouter(deps: { db: Db; pipeline: Pipeline; uploadsDir: stri
   return router;
 }
 
+const listField = (raw: unknown): string[] =>
+  Array.isArray(raw) ? raw.map(String) : typeof raw === 'string' ? [raw] : [];
+
+/** Labelled slot value → extractable type, or null for "unsorted" / anything unknown. */
+export function parseSlotType(raw: unknown): ExtractableType | null {
+  return typeof raw === 'string' && (EXTRACTABLE_TYPES as readonly string[]).includes(raw)
+    ? (raw as ExtractableType)
+    : null;
+}
+
 export function caseSummary(row: typeof cases.$inferSelect) {
   return {
     id: row.id,
@@ -198,6 +217,7 @@ export function caseDetail(db: Db, id: string) {
         originalName: d.originalName,
         detectedType: d.detectedType,
         typeConfidence: d.typeConfidence,
+        typeSource: d.typeSource,
         state: d.state,
         width: d.widthPx,
         height: d.heightPx,

@@ -15,6 +15,9 @@ export interface AppConfig {
   uploadsDir: string;
   logFile: string;
   migrationsDir: string;
+  /** Serve the built web app (apps/web/dist) from the API — used by `npm run demo`. */
+  serveWeb: boolean;
+  webDist: string;
   anthropicConfigured: boolean;
   /**
    * live        → call Claude; on failure fall back to the cache if present.
@@ -48,6 +51,8 @@ export function loadConfig(vars: NodeJS.ProcessEnv = process.env): AppConfig {
     uploadsDir: path.resolve(apiRoot, vars.UPLOADS_DIR ?? './uploads'),
     logFile: path.resolve(apiRoot, vars.LOG_FILE ?? './logs/api.log'),
     migrationsDir: path.resolve(apiRoot, './drizzle'),
+    serveWeb: vars.SERVE_WEB === '1',
+    webDist: path.resolve(apiRoot, '../web/dist'),
     anthropicConfigured: Boolean(vars.ANTHROPIC_API_KEY),
     demoMode: oneOf(vars.DEMO_MODE, ['live', 'cache_first', 'cache_only'] as const, 'live'),
     claude: {

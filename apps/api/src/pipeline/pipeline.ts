@@ -30,6 +30,8 @@ export interface IncomingFile {
   originalName: string;
   mimeType: string;
   size: number;
+  /** Set when the officer put the image in a labelled slot — classification is skipped. */
+  docType?: ExtractableType | null;
 }
 
 export interface CreateCaseInput {
@@ -173,7 +175,10 @@ export class Pipeline {
         heightPx: processed?.height ?? 0,
         sha256: processed?.sha256 ?? '',
         position,
-        state: processed ? 'UPLOADED' : 'FAILED',
+        state: processed ? (file.docType ? 'CLASSIFIED' : 'UPLOADED') : 'FAILED',
+        detectedType: file.docType ?? null,
+        typeConfidence: file.docType ? 'high' : null,
+        typeSource: file.docType ? 'officer' : null,
       })
       .run();
     this.audit(caseId, SYSTEM_ACTOR, 'DOCUMENT_UPLOADED', 'document', docId, null, {
@@ -184,6 +189,12 @@ export class Pipeline {
       height: processed?.height ?? null,
       decoded: Boolean(processed),
     });
+    if (file.docType) {
+      this.audit(caseId, SYSTEM_ACTOR, 'TYPE_SET_BY_OFFICER', 'document', docId, null, {
+        detectedType: file.docType,
+        note: 'Type set by officer (labelled intake slot) — AI classification skipped',
+      });
+    }
   }
 
   /** Never throws: any unexpected error lands the case in OFFICER_ATTENTION. */
@@ -224,6 +235,13 @@ export class Pipeline {
     doc: DocRow,
   ): Promise<{ type: ExtractableType | 'other' } | { error: string }> {
     if (!doc.processedPath) return { error: 'The image could not be opened (unsupported format?)' };
+    if (doc.typeSource === 'officer' && doc.detectedType) {
+      this.emitDoc(ctx, doc, 'classified', {
+        detectedType: doc.detectedType,
+        message: 'Type set by officer',
+      });
+      return { type: doc.detectedType };
+    }
     this.emitDoc(ctx, doc, 'classifying');
     const image = this.loadImage(doc);
     const out = await this.deps.extraction.classify(image, doc.originalName);
@@ -238,6 +256,7 @@ export class Pipeline {
       .set({
         detectedType: out.value.type,
         typeConfidence: out.value.confidence,
+        typeSource: 'ai',
         state: 'CLASSIFIED',
       })
       .where(eq(documents.id, doc.id))

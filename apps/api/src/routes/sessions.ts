@@ -5,8 +5,9 @@ import type { EventBus } from '../events.js';
 import { lanAddresses } from '../network.js';
 import { PacketError, type Pipeline } from '../pipeline/pipeline.js';
 import { MAX_FILES_PER_PACKET, type SessionStore, type UploadSession } from '../sessions.js';
-import { createUploader } from '../upload.js';
 import { toDecodable } from '../services/images.js';
+import { createUploader } from '../upload.js';
+import { parseSlotType } from './cases.js';
 
 export function sessionsRouter(deps: {
   sessions: SessionStore;
@@ -32,6 +33,7 @@ export function sessionsRouter(deps: {
       originalName: f.originalName,
       size: f.size,
       from: f.from,
+      docType: f.docType,
       thumbUrl: `/api/sessions/${s.id}/files/${f.id}`,
     })),
   });
@@ -54,20 +56,21 @@ export function sessionsRouter(deps: {
     res.json(view(find(req.params.id)));
   });
 
+  /** ?from=phone|desk  ?type=application_form|aadhaar|bank_passbook|epic (omit = unsorted) */
   router.post('/sessions/:id/files', upload.array('files', MAX_FILES_PER_PACKET), (req, res) => {
     const session = find(req.params.id);
     const from = req.query.from === 'phone' ? 'phone' : 'desk';
+    const docType = parseSlotType(req.query.type);
     const files = (req.files as Express.Multer.File[] | undefined) ?? [];
     if (!files.length) throw new PacketError('No images received');
-    const added = [];
     for (const f of files) {
       try {
         const entry = sessions.addFile(
           session.id,
           { tempPath: f.path, originalName: f.originalname, mimeType: f.mimetype, size: f.size },
           from,
+          docType,
         );
-        added.push(entry.id);
         bus.publish({
           type: 'session',
           sessionId: session.id,
@@ -75,11 +78,11 @@ export function sessionsRouter(deps: {
           fileId: entry.id,
         });
       } catch (err) {
-        fs.rmSync(f.path, { force: true });
+        files.forEach((x) => fs.rmSync(x.path, { force: true }));
         throw new PacketError(err instanceof Error ? err.message : 'Could not add file');
       }
     }
-    res.status(201).json(view(session));
+    res.status(201).json(view(find(session.id)));
   });
 
   router.get('/sessions/:id/files/:fileId', async (req, res) => {
@@ -97,6 +100,22 @@ export function sessionsRouter(deps: {
     }
   });
 
+  /** Move a file to another slot: { docType: "aadhaar" } or { docType: null } for unsorted. */
+  router.patch('/sessions/:id/files/:fileId', (req, res) => {
+    const session = find(req.params.id);
+    const body = (req.body ?? {}) as { docType?: unknown };
+    if (!sessions.setFileType(session.id, req.params.fileId, parseSlotType(body.docType))) {
+      throw new NotFound('File not found');
+    }
+    bus.publish({
+      type: 'session',
+      sessionId: session.id,
+      action: 'file-added',
+      fileId: req.params.fileId,
+    });
+    res.json(view(find(session.id)));
+  });
+
   router.delete('/sessions/:id/files/:fileId', (req, res) => {
     const session = find(req.params.id);
     if (!sessions.removeFile(session.id, req.params.fileId)) throw new NotFound('File not found');
@@ -106,7 +125,7 @@ export function sessionsRouter(deps: {
       action: 'file-removed',
       fileId: req.params.fileId,
     });
-    res.json(view(session));
+    res.json(view(find(session.id)));
   });
 
   router.post('/sessions/:id/submit', async (req, res) => {
@@ -119,9 +138,11 @@ export function sessionsRouter(deps: {
         originalName: f.originalName,
         mimeType: f.mimeType,
         size: f.size,
+        docType: parseSlotType(f.docType),
       })),
       source: session.files.some((f) => f.from === 'phone') ? 'phone' : 'desk',
     });
+    sessions.linkCase(session.id, created.caseId);
     bus.publish({
       type: 'session',
       sessionId: session.id,

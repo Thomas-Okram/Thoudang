@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import express, { type ErrorRequestHandler } from 'express';
 import multer from 'multer';
@@ -53,7 +54,7 @@ export function createApp(deps: AppDeps): AppBundle {
     uploadsDir: config.uploadsDir,
     today: deps.today,
   });
-  const sessions = new SessionStore(path.join(config.uploadsDir, 'sessions'));
+  const sessions = new SessionStore(db, path.join(config.uploadsDir, 'sessions'));
 
   const app = express();
   app.use(express.json({ limit: '1mb' }));
@@ -81,6 +82,14 @@ export function createApp(deps: AppDeps): AppBundle {
   app.use('/api', (_req, res) => {
     res.status(404).json({ error: 'Not found' });
   });
+
+  // Production-like demo: one process serves the built SPA and the API on the same port.
+  if (config.serveWeb && fs.existsSync(path.join(config.webDist, 'index.html'))) {
+    app.use(express.static(config.webDist, { index: false, maxAge: '1h' }));
+    app.get(/^(?!\/api\/).*/, (_req, res) => {
+      res.sendFile(path.join(config.webDist, 'index.html'));
+    });
+  }
 
   const onError: ErrorRequestHandler = (err: unknown, _req, res, _next) => {
     if (err instanceof PacketError || err instanceof multer.MulterError) {

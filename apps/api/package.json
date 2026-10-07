@@ -13,7 +13,9 @@
     "seed": "tsx src/seed.ts",
     "eval": "tsx src/eval/run.ts",
     "smoke": "tsx src/smoke.ts",
-    "make-specimens": "tsx src/eval/specimens.ts"
+    "make-specimens": "tsx src/eval/specimens.ts",
+    "demo": "DEMO_MODE=cache_first PORT=5173 WEB_PORT=5173 SERVE_WEB=1 tsx src/server.ts",
+    "demo:prime": "tsx src/demo/prime.ts"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",

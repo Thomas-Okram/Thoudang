@@ -1,5 +1,8 @@
 /**
- * Eval harness:  npm run eval -- --dir ./eval-data [--mode live|cache_first|cache_only] [--out eval-report.json]
+ * Eval harness:  npm run eval -- --dir ./eval-data [--mode live|cache_first|cache_only] [--labelled] [--out eval-report.json]
+ *
+ * --labelled: pass the truth.json document types as officer-labelled slots (skips classification),
+ *             to measure the speed path. Compare avg packet latency with and without it.
  *
  * Each sub-folder of --dir is one packet: images + truth.json. Runs the REAL pipeline (Claude unless
  * cached) against a separate eval database (apps/api/data/eval.db) so the demo queue stays clean.
@@ -14,7 +17,7 @@ import { loadConfig, type DemoMode } from '../env.js';
 import { createLogger } from '../logger.js';
 import { caseDetail } from '../routes/cases.js';
 import { createAnthropicVisionClient } from '../services/claude.js';
-import { PROMPT_VERSION } from '../extraction/schemas.js';
+import { EXTRACTABLE_TYPES, PROMPT_VERSION, type ExtractableType } from '../extraction/schemas.js';
 import { isImageName } from '../upload.js';
 import { eq } from 'drizzle-orm';
 import { fromInvocationDir, parseArgs } from './cli-args.js';
@@ -30,10 +33,14 @@ import {
 
 const apiRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
+const labelFor = (t: string | undefined): ExtractableType | null =>
+  t && (EXTRACTABLE_TYPES as readonly string[]).includes(t) ? (t as ExtractableType) : null;
+
 async function main() {
   const { flags } = parseArgs(process.argv.slice(2));
   const dir = fromInvocationDir(typeof flags.dir === 'string' ? flags.dir : './eval-data');
   const out = fromInvocationDir(typeof flags.out === 'string' ? flags.out : 'eval-report.json');
+  const labelled = flags.labelled === true;
   const mode = (
     typeof flags.mode === 'string' ? flags.mode : (process.env.DEMO_MODE ?? 'live')
   ) as DemoMode;
@@ -87,7 +94,7 @@ async function main() {
   fs.mkdirSync(tmp, { recursive: true });
 
   console.log(
-    `Evaluating ${packets.length} packet(s) from ${dir} — model ${config.claude.model}, mode ${mode}`,
+    `Evaluating ${packets.length} packet(s) from ${dir} — model ${config.claude.model}, mode ${mode}${labelled ? ', labelled slots (classification skipped)' : ''}`,
   );
   for (const name of packets) {
     const folder = path.join(dir, name);
@@ -106,6 +113,7 @@ async function main() {
         originalName: img,
         mimeType: 'image/jpeg',
         size: fs.statSync(copy).size,
+        docType: labelled ? labelFor(truth.documents[img]?.type) : null,
       };
     });
     process.stdout.write(`\n${name} `);
@@ -144,6 +152,7 @@ async function main() {
     model: config.claude.model,
     promptVersion: PROMPT_VERSION,
     mode,
+    labelled,
     dataset: dir,
     note: 'Token cost counts every call as if uncached (cache hits report the tokens of the original call).',
     summary,

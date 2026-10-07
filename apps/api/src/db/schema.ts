@@ -91,6 +91,8 @@ export const documents = sqliteTable(
     /** Set by the classifier; null until classified. */
     detectedType: text('detected_type', { enum: DETECTED_TYPES }),
     typeConfidence: text('type_confidence', { enum: ['high', 'medium', 'low'] }),
+    /** 'officer' when dropped into a labelled intake slot (classification skipped), else 'ai'. */
+    typeSource: text('type_source', { enum: ['ai', 'officer'] }),
     state: text('state', { enum: DOCUMENT_STATES }).notNull().default('UPLOADED'),
     originalName: text('original_name').notNull(),
     storedPath: text('stored_path').notNull(),
@@ -201,6 +203,11 @@ export const auditLog = sqliteTable(
         'OFFICER_APPROVE',
         'NOTICE_GENERATED',
         'PIPELINE_ERROR',
+        'TYPE_SET_BY_OFFICER',
+        'FIELD_EDITED',
+        'OFFICER_NOTE',
+        'SENT_FOR_CORRECTION',
+        'FORWARDED_FOR_APPROVAL',
       ],
     }).notNull(),
     entityType: text('entity_type').notNull(),
@@ -220,3 +227,30 @@ export const nameGazetteer = sqliteTable('name_gazetteer', {
   abbreviations: text('abbreviations_json', { mode: 'json' }).$type<string[]>().notNull(),
   source: text('source').notNull().default('starter'),
 });
+
+/** Desk/phone upload staging (persisted so an API restart does not invalidate the QR code). */
+export const uploadSessions = sqliteTable('upload_sessions', {
+  id: text('id').primaryKey(),
+  createdAt: createdAt(),
+  submittedAt: integer('submitted_at', { mode: 'timestamp_ms' }),
+  caseId: text('case_id'),
+});
+
+export const sessionFiles = sqliteTable(
+  'session_files',
+  {
+    id: text('id').primaryKey(),
+    sessionId: text('session_id')
+      .notNull()
+      .references(() => uploadSessions.id, { onDelete: 'cascade' }),
+    originalName: text('original_name').notNull(),
+    path: text('path').notNull(),
+    mimeType: text('mime_type').notNull(),
+    size: integer('size').notNull(),
+    from: text('from_device', { enum: ['desk', 'phone'] }).notNull(),
+    /** Set when the officer chose a labelled slot / tapped a type on the phone. */
+    docType: text('doc_type', { enum: DETECTED_TYPES }),
+    addedAt: createdAt(),
+  },
+  (t) => [index('session_files_session_idx').on(t.sessionId)],
+);

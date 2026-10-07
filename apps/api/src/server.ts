@@ -25,6 +25,10 @@ const server = app.listen(env.port, '0.0.0.0', () => {
     model: env.claude.model,
   });
   const ip = lanAddresses()[0];
+  if (env.serveWeb)
+    logger.info(
+      `Demo UI: http://localhost:${env.port}  (LAN: http://${ip ?? 'localhost'}:${env.port})`,
+    );
   if (ip) logger.info(`Phone upload base: http://${ip}:${env.webPort}`);
   if (!vision) logger.warn('ANTHROPIC_API_KEY not set — serving cached extractions only.');
 });
