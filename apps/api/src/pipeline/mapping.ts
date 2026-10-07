@@ -43,6 +43,13 @@ export const DETECTED_FROM_CORE: Record<DocType, ExtractableType> = {
 export const CONFIDENCE_SCORE: Record<Confidence, number> = { high: 0.95, medium: 0.8, low: 0.4 };
 const UNREADABLE_CONFIDENCE = 0.3;
 
+const READABLE: Record<DocType, string> = {
+  form: 'application form',
+  aadhaar: 'Aadhaar card',
+  passbook: 'bank passbook',
+  epic: 'voter ID',
+};
+
 type Field<T> = ExtractedField<T>;
 
 const missingField = <T>(): Field<T> => ({ value: null, confidence: 0 });
@@ -231,15 +238,17 @@ export function toExtractedCase(
 
   // An image we could not identify might be the "missing" document — never tell the citizen a
   // document is missing in that case; route to the officer instead.
-  const unidentified = outcomes.filter((o) => o.kind === 'unidentified');
+  const unidentified = outcomes.filter(
+    (o): o is Extract<DocOutcome, { kind: 'unidentified' }> => o.kind === 'unidentified',
+  );
   if (unidentified.length) {
     const rules = getSchemeRules();
+    const why = unidentified[0]!.error;
     for (const coreType of rules.requiredDocuments) {
       if (!documents[coreType]) {
-        const label = DETECTED_FROM_CORE[coreType].replace('_', ' ');
         (documents as Record<DocType, DocResult<unknown>>)[coreType] = {
           status: 'failed',
-          error: `${unidentified.length} uploaded image(s) could not be read; the ${label} may be among them`,
+          error: `${unidentified.length} uploaded image(s) could not be read — ${why}; the ${READABLE[coreType]} may be among them`,
         };
       }
     }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchCase, type CaseStatus, type DetectedType } from './api';
 import {
   usePipelineEvents,
@@ -80,13 +80,30 @@ export function applyEvent(
 export function useCaseProgress() {
   const [cases, setCases] = useState<Record<string, CaseProgress>>({});
 
-  usePipelineEvents(useCallback((e: PipelineEvent) => setCases((s) => applyEvent(s, e)), []));
+  // With cached extractions a case can finish before the POST returns; keep recent events so a
+  // newly tracked case replays what it missed instead of waiting for the polling fallback.
+  const recent = useRef<PipelineEvent[]>([]);
+  usePipelineEvents(
+    useCallback((e: PipelineEvent) => {
+      recent.current.push(e);
+      if (recent.current.length > 500) recent.current.splice(0, recent.current.length - 500);
+      setCases((s) => applyEvent(s, e));
+    }, []),
+  );
 
   const track = useCallback((c: { caseId: string; reference: string; packetName?: string }) => {
-    setCases((s) => ({
-      ...s,
-      [c.caseId]: { ...c, stage: 'uploaded', docs: s[c.caseId]?.docs ?? {}, startedAt: Date.now() },
-    }));
+    setCases((s) => {
+      if (s[c.caseId]) return s;
+      const startedAt = Date.now();
+      let next: Record<string, CaseProgress> = {
+        ...s,
+        [c.caseId]: { ...c, stage: 'uploaded', docs: {}, startedAt },
+      };
+      for (const e of recent.current) {
+        if (e.type !== 'session' && e.caseId === c.caseId) next = applyEvent(next, e);
+      }
+      return next;
+    });
   }, []);
 
   const pending = Object.values(cases)
