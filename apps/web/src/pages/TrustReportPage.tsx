@@ -150,6 +150,17 @@ function Accuracy({ e }: { e: TrustReport['evaluation'] }) {
         </span>
       }
     >
+      {e.fixture && (
+        <p
+          role="alert"
+          data-testid="eval-fixture-warning"
+          className="mb-4 flex items-start gap-2 rounded-xl border border-warm-300 bg-warm-50 px-4 py-3 text-[0.95rem] font-semibold text-warm-900"
+        >
+          <Icon name="alert" size={18} className="mt-0.5 shrink-0" />
+          Fixture data (no AI): this run replayed the answer key, so these numbers check the
+          pipeline only — they are not AI accuracy. Run npm run eval with an API key to measure.
+        </p>
+      )}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Stat
           label="Field accuracy"

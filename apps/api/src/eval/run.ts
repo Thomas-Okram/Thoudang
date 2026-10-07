@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { createApp } from '../app.js';
 import { openDb } from '../db/client.js';
 import { openFreshEvalDb } from './fresh-db.js';
+import { FIXTURE_MODEL } from '../demo/fixture-model.js';
 import { extractions } from '../db/schema.js';
 import { loadConfig, type DemoMode } from '../env.js';
 import { createLogger } from '../logger.js';
@@ -103,6 +104,8 @@ async function main() {
     apiLatencyMs: [],
     packetWallMs: [],
   };
+  // Replayed truth (npm run dev:fixtures) is not a measurement — the report must say so.
+  let fixtureExtractions = 0;
   const tmp = path.join(config.uploadsDir, 'tmp');
   fs.mkdirSync(tmp, { recursive: true });
 
@@ -149,6 +152,7 @@ async function main() {
       .all();
     usage.packets += 1;
     for (const c of calls) {
+      if (c.model === FIXTURE_MODEL) fixtureExtractions += 1;
       if (c.cacheHit) usage.cacheHits += 1;
       else if (c.status === 'OK') usage.apiCalls += 1;
       usage.inputTokens += c.inputTokens ?? 0;
@@ -162,7 +166,10 @@ async function main() {
   const summary = summarise(scores, usage, config.pricing);
   const report = {
     generatedAt: new Date().toISOString(),
-    model: config.claude.model,
+    model: fixtureExtractions ? `${FIXTURE_MODEL} (no AI)` : config.claude.model,
+    /** true → some/all results are replayed truth.json (dev:fixtures), NOT model accuracy. */
+    fixture: fixtureExtractions > 0,
+    fixtureExtractions,
     promptVersion: PROMPT_VERSION,
     mode,
     labelled,
@@ -173,6 +180,10 @@ async function main() {
   };
   fs.writeFileSync(out, JSON.stringify(report, null, 2));
   console.log(`\n\n${formatReport(summary)}\n\nReport written to ${out}`);
+  if (fixtureExtractions)
+    console.warn(
+      `\n⚠ ${fixtureExtractions} extraction(s) were FIXTURE data (truth replayed, no AI) — this is a pipeline check, not an accuracy measurement.`,
+    );
   handle.close();
 }
 

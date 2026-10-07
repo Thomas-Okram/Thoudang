@@ -20,6 +20,8 @@ import type { LeakScanResult } from './leak-scan.js';
 interface EvalReportFile {
   generatedAt: string;
   model: string;
+  /** Results replayed from truth.json (dev:fixtures) — not an accuracy measurement. */
+  fixture?: boolean;
   mode: string;
   labelled?: boolean;
   dataset: string;
@@ -64,6 +66,7 @@ export function trustReport(
         available: true as const,
         generatedAt: report.generatedAt,
         model: report.model,
+        fixture: Boolean(report.fixture),
         mode: report.mode,
         labelled: Boolean(report.labelled),
         packets: report.summary.packets,

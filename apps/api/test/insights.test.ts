@@ -162,8 +162,13 @@ describe('trust report', () => {
       available: true,
       packets: 3,
       fieldAccuracy: 0.95,
+      fixture: false,
       cost: { perApplicationInr: 8.8 },
     });
+    // A run that replayed dev:fixtures truth must be labelled as such, never as AI accuracy.
+    const file = JSON.parse(fs.readFileSync(t.config.evalReportPath, 'utf8')) as object;
+    fs.writeFileSync(t.config.evalReportPath, JSON.stringify({ ...file, fixture: true }));
+    expect((await request(t.app).get('/api/trust')).body.evaluation.fixture).toBe(true);
     expect(r.fairness.holdout).toMatchObject({ label: 'Held-out set', pairs: 1, errors: [] });
     expect(r.fairness.holdout.overall).toMatchObject({ falseMatches: 0, labelledAmbiguous: 0 });
   });

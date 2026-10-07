@@ -549,6 +549,8 @@ export interface TrustReport {
         available: true;
         generatedAt: string;
         model: string;
+        /** Replayed truth (dev:fixtures) — a pipeline check, not an accuracy measurement. */
+        fixture: boolean;
         mode: string;
         labelled: boolean;
         packets: number;
