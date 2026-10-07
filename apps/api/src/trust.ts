@@ -36,7 +36,19 @@ function readJson<T>(file: string): T | null {
 
 const fairnessView = (label: string, description: string, pairs: readonly FairnessPair[]) => {
   const r: FairnessReport = evaluateFairness(pairs);
-  return { label, description, pairs: pairs.length, rows: r.rows, overall: r.overall };
+  // Every pair the engine got wrong, worst kind first — fictional names, shown for transparency.
+  const errors = r.details
+    .filter((d) => d.outcome === 'false-match' || d.outcome === 'false-non-match')
+    .sort((x, y) => (x.outcome === y.outcome ? 0 : x.outcome === 'false-match' ? -1 : 1))
+    .map((d) => ({
+      community: d.community,
+      a: d.a,
+      b: d.b,
+      verdict: d.verdict,
+      score: d.score,
+      kind: d.outcome as 'false-match' | 'false-non-match',
+    }));
+  return { label, description, pairs: pairs.length, rows: r.rows, overall: r.overall, errors };
 };
 
 export function trustReport(
@@ -92,7 +104,7 @@ export function trustReport(
       ? {
           ...fairnessView(
             'Held-out set',
-            `Written by department staff${holdoutFile.source ? ` (${holdoutFile.source})` : ''} — never used to tune the engine.`,
+            `Written blind — without seeing the engine's code or output${holdoutFile.source ? ` (${holdoutFile.source})` : ''} — and never used to tune it. Labels: same / different / ambiguous.`,
             holdoutFile.pairs,
           ),
           createdAt: holdoutFile.createdAt ?? null,
@@ -185,9 +197,9 @@ export function trustReport(
       ? `Handwriting/extraction accuracy is measured on ${evaluation.packets} synthetic packet(s) only (${evaluation.fieldsScored} fields).`
       : 'Extraction accuracy has not been measured yet — no eval report.',
     fairness.holdout
-      ? `Name-engine fairness has a held-out set of ${fairness.holdout.pairs} pairs; the development set (${fairness.dev.pairs} pairs) is in-sample.`
+      ? `Name-engine fairness has a held-out set of ${fairness.holdout.pairs} pairs (${fairness.holdout.overall.falseMatches} false match${fairness.holdout.overall.falseMatches === 1 ? '' : 'es'} — mostly near-identical given names such as Tomba / Thoiba); the development set (${fairness.dev.pairs} pairs) is in-sample.`
       : `Name-engine fairness is measured only on the development set (${fairness.dev.pairs} pairs, in-sample) — add a held-out set.`,
-    'Status links are signed but have no expiry; the prototype has no passwords (demo officer switcher).',
+    'Status links are signed but have no expiry. Officers sign in with a 4-digit PIN (demo PINs) — no SSO / two-factor yet.',
     'All data is synthetic (SPECIMEN). Not tested on real applications.',
   ];
 

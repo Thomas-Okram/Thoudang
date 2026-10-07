@@ -32,9 +32,12 @@ rejection. The Trust Report proves this live by checking the database statuses.
 
 **A5. How do you know the name engine is fair to every community?**
 The Trust Report shows accuracy, false matches and false non-matches separately for Meitei, Pangal,
-Naga and Kuki-Zo names. Our current 58-pair set was written alongside the engine, so it is
-in-sample; the page lets the department import its own held-out pairs, and we will quote that
-number only.
+Naga and Kuki-Zo names. The 58-pair development set was written alongside the engine (in-sample,
+0 false matches), so we quote the **blind held-out set** instead: 160 pairs written without seeing
+the engine — **9 false matches**, 89% accuracy on the pairs it auto-decides, 13% referred to an
+officer. The false matches are near-identical given names (Tomba / Thoiba, Rajen / Rajesh); that
+is the next fix, and it will be measured on a fresh held-out set, not this one. A false match
+inside one packet only means a missing flag — the officer still sees every name side by side.
 
 **A6. What if a name is genuinely ambiguous, like "Kh. Loken Singh"?**
 The engine refuses to guess: it marks the match ambiguous, lists the candidate yumnaks

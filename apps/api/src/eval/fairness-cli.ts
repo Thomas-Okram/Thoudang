@@ -1,7 +1,7 @@
 /**
  * Name-engine fairness report:
  *   npm run fairness                                   # development set (+ held-out if present)
- *   npm run fairness -- --holdout ./holdout-pairs.csv  # import staff-written pairs, then report
+ *   npm run fairness -- --holdout ./holdout-pairs.csv  # import held-out pairs (written blind), then report
  * CSV columns: name_a,name_b,community,expected_same  (community: Meitei | Pangal | Naga | Kuki-Zo)
  */
 import fs from 'node:fs';
@@ -27,7 +27,7 @@ if (typeof flags.holdout === 'string') {
   }
   fs.writeFileSync(
     env.fairnessHoldoutPath,
-    `${JSON.stringify({ _note: 'Held-out name pairs written by department staff. Never used to tune the engine.', source: path.basename(file), createdAt: new Date().toISOString(), pairs }, null, 2)}\n`,
+    `${JSON.stringify({ _note: 'Held-out name pairs written without seeing the engine. Never used to tune the engine. Do not edit labels after seeing results.', source: path.basename(file), createdAt: new Date().toISOString(), pairs }, null, 2)}\n`,
   );
   console.log(`Imported ${pairs.length} held-out pairs → ${env.fairnessHoldoutPath}`);
 }
@@ -40,7 +40,7 @@ const print = (title: string, pairs: readonly FairnessPair[]) => {
 print('Development set (seen during build)', fairnessDevPairs);
 if (fs.existsSync(env.fairnessHoldoutPath)) {
   print(
-    'Held-out set (written by staff)',
+    'Held-out set (written blind)',
     (JSON.parse(fs.readFileSync(env.fairnessHoldoutPath, 'utf8')) as { pairs: FairnessPair[] })
       .pairs,
   );

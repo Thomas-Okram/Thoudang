@@ -164,7 +164,8 @@ describe('trust report', () => {
       fieldAccuracy: 0.95,
       cost: { perApplicationInr: 8.8 },
     });
-    expect(r.fairness.holdout).toMatchObject({ label: 'Held-out set', pairs: 1 });
+    expect(r.fairness.holdout).toMatchObject({ label: 'Held-out set', pairs: 1, errors: [] });
+    expect(r.fairness.holdout.overall).toMatchObject({ falseMatches: 0, labelledAmbiguous: 0 });
   });
 
   it('override rate and approvals come from real officer decisions', async () => {

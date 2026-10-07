@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '../components/Page';
-import { Badge, EmptyState, Icon, Skeleton, Table, Td, Th, Tr } from '../components/ui';
+import { Badge, EmptyState, Icon, Skeleton, StatTile, Table, Td, Th, Tr } from '../components/ui';
 import {
   fetchTrust,
   runLeakScan,
@@ -181,35 +181,72 @@ function Accuracy({ e }: { e: TrustReport['evaluation'] }) {
   );
 }
 
-function FairnessTable({ f }: { f: FairnessView }) {
+function FairnessTable({ f, primary = false }: { f: FairnessView; primary?: boolean }) {
+  const o = f.overall;
   return (
-    <div>
+    <div data-testid={primary ? 'fairness-holdout' : 'fairness-dev'}>
       <h3 className="text-lg font-semibold text-navy-900">
         {f.label} <span className="font-normal text-ink-muted">· {f.pairs} pairs</span>
       </h3>
       <p className="text-sm text-ink-muted">{f.description}</p>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatTile
+          label="False matches"
+          value={o.falseMatches}
+          tone={o.falseMatches ? 'danger' : 'success'}
+          icon={o.falseMatches ? 'alert' : 'shield'}
+          hint="Two different people treated as one — the dangerous error"
+          size={primary ? 'lg' : 'md'}
+          className={o.falseMatches ? 'ring-2 ring-rose-300' : ''}
+        />
+        <StatTile
+          label="Accuracy when auto-decided"
+          value={pct(o.accuracy)}
+          tone="navy"
+          hint={`${o.correct} of ${o.decided} pairs the engine decided on its own`}
+        />
+        <StatTile
+          label="Referred to an officer"
+          value={pct(o.referralRate)}
+          tone="teal"
+          hint={`${o.referred} pairs marked ambiguous — not guessed, not errors`}
+        />
+        <StatTile
+          label="False non-matches"
+          value={o.falseNonMatches}
+          tone={o.falseNonMatches ? 'warn' : 'success'}
+          hint="Same person marked different → unneeded correction"
+        />
+      </div>
+
       <div className="mt-3">
         <Table>
           <thead>
             <tr>
               <Th>Community</Th>
               <Th align="right">Pairs</Th>
-              <Th align="right">Auto-decided</Th>
-              <Th align="right">Accuracy</Th>
-              <Th align="right">Referred to officer</Th>
               <Th align="right">False matches</Th>
+              <Th align="right">Accuracy (auto-decided)</Th>
+              <Th align="right">Referred to officer</Th>
               <Th align="right">False non-matches</Th>
+              <Th align="right">Labelled ambiguous</Th>
             </tr>
           </thead>
           <tbody>
-            {[...f.rows, f.overall].map((r) => (
+            {[...f.rows, o].map((r) => (
               <Tr
                 key={r.community}
                 className={r.community === 'All' ? 'bg-slate-50 font-bold' : ''}
               >
                 <Td className="font-semibold text-navy-900">{r.community}</Td>
                 <Td align="right">{r.pairs}</Td>
-                <Td align="right">{r.decided}</Td>
+                <Td
+                  align="right"
+                  className={r.falseMatches ? 'font-bold text-rose-700' : 'text-emerald-700'}
+                >
+                  {r.falseMatches}
+                </Td>
                 <Td align="right">
                   <span className="inline-flex items-center gap-2">
                     <span className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-slate-100 sm:inline-block">
@@ -218,21 +255,59 @@ function FairnessTable({ f }: { f: FairnessView }) {
                         style={{ width: `${r.accuracy * 100}%` }}
                       />
                     </span>
-                    {pct(r.accuracy)}
+                    {pct(r.accuracy)}{' '}
+                    <span className="font-normal text-ink-muted">
+                      ({r.correct}/{r.decided})
+                    </span>
                   </span>
                 </Td>
                 <Td align="right">
                   {r.referred} ({pct(r.referralRate)})
                 </Td>
-                <Td align="right" className={r.falseMatches ? 'font-bold text-rose-700' : ''}>
-                  {r.falseMatches}
-                </Td>
                 <Td align="right">{r.falseNonMatches}</Td>
+                <Td align="right">
+                  {r.labelledAmbiguous}
+                  {r.autoDecidedUnclear > 0 && (
+                    <span className="font-normal text-ink-muted">
+                      {' '}
+                      ({r.autoDecidedUnclear} auto-decided)
+                    </span>
+                  )}
+                </Td>
               </Tr>
             ))}
           </tbody>
         </Table>
       </div>
+
+      {f.errors.length > 0 && (
+        <details className="group/err mt-3 rounded-xl border border-line bg-white" open={primary}>
+          <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-sm font-semibold text-navy-900 [&::-webkit-details-marker]:hidden">
+            <Icon
+              name="chevronRight"
+              size={15}
+              className="transition-transform group-open/err:rotate-90"
+            />
+            Every pair the engine got wrong ({f.errors.length}) — fictional names
+          </summary>
+          <ul className="grid gap-1.5 border-t border-line px-4 py-3 text-sm md:grid-cols-2">
+            {f.errors.map((e) => (
+              <li key={`${e.a}|${e.b}`} className="flex items-baseline gap-2">
+                <Badge tone={e.kind === 'false-match' ? 'danger' : 'warn'} size="sm">
+                  {e.kind === 'false-match' ? 'False match' : 'False non-match'}
+                </Badge>
+                <span className="min-w-0 text-ink-soft">
+                  “{e.a}” ↔ “{e.b}”{' '}
+                  <span className="text-ink-muted">
+                    · {e.community} · engine said {e.verdict.replace('_', ' ').toLowerCase()} (
+                    {e.score})
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </div>
   );
 }
@@ -241,21 +316,24 @@ function Fairness({ f }: { f: TrustReport['fairness'] }) {
   return (
     <Section n={2} title="Name-engine fairness by community">
       <p className="mb-5 max-w-4xl text-[0.95rem] text-ink-soft">
-        The name engine is deterministic code (no AI). A <em>false match</em> — two different people
-        treated as one — is the dangerous error; ambiguous cases go to an officer instead of being
-        guessed.
+        The name engine is deterministic code (no AI). The headline number is{' '}
+        <strong>false matches</strong> — two different people treated as one. When the engine is
+        unsure it answers <em>ambiguous</em> and an officer decides: that is counted as a{' '}
+        <strong>referral, never as an error</strong>, even when the labellers knew the pair was the
+        same person. Pairs the labellers themselves marked <em>ambiguous</em> have no right answer
+        and are never scored. Accuracy is measured only on pairs the engine decided on its own.
       </p>
-      <div className="space-y-6">
-        <FairnessTable f={f.dev} />
+      <div className="space-y-8">
         {f.holdout ? (
-          <FairnessTable f={f.holdout} />
+          <FairnessTable f={f.holdout} primary />
         ) : (
           <p className="rounded-xl border border-warm-200 bg-warm-50 px-4 py-3 text-sm text-warm-900">
-            No held-out set yet. Department staff can add one:{' '}
+            No held-out set yet. Add one:{' '}
             <code>npm run fairness -- --holdout ./holdout-pairs.csv</code> (columns
-            name_a,name_b,community,expected_same).
+            name_a,name_b,community,expected_same — true / false / ambiguous).
           </p>
         )}
+        <FairnessTable f={f.dev} />
       </div>
     </Section>
   );

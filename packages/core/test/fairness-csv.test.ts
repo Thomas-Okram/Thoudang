@@ -35,7 +35,7 @@ describe('held-out fairness CSV', () => {
     expect(pairs).toEqual([]);
     expect(errors).toEqual([
       'Row 2: unknown community "Martian" (use Meitei, Pangal, Naga or Kuki-Zo)',
-      'Row 3: expected_same must be true/false (got "maybe")',
+      'Row 3: expected_same must be true/false/ambiguous (got "maybe")',
       'Row 4: name_a and name_b are required',
     ]);
   });
@@ -58,6 +58,63 @@ describe('held-out fairness CSV', () => {
         accuracy: 1,
       }),
     ]);
+  });
+
+  it('accepts the blind hold-out conventions: "Meitei Pangal" and an "ambiguous" label', () => {
+    const { pairs, errors } = parseFairnessCsv(
+      [
+        'name_a,name_b,community,expected_same,note',
+        'Md. Abdul Rahim,Mohammad Abdul Rahim,Meitei Pangal,true,x',
+        'Laishram Sanatombi Devi,Okram Sanatombi Devi,Meitei,ambiguous,married name?',
+      ].join('\n'),
+    );
+    expect(errors).toEqual([]);
+    expect(pairs).toEqual([
+      { a: 'Md. Abdul Rahim', b: 'Mohammad Abdul Rahim', community: 'Pangal', samePerson: true },
+      {
+        a: 'Laishram Sanatombi Devi',
+        b: 'Okram Sanatombi Devi',
+        community: 'Meitei',
+        samePerson: null,
+      },
+    ]);
+  });
+
+  it('scoring: AMBIGUOUS vs a "same" label is a referral, not an error; "ambiguous" labels never count as errors', () => {
+    const r = evaluateFairness([
+      // engine refers (Kh. is ambiguous) — label says same → referral
+      { a: 'Kh. Loken Singh', b: 'Khuraijam Loken Singh', community: 'Meitei', samePerson: true },
+      // label ambiguous, engine refers → referral, no error
+      {
+        a: 'Laishram Sanatombi Devi',
+        b: 'Okram Sanatombi Devi',
+        community: 'Meitei',
+        samePerson: null,
+      },
+      // label ambiguous, engine auto-decides → unscored, counted separately
+      { a: 'Okram Tomba Singh', b: 'Laishram Tomba Singh', community: 'Meitei', samePerson: null },
+      // ordinary correct decision
+      { a: 'Okram Thomas', b: 'Thomas Okram', community: 'Meitei', samePerson: true },
+    ]);
+    const row = r.rows[0]!;
+    expect(r.details.map((d) => d.outcome)).toEqual([
+      'referred',
+      'referred',
+      'unscored',
+      'correct',
+    ]);
+    expect(row).toMatchObject({
+      pairs: 4,
+      labelledAmbiguous: 2,
+      decided: 1,
+      correct: 1,
+      accuracy: 1,
+      referred: 2,
+      referralRate: 0.5,
+      falseMatches: 0,
+      falseNonMatches: 0,
+      autoDecidedUnclear: 1,
+    });
   });
 
   it('the development set is still exported (renamed to fairness-dev.json)', () => {

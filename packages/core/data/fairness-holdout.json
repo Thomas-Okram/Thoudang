@@ -1,0 +1,967 @@
+{
+  "_note": "Held-out name pairs written by department staff. Never used to tune the engine.",
+  "source": "holdout-pairs.csv",
+  "createdAt": "2026-10-07T19:59:00.809Z",
+  "pairs": [
+    {
+      "a": "Laishram Tomba Singh",
+      "b": "L. Tomba Singh",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Thokchom Ibemhal Devi",
+      "b": "Th. Ibemhal Devi",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Khumanthem Sanatombi Chanu",
+      "b": "Kh. Sanatombi Chanu",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Ningthoujam Chaoba Singh",
+      "b": "Chaoba Singh Ningthoujam",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Wahengbam Ibochouba Singh",
+      "b": "WAHENGBAM IBOCHOUBA SINGH",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Sorokhaibam Memcha Devi",
+      "b": "Sorokhaibam Memcha",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Yumnam Naoba",
+      "b": "Yumnam Naoba Singh",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Konsam Thoibi Chanu",
+      "b": "Konsam Thoibi Devi",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Moirangthem Ibotombi Meitei",
+      "b": "Moirangthem Ibotombi Singh",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Huidrom Rajen Meetei",
+      "b": "Huidrom Rajen Meitei",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Kshetrimayum Bimola Devi",
+      "b": "Kshetrimayum Bimola Leima",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Elangbam Tombi Devi",
+      "b": "Elangbam Ningol Oinam Ongbi Tombi Devi",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Haobam Sanajaoba Singh",
+      "b": "Haobam Sana Jaoba Singh",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Akoijam Ibomcha Singh",
+      "b": "Akoijam  Ibomcha  Singh.",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Chongtham Lukhoi Singh",
+      "b": "Ch. Lukhoi Singh",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Thangjam Premila Devi",
+      "b": "THANGJAM PREMILA",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Maibam Sanatomba Singh",
+      "b": "Maibam Sanatomba Singh Meitei",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Takhellambam Ibungo Singh",
+      "b": "Tekhellambam Ibungo Singh",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Sagolsem Romita Devi",
+      "b": "Sagolshem Romita Devi",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Nongmaithem Achouba Singh",
+      "b": "N. Achouba Singh",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Pukhrambam Ngambi Devi",
+      "b": "NGAMBI DEVI PUKHRAMBAM",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Lairenlakpam Ibohal Singh",
+      "b": "Lairellakpam Ibohal Singh",
+      "community": "Meitei",
+      "samePerson": true
+    },
+    {
+      "a": "Laishram Tomba Singh",
+      "b": "Laishram Thoiba Singh",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Thokchom Ibemcha Devi",
+      "b": "Thokchom Ibemhal Devi",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Ningthoujam Chaoba Singh",
+      "b": "Ningthoujam Naoba Singh",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Wahengbam Ibochouba Singh",
+      "b": "Yumnam Ibochouba Singh",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Moirangthem Tomba Singh",
+      "b": "Moirangthem Tombi Devi",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Huidrom Ibomcha Singh",
+      "b": "Huidrom Ibotombi Singh",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Konsam Sanatombi Chanu",
+      "b": "Konsam Sanahanbi Chanu",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Akoijam Memcha Devi",
+      "b": "Akoijam Momon Devi",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Kshetrimayum Rajen Singh",
+      "b": "Kshetrimayum Rajesh Singh",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Sorokhaibam Ibungo Singh",
+      "b": "Soraisam Ibungo Singh",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Chongtham Lukhoi Singh",
+      "b": "Chingtham Lukhoi Singh",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Haobam Sanajaoba Singh",
+      "b": "Haobam Sanayaima Singh",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Elangbam Tombi Devi",
+      "b": "Elangbam Thoibi Devi",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Maibam Ibohal Singh",
+      "b": "Maibam Ibohanbi Devi",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Ningthoujam Ranjit Singh",
+      "b": "Ningombam Ranjit Singh",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Thangjam Premila Devi",
+      "b": "Thangjam Pramodini Devi",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Salam Tomchou Singh",
+      "b": "Salam Tomba Singh",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Keisham Ibetombi Chanu",
+      "b": "Keisham Ibemcha Chanu",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Yumnam Naoba Singh",
+      "b": "Yumnam Naobi Devi",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Mayengbam Sanjit Singh",
+      "b": "Mayengbam Sanjoy Singh",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "L. Tomba Singh",
+      "b": "L. Thoiba Singh",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Atom Ibotombi Singh",
+      "b": "Atom Ibochaoba Singh",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Khumanthem Sanatombi Chanu",
+      "b": "Kh. Sanahanbi Chanu",
+      "community": "Meitei",
+      "samePerson": false
+    },
+    {
+      "a": "Elangbam Tombi Devi",
+      "b": "Oinam Ongbi Tombi Devi",
+      "community": "Meitei",
+      "samePerson": null
+    },
+    {
+      "a": "Soibam Tiken Singh",
+      "b": "Soibam Tikendrajit Singh",
+      "community": "Meitei",
+      "samePerson": null
+    },
+    {
+      "a": "Thangjam Premila Devi",
+      "b": "Thangjam Pramila Devi",
+      "community": "Meitei",
+      "samePerson": null
+    },
+    {
+      "a": "Tomba Singh",
+      "b": "Laishram Tomba Singh",
+      "community": "Meitei",
+      "samePerson": null
+    },
+    {
+      "a": "Ningthoujam Bimola Devi",
+      "b": "Ningombam Bimola Devi",
+      "community": "Meitei",
+      "samePerson": null
+    },
+    {
+      "a": "Md. Abdul Hamid",
+      "b": "Mohammad Abdul Hamid",
+      "community": "Pangal",
+      "samePerson": true
+    },
+    {
+      "a": "Mohd. Fajur Rahman",
+      "b": "Md Fajur Rahman",
+      "community": "Pangal",
+      "samePerson": true
+    },
+    {
+      "a": "Mohammed Ali Hussain",
+      "b": "MD ALI HUSSAIN",
+      "community": "Pangal",
+      "samePerson": true
+    },
+    {
+      "a": "Md. Nasir Uddin",
+      "b": "Md. Nasiruddin",
+      "community": "Pangal",
+      "samePerson": true
+    },
+    {
+      "a": "Md. Abdul Salam Khan",
+      "b": "Md. Abdul Salam",
+      "community": "Pangal",
+      "samePerson": true
+    },
+    {
+      "a": "Hasina Begum",
+      "b": "Hasina Begam",
+      "community": "Pangal",
+      "samePerson": true
+    },
+    {
+      "a": "Sabina Nessa",
+      "b": "Sabina Nesa",
+      "community": "Pangal",
+      "samePerson": true
+    },
+    {
+      "a": "Khullakpam Md. Jamal Uddin",
+      "b": "Md. Jamal Uddin Khullakpam",
+      "community": "Pangal",
+      "samePerson": true
+    },
+    {
+      "a": "Phundreimayum Md. Abdul Rashid",
+      "b": "Ph. Md. Abdul Rashid",
+      "community": "Pangal",
+      "samePerson": true
+    },
+    {
+      "a": "Md. Abdul Latif Shah",
+      "b": "Mohd Abdul Latif Shah",
+      "community": "Pangal",
+      "samePerson": true
+    },
+    {
+      "a": "Rahima Bibi",
+      "b": "RAHIMA BIBI",
+      "community": "Pangal",
+      "samePerson": true
+    },
+    {
+      "a": "Md. Kutub Uddin",
+      "b": "Md. Qutub Uddin",
+      "community": "Pangal",
+      "samePerson": true
+    },
+    {
+      "a": "Md. Ahmed Ali",
+      "b": "Md. Ahamed Ali",
+      "community": "Pangal",
+      "samePerson": true
+    },
+    {
+      "a": "Md. Abdul Hamid",
+      "b": "Md. Abdul Hakim",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Md. Abdul Salam",
+      "b": "Md. Abdul Kalam",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Md. Fajur Rahman",
+      "b": "Md. Fajur Rahim",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Md. Ali Hussain",
+      "b": "Md. Ali Hasan",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Md. Nasir Uddin",
+      "b": "Md. Nizam Uddin",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Hasina Begum",
+      "b": "Hamida Begum",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Sabina Nessa",
+      "b": "Sabana Nessa",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Khullakpam Md. Jamal Uddin",
+      "b": "Khullakpam Md. Kamal Uddin",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Md. Abdul Rashid",
+      "b": "Md. Rashid Ali",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Md. Abdul Latif Shah",
+      "b": "Md. Abdul Majid Shah",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Rahima Bibi",
+      "b": "Md. Rahim Uddin",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Md. Abdul Wahid",
+      "b": "Md. Abdul Wahab",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Md. Sirajuddin",
+      "b": "Md. Sirajul Haque",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Md. Amir Hussain",
+      "b": "Md. Amin Hussain",
+      "community": "Pangal",
+      "samePerson": false
+    },
+    {
+      "a": "Md. Abdul Rashid",
+      "b": "Md. Rashid",
+      "community": "Pangal",
+      "samePerson": null
+    },
+    {
+      "a": "Mohammad Ali",
+      "b": "Md. Ali Hussain",
+      "community": "Pangal",
+      "samePerson": null
+    },
+    {
+      "a": "Hasina Begum",
+      "b": "Hasina Khatun",
+      "community": "Pangal",
+      "samePerson": null
+    },
+    {
+      "a": "Ngachonmi Shimray",
+      "b": "Shimray Ngachonmi",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Ramthing Hungyo",
+      "b": "Ramthing H.",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Somingam Zimik",
+      "b": "SOMINGAM ZIMIK",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Kasomwung Keishing",
+      "b": "Kasomwung Keising",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Pamreihor Kasar",
+      "b": "Pamrei Hor Kasar",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Kamei Ramkung",
+      "b": "Ramkung Kamei",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Gonmei Thaithuilung",
+      "b": "G. Thaithuilung",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Pamei Kaikhonlung",
+      "b": "Pamei Kaikhonglung",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Haipeu Newmai",
+      "b": "Haipeu Newme",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Pheisii Lorho",
+      "b": "Pheisi Lorho",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Rakho Veino",
+      "b": "Veino Rakho",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Thiulung Maram",
+      "b": "THIULUNG MARAM.",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Daniel Haichang Zeme",
+      "b": "Daniel Haichang",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Kheshang Thoumai Maring",
+      "b": "Kheshang Thoumai",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Ruthie Ningam Anal",
+      "b": "Ruthie N. Anal",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Yarteo Luithui",
+      "b": "Yarteo Lui Thui",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Shangreiphao Chiphang",
+      "b": "Shangreipao Chiphang",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Riamei Kalung Rongmei",
+      "b": "Kalung Riamei",
+      "community": "Naga",
+      "samePerson": true
+    },
+    {
+      "a": "Ngachonmi Shimray",
+      "b": "Ngachonla Shimray",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Ramthing Hungyo",
+      "b": "Ramthing Zimik",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Somingam Zimik",
+      "b": "Somiwung Zimik",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "John Shimray",
+      "b": "John Hungyo",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Peter Kasar",
+      "b": "Paul Kasar",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Kamei Ramkung",
+      "b": "Kamei Ramkhui",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Gonmei Thaithuilung",
+      "b": "Gonmei Thaithuiliu",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Pamei Kaikhonlung",
+      "b": "Panmei Kaikhonlung",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Haipeu Newmai",
+      "b": "Haitung Newmai",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Pheisii Lorho",
+      "b": "Pfosii Lorho",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Rakho Veino",
+      "b": "Lokho Veino",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Thiulung Maram",
+      "b": "Thiuliu Maram",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Daniel Haichang",
+      "b": "David Haichang",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Kheshang Thoumai",
+      "b": "Kheshang Sakhong",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Thangpu Anal",
+      "b": "Thangpi Anal",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Yarteo Luithui",
+      "b": "Yarteo Lunghar",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Shangreiphao Chiphang",
+      "b": "Shangreiwon Chiphang",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Kalung Riamei",
+      "b": "Kalung Malangmei",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Somingam Zimik",
+      "b": "Ngathingkhui Zimik",
+      "community": "Naga",
+      "samePerson": false
+    },
+    {
+      "a": "Mayaso Raleng",
+      "b": "Mayaso Shimray",
+      "community": "Naga",
+      "samePerson": null
+    },
+    {
+      "a": "John Shimray",
+      "b": "John Ngalaiphi Shimray",
+      "community": "Naga",
+      "samePerson": null
+    },
+    {
+      "a": "R. Hungyo",
+      "b": "Ramthing Hungyo",
+      "community": "Naga",
+      "samePerson": null
+    },
+    {
+      "a": "Thangboi Haokip",
+      "b": "Haokip Thangboi",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Lhingneilam Kipgen",
+      "b": "Hlingneilam Kipgen",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Seilen Singsit",
+      "b": "SEILEN SINGSIT",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Paolen Touthang",
+      "b": "Paolen T.",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Jangkhosei Doungel",
+      "b": "Jangkhosei Dongel",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Lianzamang Guite",
+      "b": "Lian Za Mang Guite",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Khamzalian Tonsing",
+      "b": "Tonsing Khamzalian",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Niangngaihlun Samte",
+      "b": "Niangngailun Samte",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Lalremruata Pulamte",
+      "b": "Lalremruata Pulamte Hmar",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Lalhmingsangi Neitham",
+      "b": "Lalhmingsangi N.",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Thangkhanmuan Vaiphei",
+      "b": "Thangkhanmuang Vaiphei",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Pu Thangkhanlian Zou",
+      "b": "Thangkhanlian Zou",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Lianminthang Gangte",
+      "b": "Lian Minthang Gangte",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Sanglen Kom",
+      "b": "Kom Sanglen",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Pi Ngaihchingdim Simte",
+      "b": "Ngaihchingdim Simte",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Nengneikim Lhungdim",
+      "b": "NENGNEIKIM LHUNGDIM.",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Thangminlen Chongloi",
+      "b": "Thangminlen Chongloih",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Hemkhosei Hangshing",
+      "b": "Hemkhosei Hangsing",
+      "community": "Kuki-Zo",
+      "samePerson": true
+    },
+    {
+      "a": "Thangboi Haokip",
+      "b": "Thangboi Kipgen",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Lhingneilam Kipgen",
+      "b": "Lhingneikim Kipgen",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Seilen Singsit",
+      "b": "Paolen Singsit",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Paolen Touthang",
+      "b": "Paominlen Touthang",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Jangkhosei Doungel",
+      "b": "Jangkholun Doungel",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Lianzamang Guite",
+      "b": "Lianzamung Guite",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Khamzalian Tonsing",
+      "b": "Khamzalian Samte",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Niangngaihlun Samte",
+      "b": "Niangngaihching Samte",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Lalremruata Pulamte",
+      "b": "Lalremruati Pulamte",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Lalhmingsangi Neitham",
+      "b": "Lalhmingthangi Neitham",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Thangkhanmuan Vaiphei",
+      "b": "Thangkhanpau Vaiphei",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Thangkhanlian Zou",
+      "b": "Thangkhanlian Gangte",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Lianminthang Gangte",
+      "b": "Lianmuanthang Gangte",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Sanglen Kom",
+      "b": "Sangboi Kom",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Ngaihchingdim Simte",
+      "b": "Ngaihchingmoi Simte",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Lalboi Mate",
+      "b": "Thanglalboi Mate",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Thangminlen Chongloi",
+      "b": "Thangminthang Chongloi",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Seigoulun Khongsai",
+      "b": "Seigoulen Khongsai",
+      "community": "Kuki-Zo",
+      "samePerson": false
+    },
+    {
+      "a": "Lhingneilam Kipgen",
+      "b": "Lhingneilam Haokip",
+      "community": "Kuki-Zo",
+      "samePerson": null
+    },
+    {
+      "a": "T. Haokip",
+      "b": "Thangboi Haokip",
+      "community": "Kuki-Zo",
+      "samePerson": null
+    },
+    {
+      "a": "Lalremruata",
+      "b": "Lalremruata Pulamte",
+      "community": "Kuki-Zo",
+      "samePerson": null
+    },
+    {
+      "a": "Mang Guite",
+      "b": "Lianzamang Guite",
+      "community": "Kuki-Zo",
+      "samePerson": null
+    }
+  ]
+}

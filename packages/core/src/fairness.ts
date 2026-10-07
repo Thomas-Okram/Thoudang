@@ -5,15 +5,21 @@ export interface FairnessPair {
   community: string;
   a: string;
   b: string;
-  /** Ground truth: are these the same person? */
-  samePerson: boolean;
+  /**
+   * Ground truth: are these the same person? `null` = the labellers judged it undecidable from
+   * the names alone (CSV label "ambiguous", e.g. a woman's yumnak that may have changed at
+   * marriage). Such pairs are never scored as right or wrong.
+   */
+  samePerson: boolean | null;
   note?: string;
 }
 
 export interface FairnessRow {
   community: string;
   pairs: number;
-  /** Pairs the engine decided on its own (SAME / LIKELY_SAME / DIFFERENT). */
+  /** Pairs whose label is "ambiguous" (no ground truth; never counted as errors). */
+  labelledAmbiguous: number;
+  /** Pairs with a same/different label that the engine decided on its own (SAME / LIKELY_SAME / DIFFERENT). */
   decided: number;
   correct: number;
   /** correct / decided — accuracy when the engine does not refer to an officer. */
@@ -25,12 +31,18 @@ export interface FairnessRow {
   falseMatches: number;
   /** Same person auto-marked DIFFERENT — causes an unnecessary citizen correction. */
   falseNonMatches: number;
+  /** "ambiguous"-labelled pairs the engine decided anyway (not scored; shown for transparency). */
+  autoDecidedUnclear: number;
 }
 
 export interface FairnessDetail extends FairnessPair {
   verdict: NameVerdict;
   score: number;
-  outcome: 'correct' | 'referred' | 'false-match' | 'false-non-match';
+  /**
+   * referred = engine said AMBIGUOUS (an officer decides) — never an error, whatever the label.
+   * unscored = label "ambiguous" but the engine auto-decided: no ground truth to score against.
+   */
+  outcome: 'correct' | 'referred' | 'false-match' | 'false-non-match' | 'unscored';
 }
 
 export interface FairnessReport {
@@ -54,11 +66,15 @@ const COMMUNITY_ALIASES: Record<string, (typeof COMMUNITIES)[number]> = {
   'kuki-zo': 'Kuki-Zo',
   'kuki zo': 'Kuki-Zo',
   kukizo: 'Kuki-Zo',
+  'meitei pangal': 'Pangal',
+  'meetei pangal': 'Pangal',
+  'meitei-pangal': 'Pangal',
   kuki: 'Kuki-Zo',
   zo: 'Kuki-Zo',
 };
 const TRUE = new Set(['true', 'yes', 'y', '1', 'same']);
 const FALSE = new Set(['false', 'no', 'n', '0', 'different']);
+const UNCLEAR = new Set(['ambiguous', 'unclear', 'unknown']);
 
 /** Minimal RFC-4180 CSV: quoted fields, escaped quotes, commas inside quotes, CRLF. */
 function parseCsv(text: string): string[][] {
@@ -119,9 +135,11 @@ export function parseFairnessCsv(text: string): { pairs: FairnessPair[]; errors:
       return errors.push(
         `Row ${line}: unknown community "${rawCommunity}" (use Meitei, Pangal, Naga or Kuki-Zo)`,
       );
-    if (!TRUE.has(rawSame) && !FALSE.has(rawSame))
-      return errors.push(`Row ${line}: expected_same must be true/false (got "${rawSame}")`);
-    pairs.push({ a, b, community, samePerson: TRUE.has(rawSame) });
+    if (!TRUE.has(rawSame) && !FALSE.has(rawSame) && !UNCLEAR.has(rawSame))
+      return errors.push(
+        `Row ${line}: expected_same must be true/false/ambiguous (got "${rawSame}")`,
+      );
+    pairs.push({ a, b, community, samePerson: UNCLEAR.has(rawSame) ? null : TRUE.has(rawSame) });
   });
   return { pairs: errors.length ? [] : pairs, errors };
 }
@@ -132,10 +150,12 @@ function summarise(community: string, details: FairnessDetail[]): FairnessRow {
   const count = (o: FairnessDetail['outcome']) => details.filter((d) => d.outcome === o).length;
   const referred = count('referred');
   const correct = count('correct');
-  const decided = details.length - referred;
+  const autoDecidedUnclear = count('unscored');
+  const decided = details.filter((d) => d.samePerson !== null && d.outcome !== 'referred').length;
   return {
     community,
     pairs: details.length,
+    labelledAmbiguous: details.filter((d) => d.samePerson === null).length,
     decided,
     correct,
     accuracy: ratio(correct, decided),
@@ -143,6 +163,7 @@ function summarise(community: string, details: FairnessDetail[]): FairnessRow {
     referralRate: details.length ? referred / details.length : 0,
     falseMatches: count('false-match'),
     falseNonMatches: count('false-non-match'),
+    autoDecidedUnclear,
   };
 }
 
@@ -156,6 +177,7 @@ export function evaluateFairness(
     const predictedSame = verdict === 'SAME' || verdict === 'LIKELY_SAME';
     let outcome: FairnessDetail['outcome'];
     if (verdict === 'AMBIGUOUS') outcome = 'referred';
+    else if (p.samePerson === null) outcome = 'unscored';
     else if (predictedSame === p.samePerson) outcome = 'correct';
     else outcome = predictedSame ? 'false-match' : 'false-non-match';
     return { ...p, verdict, score, outcome };
@@ -178,10 +200,10 @@ const pct = (x: number) => `${(x * 100).toFixed(0)}%`;
 /** Markdown table — used in test output and the Trust Report. */
 export function formatFairnessTable(report: FairnessReport): string {
   const header = [
-    '| Community | Pairs | Auto-decided | Accuracy (decided) | Referred to officer | False matches | False non-matches |',
+    '| Community | Pairs | FALSE MATCHES (2 people merged) | Accuracy (auto-decided) | Referred to officer | False non-matches | Labelled ambiguous |',
     '|---|---:|---:|---:|---:|---:|---:|',
   ];
   const line = (r: FairnessRow) =>
-    `| ${r.community} | ${r.pairs} | ${r.decided} | ${pct(r.accuracy)} | ${r.referred} (${pct(r.referralRate)}) | ${r.falseMatches} | ${r.falseNonMatches} |`;
+    `| ${r.community} | ${r.pairs} | **${r.falseMatches}** | ${pct(r.accuracy)} (${r.correct}/${r.decided}) | ${r.referred} (${pct(r.referralRate)}) | ${r.falseNonMatches} | ${r.labelledAmbiguous}${r.autoDecidedUnclear ? ` (${r.autoDecidedUnclear} auto-decided)` : ''} |`;
   return [...header, ...report.rows.map(line), line(report.overall)].join('\n');
 }

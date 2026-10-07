@@ -501,6 +501,9 @@ export const fetchPublicStatus = (ref: string, k: string) =>
 export interface FairnessRow {
   community: string;
   pairs: number;
+  /** Pairs labelled "ambiguous" (no ground truth — never counted as errors). */
+  labelledAmbiguous: number;
+  /** Pairs with a same/different label the engine auto-decided. */
   decided: number;
   correct: number;
   accuracy: number;
@@ -508,6 +511,16 @@ export interface FairnessRow {
   referralRate: number;
   falseMatches: number;
   falseNonMatches: number;
+  /** "ambiguous"-labelled pairs the engine auto-decided anyway (unscored). */
+  autoDecidedUnclear: number;
+}
+export interface FairnessError {
+  community: string;
+  a: string;
+  b: string;
+  verdict: NameVerdict;
+  score: number;
+  kind: 'false-match' | 'false-non-match';
 }
 export interface FairnessView {
   label: string;
@@ -515,6 +528,7 @@ export interface FairnessView {
   pairs: number;
   rows: FairnessRow[];
   overall: FairnessRow;
+  errors: FairnessError[];
 }
 export interface LeakScan {
   scannedAt: string;
