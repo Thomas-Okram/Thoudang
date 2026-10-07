@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import type { CaseDetail } from '../../lib/api';
 
 export function ActionBar({
@@ -70,13 +71,28 @@ export function ActionBar({
         >
           {busy === 'correct' ? 'Sending…' : 'Send for citizen correction'}
         </button>
-        <button
-          disabled
-          title="Deficiency notice (Meiteilon + English) arrives in the next phase"
-          className="cursor-not-allowed rounded-lg border border-dashed border-slate-300 px-4 py-2.5 font-semibold text-slate-400"
-        >
-          Notice — coming next
-        </button>
+        {d.notice.allowed ? (
+          <Link
+            to={`/cases/${d.case.id}/notice`}
+            className="rounded-lg border border-navy-900 bg-white px-4 py-2.5 font-semibold text-navy-900 transition hover:bg-slate-50"
+          >
+            {d.case.noticeSentAt ? 'View notice' : 'Generate notice'}
+          </Link>
+        ) : (
+          <button
+            disabled
+            title={d.notice.reasons[0] ?? 'No notice needed'}
+            className="cursor-not-allowed rounded-lg border border-dashed border-slate-300 px-4 py-2.5 font-semibold text-slate-400"
+          >
+            Generate notice
+          </button>
+        )}
+        {d.case.noticeSentAt && (
+          <span className="text-xs text-slate-500">
+            Notice sent on{' '}
+            {new Date(d.case.noticeSentAt).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
+          </span>
+        )}
         <span className="ml-auto flex gap-1">
           <button
             onClick={() => setNoteOpen((o) => !o)}

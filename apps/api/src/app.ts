@@ -73,6 +73,8 @@ export function createApp(deps: AppDeps): AppBundle {
       anthropicConfigured: Boolean(deps.vision),
       demoMode: config.demoMode,
       model: config.claude.model,
+      demo: config.demoMode !== 'live' || config.serveWeb,
+      ttsConfigured: Boolean(deps.tts ?? config.tts.apiKey),
     }),
   );
   app.use('/api', eventsRouter(bus));

@@ -1,4 +1,6 @@
 export interface HealthResponse {
+  demo: boolean;
+  ttsConfigured: boolean;
   status: 'ok' | 'degraded';
   service: string;
   db: 'ok' | 'error';
@@ -30,6 +32,8 @@ export interface CaseSummary {
   age: number | null;
   scheme: string;
   source: string;
+  historical: boolean;
+  noticeSentAt: string | null;
   batchId: string | null;
   packetName: string | null;
   receivedAt: string;
@@ -138,7 +142,13 @@ export interface AuditEntry {
 }
 
 export type Permission =
-  'approve' | 'resolve_flag' | 'edit_field' | 'add_note' | 'send_for_correction' | 'forward';
+  | 'approve'
+  | 'resolve_flag'
+  | 'edit_field'
+  | 'add_note'
+  | 'send_for_correction'
+  | 'forward'
+  | 'edit_templates';
 
 export interface CaseDetail {
   case: CaseSummary;
@@ -347,3 +357,213 @@ export function uploadBatchZip(zip: File) {
   form.append('files', zip, zip.name);
   return send<BatchResult>('/api/cases/batch', { method: 'POST', body: form });
 }
+
+// ---- Notices -------------------------------------------------------------------------------
+
+export type NoticeLang = 'en' | 'mni_beng' | 'mni_mtei';
+
+export interface NoticeText {
+  title: string;
+  greeting: string;
+  intro: string;
+  items: string[];
+  bring: string;
+  notRejection: string;
+  finalDecision: string;
+  helpline: string;
+  signoff: string;
+}
+
+export interface NoticeAudio {
+  available: boolean;
+  cached: boolean;
+  url: string | null;
+  reason: string | null;
+}
+
+export interface Notice {
+  caseId: string;
+  reference: string;
+  applicantName: string;
+  allowed: boolean;
+  blockedReason: string | null;
+  rendered: {
+    en: NoticeText;
+    mni_beng: NoticeText;
+    mni_mtei: NoticeText;
+    codes: string[];
+    review: { pendingCount: number; mni_mtei: 'manual' | 'auto' };
+  } | null;
+  plainText: Record<NoticeLang, string> | null;
+  statusPath: string;
+  noticeSentAt: string | null;
+  date: string;
+  audio: NoticeAudio;
+}
+
+export interface NoticeListItem {
+  caseId: string;
+  reference: string;
+  applicantName: string | null;
+  district: string | null;
+  status: CaseStatus;
+  allowed: boolean;
+  blockedReason: string | null;
+  items: number;
+  noticeSentAt: string | null;
+}
+
+export const fetchNotice = (caseId: string) => getJson<Notice>(`/api/cases/${caseId}/notice`);
+export const generateNoticeAudio = (caseId: string) =>
+  post<NoticeAudio>(`/api/cases/${caseId}/notice/audio`);
+export const markNoticeSent = (caseId: string, channel: 'print' | 'whatsapp' | 'in_person') =>
+  post<Notice>(`/api/cases/${caseId}/notice/sent`, { channel });
+export const fetchNotices = () => getJson<{ notices: NoticeListItem[] }>('/api/notices');
+
+export interface TemplateEntry {
+  en: string;
+  mni_beng: string;
+  mni_mtei: string;
+  reviewed: boolean;
+}
+export interface TemplateSetView {
+  settings: { days: number; helpline: string };
+  templates: (TemplateEntry & { code: string })[];
+  blocks: (TemplateEntry & { id: string })[];
+  summary: { total: number; reviewed: number; manualMeetei: number };
+}
+export const fetchTemplates = () => getJson<TemplateSetView>('/api/templates');
+export const patchTemplate = (
+  kind: 'template' | 'block',
+  key: string,
+  patch: Partial<TemplateEntry>,
+) =>
+  send<{ ok: true; entry: TemplateEntry }>(`/api/templates/${kind}/${encodeURIComponent(key)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  });
+
+export interface PublicStatus {
+  reference: string;
+  firstName: string;
+  status: 'Received' | 'Correction needed' | 'Under review' | 'Approved';
+  updatedAt: string;
+}
+export const fetchPublicStatus = (ref: string, k: string) =>
+  getJson<PublicStatus>(`/api/public/status/${encodeURIComponent(ref)}?k=${encodeURIComponent(k)}`);
+
+// ---- Trust report & dashboard --------------------------------------------------------------
+
+export interface FairnessRow {
+  community: string;
+  pairs: number;
+  decided: number;
+  correct: number;
+  accuracy: number;
+  referred: number;
+  referralRate: number;
+  falseMatches: number;
+  falseNonMatches: number;
+}
+export interface FairnessView {
+  label: string;
+  description: string;
+  pairs: number;
+  rows: FairnessRow[];
+  overall: FairnessRow;
+}
+export interface LeakScan {
+  scannedAt: string;
+  findings: { where: string; location: string }[];
+  scanned: { dbRows: number; logLines: number; apiResponses: number };
+  clean: boolean;
+}
+export interface Rate {
+  key: string;
+  n: number;
+  accuracy: number;
+}
+export interface TrustReport {
+  generatedAt: string;
+  evaluation:
+    | { available: false; howTo: string }
+    | {
+        available: true;
+        generatedAt: string;
+        model: string;
+        mode: string;
+        labelled: boolean;
+        packets: number;
+        fieldsScored: number;
+        fieldAccuracy: number | null;
+        classificationAccuracy: number | null;
+        statusAccuracy: number | null;
+        nameVerdictAccuracy: number | null;
+        byDocType: Rate[];
+        byField: Rate[];
+        byConfidence: Rate[];
+        latency: { avgApiCallMs: number; avgPacketWallMs: number };
+        cost: {
+          totalUsd: number;
+          avgPerPacketUsd: number;
+          perApplicationInr: number;
+          usdToInr: number;
+        };
+      };
+  fairness: { dev: FairnessView; holdout: (FairnessView & { createdAt: string | null }) | null };
+  safeguards: {
+    statuses: string[];
+    rejectStatusExists: boolean;
+    leakScan: LeakScan | null;
+    imagesRedacted: number;
+    imagesTotal: number;
+    auditEntries: number;
+    approvals: number;
+    approvalsByDswoOnly: boolean;
+    flagsDecidedByOfficers: number;
+    overrideRate: number | null;
+    notices: { aiCalls: number; templates: number; reviewed: number };
+    syntheticOnly: { liveCases: number; historicalSynthetic: number };
+  };
+  limitations: string[];
+}
+export const fetchTrust = () => getJson<TrustReport>('/api/trust');
+export const runLeakScan = () => post<LeakScan>('/api/trust/leak-scan');
+
+export interface WatchCase {
+  id: string;
+  reference: string;
+  applicantName: string | null;
+  district: string | null;
+  daysPending: number;
+  age: number | null;
+  historical: boolean;
+}
+export interface Dashboard {
+  generatedAt: string;
+  historicalIncluded: number;
+  kpis: {
+    received: number;
+    screenedToday: number;
+    avgScreeningMs: number | null;
+    firstTimeRight: number | null;
+    pendingByStatus: { READY: number; NEEDS_CITIZEN_CORRECTION: number; OFFICER_ATTENTION: number };
+    approved: number;
+    noticesSent: number;
+    avgDaysPending: number | null;
+  };
+  deficiencies: { code: string; title: string; count: number }[];
+  districts: {
+    district: string;
+    received: number;
+    ready: number;
+    correction: number;
+    attention: number;
+    approved: number;
+  }[];
+  priorityWatch: { key: string; label: string; count: number; cases: WatchCase[] }[];
+}
+export const fetchDashboard = (includeHistorical = true) =>
+  getJson<Dashboard>(`/api/dashboard${includeHistorical ? '' : '?historical=exclude'}`);
+export const resetDemo = () =>
+  post<{ ok: true; removed: { cases: number; sessions: number } }>('/api/demo/reset');

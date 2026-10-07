@@ -5,7 +5,13 @@ import type { DemoMode } from '../env.js';
 
 export function healthRouter(
   db: Db,
-  opts: { anthropicConfigured: boolean; demoMode: DemoMode; model: string },
+  opts: {
+    anthropicConfigured: boolean;
+    demoMode: DemoMode;
+    model: string;
+    demo: boolean;
+    ttsConfigured: boolean;
+  },
 ): Router {
   const router = Router();
   router.get('/health', (_req, res) => {
@@ -23,6 +29,8 @@ export function healthRouter(
       claudeConfigured: opts.anthropicConfigured,
       demoMode: opts.demoMode,
       model: opts.model,
+      demo: opts.demo,
+      ttsConfigured: opts.ttsConfigured,
       time: new Date().toISOString(),
     });
   });

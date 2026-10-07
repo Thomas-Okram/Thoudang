@@ -1,4 +1,6 @@
 @import '@fontsource-variable/inter';
+@import '@fontsource-variable/noto-sans-bengali';
+@import '@fontsource/noto-sans-meetei-mayek';
 @import 'tailwindcss';
 
 @theme {
@@ -80,5 +82,34 @@ body {
   *::after {
     animation-duration: 1ms !important;
     transition-duration: 1ms !important;
+  }
+}
+
+/* Manipuri scripts — bundled fonts so they render offline and on any machine. */
+.font-beng {
+  font-family: 'Noto Sans Bengali Variable', 'Noto Sans Bengali', 'Bangla Sangam MN', sans-serif;
+}
+.font-mtei {
+  font-family: 'Noto Sans Meetei Mayek', sans-serif;
+  letter-spacing: 0.01em;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+  body {
+    background: #fff !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-page {
+    box-shadow: none !important;
+    border: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
   }
 }
