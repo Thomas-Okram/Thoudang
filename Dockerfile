@@ -32,9 +32,13 @@ RUN npm run build -w @thoudang/web
 
 # ---- 3. production dependencies for api + core only -----------------------------------------
 FROM deps AS prod-deps
+# npm nests a package under a workspace's own node_modules when its version conflicts with the
+# hoisted one (e.g. p-limit under apps/api), so the runtime image needs every workspace's
+# node_modules, not just the root. mkdir -p keeps the COPYs below valid when npm creates none.
 RUN rm -rf node_modules apps/*/node_modules packages/*/node_modules \
  && npm ci --omit=dev --no-audit --no-fund \
-      -w @thoudang/api -w @thoudang/core --include-workspace-root=false
+      -w @thoudang/api -w @thoudang/core --include-workspace-root=false \
+ && mkdir -p apps/api/node_modules packages/core/node_modules
 
 # ---- 4. web: static UI + reverse proxy (listens on 8080 as uid 101) --------------------------
 FROM ${NGINX_IMAGE} AS web
@@ -63,6 +67,8 @@ RUN npm install -g --no-audit --no-fund "tsx@${TSX_VERSION}" \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=node:node /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=prod-deps --chown=node:node /app/packages/core/node_modules ./packages/core/node_modules
 COPY --chown=node:node package.json tsconfig.base.json ./
 COPY --chown=node:node packages/core/package.json packages/core/tsconfig.json packages/core/
 COPY --chown=node:node packages/core/src packages/core/src
