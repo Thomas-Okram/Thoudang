@@ -26,9 +26,13 @@ COPY apps/web apps/web
 RUN npm run build -w @thoudang/web
 
 FROM deps AS prod-deps
+# npm nests a package under a workspace's own node_modules when its version conflicts with the
+# hoisted one (e.g. p-limit under apps/api), so the runtime image needs every workspace's
+# node_modules, not just the root. mkdir -p keeps the COPYs below valid when npm creates none.
 RUN rm -rf node_modules apps/*/node_modules packages/*/node_modules \
  && npm ci --omit=dev --no-audit --no-fund \
-      -w @thoudang/api -w @thoudang/core --include-workspace-root=false
+      -w @thoudang/api -w @thoudang/core --include-workspace-root=false \
+ && mkdir -p apps/api/node_modules packages/core/node_modules
 
 FROM ${NODE_IMAGE} AS railway
 ARG TSX_VERSION
@@ -51,6 +55,8 @@ RUN npm install -g --no-audit --no-fund "tsx@${TSX_VERSION}" \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=prod-deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=prod-deps /app/packages/core/node_modules ./packages/core/node_modules
 COPY package.json tsconfig.base.json ./
 COPY packages/core/package.json packages/core/tsconfig.json packages/core/
 COPY packages/core/src packages/core/src
