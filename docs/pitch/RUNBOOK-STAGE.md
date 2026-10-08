@@ -25,7 +25,7 @@ Technical detail for each command is in [../demo-runbook.md](../demo-runbook.md)
       duplicate). Expected verdicts per packet: table at the end of [SCRIPT.md](SCRIPT.md).
 - [ ] `npm run notices:prime` — open one notice and press play; audio must work offline afterwards.
 - [ ] `npm run seed:dashboard` — `/dashboard` shows charts.
-- [ ] `npm run fairness -- --holdout ./holdout-pairs.csv` if you have staff-written pairs.
+- [ ] `npm run fairness -- --holdout ./eval-data/holdout-v2/holdout-v2-pairs.csv` once staff have filled in holdout v2 (see its README).
 - [ ] Open `/trust`: section 1 shows numbers (not "No evaluation has been run yet"); section 3 checks
       are green; press the leak scan.
 

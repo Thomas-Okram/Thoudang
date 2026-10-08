@@ -10,7 +10,7 @@ npm run eval -- --dir ./eval-data              # accuracy/latency/cost (classify
 npm run eval -- --dir ./eval-data --labelled   # same, labelled-slot speed path — compare latency
 npm run demo:prime -- --dir ./demo-packets     # real results → main DB cache (no cases created)
 npm run seed:dashboard                         # synthetic history so the dashboard is alive
-npm run fairness -- --holdout ./holdout-pairs.csv   # staff-written name pairs → Trust Report
+npm run fairness -- --holdout ./eval-data/holdout-v2/holdout-v2-pairs.csv   # staff-written blind v2 → Trust Report
 # pre-fill the queue: cases for demo-01…06 only, in folder order (demo-07 = the live Thomas upload)
 for d in demo-packets/demo-0[1-6]-*; do npm run demo:prime -- --dir "./$d" --with-cases; done
 ```

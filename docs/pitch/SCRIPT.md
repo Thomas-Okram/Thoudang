@@ -134,9 +134,12 @@ point at the QR code on the notice.
 
 > "AI reads, code decides, the officer makes the final call.
 > Here is measured field accuracy on our labelled test set, and name-engine fairness across Meitei,
-> Pangal, Naga and Kuki-Zo names on a blind held-out set. The number we put first is false
-> matches — two different people merged. It is not zero yet: nine of 160, all near-identical given
-> names like Tomba and Thoiba, and every one is listed right here. And live checks: the database is scanned for any full Aadhaar
+> Pangal, Naga and Kuki-Zo names. The number we put first is false matches — two different people
+> merged. Our first blind set found nine of 160, all near-identical given names like Tomba and
+> Thoiba. We fixed the rule: a given name must match exactly or as a known spelling variant, and
+> anything merely similar goes to an officer. On that set it is now zero, but more pairs are now
+> sent to an officer: 28% instead of 13%. That set is no longer blind, so we label it 'pre-fix'.
+> Department staff are writing a fresh blind set. And live checks: the database is scanned for any full Aadhaar
 > number, only the DSWO can approve, and the audit log cannot be edited.
 > We also list our known limitations on this page — the data is synthetic and the gazetteer needs
 > department review."

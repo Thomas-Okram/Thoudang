@@ -173,6 +173,38 @@ describe('trust report', () => {
     expect(r.fairness.holdout.overall).toMatchObject({ falseMatches: 0, labelledAmbiguous: 0 });
   });
 
+  it('holdout v1 marked seen shows as "pre-fix" with its before/after; v2 is the blind set', async () => {
+    t = setupApp(packetVision());
+    const pair = { a: 'Laishram Ibomcha Singh', b: 'Laishram Ibocha Singh', community: 'Meitei' };
+    fs.writeFileSync(
+      t.config.fairnessHoldoutPath,
+      JSON.stringify({
+        status: 'seen',
+        seenOn: '2026-10-08',
+        preFix: {
+          engine: 'old engine',
+          overall: { falseMatches: 1, referred: 0, referralRate: 0 },
+        },
+        pairs: [{ ...pair, samePerson: false }],
+      }),
+    );
+    let r = (await request(t.app).get('/api/trust')).body;
+    expect(r.fairness.holdout).toMatchObject({ label: 'Holdout v1 (pre-fix)', seen: true });
+    expect(r.fairness.holdout.preFix.overall.falseMatches).toBe(1);
+    // The near-miss given name is now referred, not merged.
+    expect(r.fairness.holdout.overall).toMatchObject({ falseMatches: 0, referred: 1 });
+    expect(r.fairness.holdoutV2).toBeNull();
+    expect(r.limitations.join(' ')).toMatch(/No blind name-engine number yet.*1 → 0 false matches/);
+
+    fs.writeFileSync(
+      t.config.fairnessHoldoutV2Path,
+      JSON.stringify({ status: 'blind', pairs: [{ ...pair, samePerson: false }] }),
+    );
+    r = (await request(t.app).get('/api/trust')).body;
+    expect(r.fairness.holdoutV2).toMatchObject({ label: 'Holdout v2 (blind)', pairs: 1 });
+    expect(r.limitations.join(' ')).toMatch(/blind holdout v2 has 1 pairs \(0 false matches/);
+  });
+
   it('override rate and approvals come from real officer decisions', async () => {
     t = setupApp(packetVision({ bank_passbook: { ifsc: 'BAD' } }));
     const id = await liveCase();

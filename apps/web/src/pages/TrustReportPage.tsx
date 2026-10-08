@@ -5,6 +5,7 @@ import { Badge, EmptyState, Icon, Skeleton, StatTile, Table, Td, Th, Tr } from '
 import {
   fetchTrust,
   runLeakScan,
+  type FairnessRow,
   type FairnessView,
   type Rate,
   type TrustReport,
@@ -192,14 +193,51 @@ function Accuracy({ e }: { e: TrustReport['evaluation'] }) {
   );
 }
 
-function FairnessTable({ f, primary = false }: { f: FairnessView; primary?: boolean }) {
+function FairnessTable({
+  f,
+  primary = false,
+  testId,
+  preFix,
+}: {
+  f: FairnessView;
+  primary?: boolean;
+  testId: string;
+  /** Scores of the same set before the fix it motivated — shown as an honest before/after. */
+  preFix?: { engine: string; overall: FairnessRow } | null;
+}) {
   const o = f.overall;
   return (
-    <div data-testid={primary ? 'fairness-holdout' : 'fairness-dev'}>
+    <div data-testid={testId}>
       <h3 className="text-lg font-semibold text-navy-900">
         {f.label} <span className="font-normal text-ink-muted">· {f.pairs} pairs</span>
       </h3>
       <p className="text-sm text-ink-muted">{f.description}</p>
+
+      {preFix && (
+        <div
+          data-testid="fairness-prefix"
+          className="mt-3 rounded-xl border border-line bg-slate-50 px-4 py-3 text-sm text-ink-soft"
+        >
+          <p className="font-semibold text-navy-900">Before → after the given-name rule</p>
+          <p className="mt-1">
+            False matches <strong>{preFix.overall.falseMatches}</strong> →{' '}
+            <strong>{o.falseMatches}</strong> · Referred to an officer{' '}
+            <strong>
+              {preFix.overall.referred} ({pct(preFix.overall.referralRate)})
+            </strong>{' '}
+            →{' '}
+            <strong>
+              {o.referred} ({pct(o.referralRate)})
+            </strong>{' '}
+            · False non-matches {preFix.overall.falseNonMatches} → {o.falseNonMatches}
+          </p>
+          <p className="mt-1 text-ink-muted">
+            The rule: given names must match exactly or through an explicit romanisation-variant
+            table; similar-looking given names (Tomba / Thoiba) go to an officer. Fewer automatic
+            decisions is the price of zero merged people. Before = {preFix.engine}.
+          </p>
+        </div>
+      )}
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatTile
@@ -324,6 +362,7 @@ function FairnessTable({ f, primary = false }: { f: FairnessView; primary?: bool
 }
 
 function Fairness({ f }: { f: TrustReport['fairness'] }) {
+  const v1 = f.holdout;
   return (
     <Section n={2} title="Name-engine fairness by community">
       <p className="mb-5 max-w-4xl text-[0.95rem] text-ink-soft">
@@ -335,16 +374,28 @@ function Fairness({ f }: { f: TrustReport['fairness'] }) {
         and are never scored. Accuracy is measured only on pairs the engine decided on its own.
       </p>
       <div className="space-y-8">
-        {f.holdout ? (
-          <FairnessTable f={f.holdout} primary />
+        {f.holdoutV2 ? (
+          <FairnessTable f={f.holdoutV2} primary testId="fairness-holdout-v2" />
         ) : (
-          <p className="rounded-xl border border-warm-200 bg-warm-50 px-4 py-3 text-sm text-warm-900">
-            No held-out set yet. Add one:{' '}
-            <code>npm run fairness -- --holdout ./holdout-pairs.csv</code> (columns
-            name_a,name_b,community,expected_same — true / false / ambiguous).
+          <p
+            data-testid="fairness-holdout-v2-pending"
+            className="rounded-xl border border-warm-200 bg-warm-50 px-4 py-3 text-sm text-warm-900"
+          >
+            <strong>Holdout v2 (blind) — not imported yet.</strong> Department staff are writing a
+            fresh set (<code>eval-data/holdout-v2/</code>). Import it with{' '}
+            <code>npm run fairness -- --holdout ./eval-data/holdout-v2/holdout-v2-pairs.csv</code>.
+            Until then there is no blind number for the current engine.
           </p>
         )}
-        <FairnessTable f={f.dev} />
+        {v1 && (
+          <FairnessTable
+            f={v1}
+            primary={!f.holdoutV2 && !v1.seen}
+            testId="fairness-holdout"
+            preFix={v1.preFix}
+          />
+        )}
+        <FairnessTable f={f.dev} testId="fairness-dev" />
       </div>
     </Section>
   );

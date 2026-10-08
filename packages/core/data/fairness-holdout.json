@@ -1,7 +1,145 @@
 {
-  "_note": "Held-out name pairs written by department staff. Never used to tune the engine.",
+  "_note": "Holdout v1: name pairs written blind (an independent session that never saw the engine). SEEN since 8 Oct 2026: its results motivated the given-name rule, so it is no longer a held-out measurement. Labels unchanged. Fresh blind set: eval-data/holdout-v2/.",
+  "version": "v1",
+  "status": "seen",
+  "seenOn": "2026-10-08",
   "source": "holdout-pairs.csv",
   "createdAt": "2026-10-07T19:59:00.809Z",
+  "preFix": {
+    "engine": "name engine before the given-name rule (commit 0469148)",
+    "rows": [
+      {
+        "community": "Meitei",
+        "pairs": 50,
+        "labelledAmbiguous": 5,
+        "decided": 37,
+        "correct": 33,
+        "accuracy": 0.8918918918918919,
+        "referred": 10,
+        "referralRate": 0.2,
+        "falseMatches": 4,
+        "falseNonMatches": 0,
+        "autoDecidedUnclear": 3
+      },
+      {
+        "community": "Pangal",
+        "pairs": 30,
+        "labelledAmbiguous": 3,
+        "decided": 25,
+        "correct": 22,
+        "accuracy": 0.88,
+        "referred": 2,
+        "referralRate": 0.06666666666666667,
+        "falseMatches": 2,
+        "falseNonMatches": 1,
+        "autoDecidedUnclear": 3
+      },
+      {
+        "community": "Naga",
+        "pairs": 40,
+        "labelledAmbiguous": 3,
+        "decided": 33,
+        "correct": 31,
+        "accuracy": 0.9393939393939394,
+        "referred": 5,
+        "referralRate": 0.125,
+        "falseMatches": 0,
+        "falseNonMatches": 2,
+        "autoDecidedUnclear": 2
+      },
+      {
+        "community": "Kuki-Zo",
+        "pairs": 40,
+        "labelledAmbiguous": 4,
+        "decided": 33,
+        "correct": 28,
+        "accuracy": 0.8484848484848485,
+        "referred": 3,
+        "referralRate": 0.075,
+        "falseMatches": 3,
+        "falseNonMatches": 2,
+        "autoDecidedUnclear": 4
+      }
+    ],
+    "overall": {
+      "community": "All",
+      "pairs": 160,
+      "labelledAmbiguous": 15,
+      "decided": 128,
+      "correct": 114,
+      "accuracy": 0.890625,
+      "referred": 20,
+      "referralRate": 0.125,
+      "falseMatches": 9,
+      "falseNonMatches": 5,
+      "autoDecidedUnclear": 12
+    },
+    "falseMatchPairs": [
+      {
+        "community": "Meitei",
+        "a": "Laishram Tomba Singh",
+        "b": "Laishram Thoiba Singh",
+        "verdict": "SAME",
+        "score": 92
+      },
+      {
+        "community": "Meitei",
+        "a": "Kshetrimayum Rajen Singh",
+        "b": "Kshetrimayum Rajesh Singh",
+        "verdict": "SAME",
+        "score": 92
+      },
+      {
+        "community": "Meitei",
+        "a": "Elangbam Tombi Devi",
+        "b": "Elangbam Thoibi Devi",
+        "verdict": "SAME",
+        "score": 92
+      },
+      {
+        "community": "Meitei",
+        "a": "L. Tomba Singh",
+        "b": "L. Thoiba Singh",
+        "verdict": "LIKELY_SAME",
+        "score": 82
+      },
+      {
+        "community": "Pangal",
+        "a": "Sabina Nessa",
+        "b": "Sabana Nessa",
+        "verdict": "SAME",
+        "score": 92
+      },
+      {
+        "community": "Pangal",
+        "a": "Khullakpam Md. Jamal Uddin",
+        "b": "Khullakpam Md. Kamal Uddin",
+        "verdict": "SAME",
+        "score": 92
+      },
+      {
+        "community": "Kuki-Zo",
+        "a": "Lianzamang Guite",
+        "b": "Lianzamung Guite",
+        "verdict": "SAME",
+        "score": 92
+      },
+      {
+        "community": "Kuki-Zo",
+        "a": "Lalhmingsangi Neitham",
+        "b": "Lalhmingthangi Neitham",
+        "verdict": "SAME",
+        "score": 92
+      },
+      {
+        "community": "Kuki-Zo",
+        "a": "Seigoulun Khongsai",
+        "b": "Seigoulen Khongsai",
+        "verdict": "SAME",
+        "score": 92
+      }
+    ]
+  },
   "pairs": [
     {
       "a": "Laishram Tomba Singh",

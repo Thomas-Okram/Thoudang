@@ -1,11 +1,14 @@
-# Held-out name-pair set (blind)
+# Holdout v1 — name-pair set (written blind, now SEEN)
+
+> **Status: seen since 8 Oct 2026.** This set found 9 false matches (near-identical given names). Those
+> results led to the given-name rule, so v1 is no longer a held-out measurement. It stays here unchanged,
+> and the Trust Report shows it as **"Holdout v1 (pre-fix)"** with before/after numbers. The fresh blind
+> set is [`../holdout-v2/`](../holdout-v2/README.md).
 
 `holdout-pairs.csv` contains 160 **fictional** name pairs for checking the Manipur-aware name engine on
-data it was not written against. Use it with:
-
-```
-npm run fairness -- --holdout ./eval-data/holdout/holdout-pairs.csv
-```
+data it was not written against. It is already imported (`packages/core/data/fairness-holdout.json`);
+`npm run fairness` reports it. (`--holdout` now always imports into holdout v2, so v1 cannot be
+overwritten.)
 
 ## How it was written
 

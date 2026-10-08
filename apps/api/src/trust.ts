@@ -28,6 +28,17 @@ interface EvalReportFile {
   summary: EvalSummary;
 }
 
+interface HoldoutFile {
+  pairs: FairnessPair[];
+  source?: string;
+  createdAt?: string;
+  /** "seen" once the set's results have influenced the engine (it is then no longer held out). */
+  status?: 'blind' | 'seen';
+  seenOn?: string;
+  /** Snapshot of the scores before the fix the set motivated (kept for an honest before/after). */
+  preFix?: { engine: string; overall: FairnessReport['overall'] };
+}
+
 function readJson<T>(file: string): T | null {
   try {
     return fs.existsSync(file) ? (JSON.parse(fs.readFileSync(file, 'utf8')) as T) : null;
@@ -35,6 +46,9 @@ function readJson<T>(file: string): T | null {
     return null;
   }
 }
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+const pctText = (x: number) => `${Math.round(x * 100)}%`;
 
 const fairnessView = (label: string, description: string, pairs: readonly FairnessPair[]) => {
   const r: FairnessReport = evaluateFairness(pairs);
@@ -93,10 +107,10 @@ export function trustReport(
           'Run `npm run eval -- --dir ./eval-data` with ANTHROPIC_API_KEY set; the report appears here.',
       };
 
-  // 2. Name-engine fairness — development vs held-out
-  const holdoutFile = readJson<{ pairs: FairnessPair[]; source?: string; createdAt?: string }>(
-    config.fairnessHoldoutPath,
-  );
+  // 2. Name-engine fairness — development vs held-out v1 (seen, pre-fix) vs held-out v2 (blind)
+  const holdoutFile = readJson<HoldoutFile>(config.fairnessHoldoutPath);
+  const holdoutV2File = readJson<HoldoutFile>(config.fairnessHoldoutV2Path);
+  const v1Seen = holdoutFile?.status === 'seen';
   const fairness = {
     dev: fairnessView(
       'Development set',
@@ -106,11 +120,27 @@ export function trustReport(
     holdout: holdoutFile?.pairs?.length
       ? {
           ...fairnessView(
-            'Held-out set',
-            `Written blind — without seeing the engine's code or output${holdoutFile.source ? ` (${holdoutFile.source})` : ''} — and never used to tune it. Labels: same / different / ambiguous.`,
+            v1Seen ? 'Holdout v1 (pre-fix)' : 'Held-out set',
+            v1Seen
+              ? `Written blind${holdoutFile.source ? ` (${holdoutFile.source})` : ''}, but no longer held out: its 9 false matches led to the given-name rule on ${holdoutFile.seenOn ?? '8 Oct'}, so the "now" numbers below are in-sample. Labels unchanged. A fresh blind set (holdout v2) is the honest measurement.`
+              : `Written blind — without seeing the engine's code or output${holdoutFile.source ? ` (${holdoutFile.source})` : ''} — and never used to tune it. Labels: same / different / ambiguous.`,
             holdoutFile.pairs,
           ),
           createdAt: holdoutFile.createdAt ?? null,
+          seen: v1Seen,
+          preFix: holdoutFile.preFix
+            ? { engine: holdoutFile.preFix.engine, overall: holdoutFile.preFix.overall }
+            : null,
+        }
+      : null,
+    holdoutV2: holdoutV2File?.pairs?.length
+      ? {
+          ...fairnessView(
+            'Holdout v2 (blind)',
+            `Written blind by department staff after the given-name fix${holdoutV2File.source ? ` (${holdoutV2File.source})` : ''} — never used to tune the engine. Labels: same / different / ambiguous.`,
+            holdoutV2File.pairs,
+          ),
+          createdAt: holdoutV2File.createdAt ?? null,
         }
       : null,
   };
@@ -199,9 +229,13 @@ export function trustReport(
     evaluation.available
       ? `Handwriting/extraction accuracy is measured on ${evaluation.packets} synthetic packet(s) only (${evaluation.fieldsScored} fields).`
       : 'Extraction accuracy has not been measured yet — no eval report.',
-    fairness.holdout
-      ? `Name-engine fairness has a held-out set of ${fairness.holdout.pairs} pairs (${fairness.holdout.overall.falseMatches} false match${fairness.holdout.overall.falseMatches === 1 ? '' : 'es'} — mostly near-identical given names such as Tomba / Thoiba); the development set (${fairness.dev.pairs} pairs) is in-sample.`
-      : `Name-engine fairness is measured only on the development set (${fairness.dev.pairs} pairs, in-sample) — add a held-out set.`,
+    fairness.holdoutV2
+      ? `Name-engine fairness: blind holdout v2 has ${fairness.holdoutV2.pairs} pairs (${plural(fairness.holdoutV2.overall.falseMatches, 'false match', 'false matches')}, ${pctText(fairness.holdoutV2.overall.referralRate)} referred to an officer).`
+      : fairness.holdout?.seen
+        ? `No blind name-engine number yet: holdout v1 (${fairness.holdout.pairs} pairs) is seen — it motivated the given-name fix${fairness.holdout.preFix ? ` (${fairness.holdout.preFix.overall.falseMatches} → ${fairness.holdout.overall.falseMatches} false matches, referrals ${pctText(fairness.holdout.preFix.overall.referralRate)} → ${pctText(fairness.holdout.overall.referralRate)})` : ''}. Holdout v2 is being written by department staff.`
+        : fairness.holdout
+          ? `Name-engine fairness has a held-out set of ${fairness.holdout.pairs} pairs (${plural(fairness.holdout.overall.falseMatches, 'false match', 'false matches')}); the development set (${fairness.dev.pairs} pairs) is in-sample.`
+          : `Name-engine fairness is measured only on the development set (${fairness.dev.pairs} pairs, in-sample) — add a held-out set.`,
     'Status links are signed but have no expiry. Officers sign in with a 4-digit PIN (demo PINs) — no SSO / two-factor yet.',
     'All data is synthetic (SPECIMEN). Not tested on real applications.',
   ];

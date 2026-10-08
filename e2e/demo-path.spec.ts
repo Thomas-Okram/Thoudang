@@ -158,6 +158,10 @@ test('full demo path', async ({ page, context }) => {
     const holdout = page.getByTestId('fairness-holdout');
     await expect(holdout).toBeVisible();
     await expect(holdout.getByText('False matches').first()).toBeVisible();
+    // v1 is seen since the given-name fix: labelled pre-fix, with an honest before → after.
+    await expect(holdout.getByText('Holdout v1 (pre-fix)')).toBeVisible();
+    await expect(holdout.getByTestId('fairness-prefix')).toContainText('False matches 9 → 0');
+    await expect(page.getByTestId('fairness-holdout-v2-pending')).toBeVisible();
     await expect(page.getByTestId('fairness-dev')).toBeVisible();
   });
 

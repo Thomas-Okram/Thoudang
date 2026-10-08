@@ -570,7 +570,19 @@ export interface TrustReport {
           usdToInr: number;
         };
       };
-  fairness: { dev: FairnessView; holdout: (FairnessView & { createdAt: string | null }) | null };
+  fairness: {
+    dev: FairnessView;
+    /** Holdout v1: written blind, but seen since the 8 Oct given-name fix (`seen`). */
+    holdout:
+      | (FairnessView & {
+          createdAt: string | null;
+          seen: boolean;
+          preFix: { engine: string; overall: FairnessRow } | null;
+        })
+      | null;
+    /** Holdout v2: fresh blind set from department staff. */
+    holdoutV2: (FairnessView & { createdAt: string | null }) | null;
+  };
   safeguards: {
     statuses: string[];
     rejectStatusExists: boolean;

@@ -64,6 +64,7 @@ export function setupApp(
     STATUS_LINK_SECRET: 'test-secret',
     EVAL_REPORT: path.join(dir, 'eval-report.json'),
     FAIRNESS_HOLDOUT: path.join(dir, 'fairness-holdout.json'),
+    FAIRNESS_HOLDOUT_V2: path.join(dir, 'fairness-holdout-v2.json'),
     ...opts.env,
   });
   const handle = openDb(dbPath);

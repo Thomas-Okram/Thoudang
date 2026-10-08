@@ -55,7 +55,10 @@ export interface AppConfig {
   statusLinkSecret: string;
   /** Latest `npm run eval` report shown on the Trust Report. */
   evalReportPath: string;
+  /** Holdout v1 — written blind, but SEEN since the 8 Oct given-name fix (shown as "pre-fix"). */
   fairnessHoldoutPath: string;
+  /** Holdout v2 — fresh blind set from department staff (eval-data/holdout-v2/). */
+  fairnessHoldoutV2Path: string;
 }
 
 const oneOf = <T extends string>(
@@ -124,6 +127,10 @@ export function loadConfig(vars: NodeJS.ProcessEnv = process.env): AppConfig {
     fairnessHoldoutPath: path.resolve(
       repoRoot,
       vars.FAIRNESS_HOLDOUT ?? 'packages/core/data/fairness-holdout.json',
+    ),
+    fairnessHoldoutV2Path: path.resolve(
+      repoRoot,
+      vars.FAIRNESS_HOLDOUT_V2 ?? 'packages/core/data/fairness-holdout-v2.json',
     ),
   };
 }
