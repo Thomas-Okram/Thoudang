@@ -19,3 +19,10 @@ e2e/.pgdata/
 e2e/.results/
 e2e/.report/
 demo-recording/
+
+# local only
+CLAUDE.md
+.claude/
+REPORT-*.md
+MERGE-REPORT.md
+POSTGRES-STATUS.md
