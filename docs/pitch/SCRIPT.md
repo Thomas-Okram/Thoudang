@@ -15,14 +15,14 @@ Numbers you may say out loud are in [FACTS.md](FACTS.md). Do not add any others.
 
 The packets are the committed SPECIMEN set in `demo-packets/` (table at the end of this page).
 
-| Thing          | State                                                                                                                                                                                                                                                                                      |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Tab 1          | `/intake`, **Single packet** tab, phone QR visible                                                                                                                                                                                                                                         |
-| Tab 2          | `/queue` with `demo-01` … `demo-06` already screened as cases (runbook: "Prime the queue") — **not** `demo-07`                                                                                                                                                                             |
-| Tab 3          | `/trust` scrolled to the top                                                                                                                                                                                                                                                               |
-| Phone          | QR scanned, upload page open with type **Form** selected, screen brightness max                                                                                                                                                                                                            |
-| Packet on desk | `demo-07-thomas-o-resolved-by-father`: SPECIMEN form (`O. Thomas Meitei`, father `Okram Ibomcha Singh`), Aadhaar (`Okram Thomas Meitei`), passbook (`THOMAS OKRAM`) — the image **files** are primed in the cache (a new phone photo of the paper is a new image and always calls the API) |
-| Queue          | _Ready_ 3 · _Needs citizen correction_ 1 (**Gaikhangam Dangmei**, notice audio primed) · _Officer attention_ 2 (**Kh. Loken Singh**; **CHABUNGBAM IBOBI SINGH**, the duplicate)                                                                                                            |
+| Thing          | State                                                                                                                                                                                                                                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tab 1          | `/intake`, **Single packet** tab, phone QR visible                                                                                                                                                                                                                                             |
+| Tab 2          | `/queue` with `demo-01` … `demo-06` already screened as cases (runbook: "Prime the queue") — **not** `demo-07`                                                                                                                                                                                 |
+| Tab 3          | `/trust` scrolled to the top                                                                                                                                                                                                                                                                   |
+| Phone          | QR scanned, upload page open with type **Form** selected, screen brightness max                                                                                                                                                                                                                |
+| Packet on desk | `demo-07-tomba-l-resolved-by-father`: SPECIMEN form (`L. Tomba Meitei`, father `Laishram Ibohal Singh`), Aadhaar (`Laishram Tomba Meitei`), passbook (`TOMBA LAISHRAM`) — the image **files** are primed in the cache (a new phone photo of the paper is a new image and always calls the API) |
+| Queue          | _Ready_ 3 · _Needs citizen correction_ 1 (**Gaikhangam Dangmei**, notice audio primed) · _Officer attention_ 2 (**Kh. Loken Singh**; **CHABUNGBAM IBOBI SINGH**, the duplicate)                                                                                                                |
 
 ---
 
@@ -30,8 +30,8 @@ The packets are the committed SPECIMEN set in `demo-packets/` (table at the end 
 
 **Screen:** Tab 1 (Intake). Hold up the three SPECIMEN papers.
 
-> "Okram Thomas Meitei. O. Thomas Meitei. Thomas Okram.
-> Same person — me — on three documents.
+> "Laishram Tomba Meitei. L. Tomba Meitei. Tomba Laishram.
+> Same person on three documents.
 > In Manipur, that is normal. Yumnak first or last, abbreviated or not, Singh, Meitei, or nothing.
 > Today a dealing assistant compares them by eye, packet by packet, in a scheme with over a lakh
 > old-age pensioners. The CAG found all 100 sampled pensioners in Manipur waited four to 44 months.
@@ -70,13 +70,13 @@ Point at: document image on the left, **Identity card** on the right. Hover a na
 
 **Expected on screen** (the engine's output for these exact names): status **Ready**. Identity card
 pill **Same**, "Every document names the same person." All three comparisons **Same** — form vs
-Aadhaar and form vs passbook say "O. = Okram, written in full elsewhere in the packet." Footer:
-"Relative's full yumnak in packet: **Okram** — used to resolve abbreviations." The only flag is
+Aadhaar and form vs passbook say "L. = Laishram, written in full elsewhere in the packet." Footer:
+"Relative's full yumnak in packet: **Laishram** — used to resolve abbreviations." The only flag is
 info: _Optional document not provided_ (no voter ID; it is optional).
 
 > "Three names, one verdict. The name engine knows Manipur naming: yumnak order, the optional
-> Singh or Meitei, and abbreviations. 'O.' alone could be Okram or Oinam — but the father's full
-> yumnak on the same form is Okram, so it resolves.
+> Singh or Meitei, and abbreviations. 'L.' alone could be Laishram, Loitongbam, or a dozen others — but the father's full
+> yumnak on the same form is Laishram, so it resolves.
 > Nothing to fix here, so it goes straight to Ready. When there is a problem, every flag says what
 > is wrong, which document, the exact value read, and how confident the reading was."
 
@@ -106,7 +106,7 @@ _Name needs confirmation_ (warning, officer) + info _Optional document not provi
 (_Total cases_, _Avg screening time_, _Issues caught_). Optionally click the **80+** or
 **Disability** priority filter (no demo packet has a relief-camp address, so skip **Displaced**).
 Columns: _Ready_ — Chabungbam Ibobi Singh (84), Khundrakpam Ongbi Tamphasana Devi (Ongbi married
-name vs "Khundrakpam Tamphasana Devi" on the Aadhaar — Same), Nemneilhing Touthang, plus Thomas
+name vs "Khundrakpam Tamphasana Devi" on the Aadhaar — Same), Nemneilhing Touthang, plus Tomba
 from the live upload; _Needs citizen correction_ — Gaikhangam Dangmei; _Officer attention_ —
 Kh. Loken Singh and CHABUNGBAM IBOBI SINGH (_Possible duplicate_ of the first case).
 
@@ -181,16 +181,16 @@ Run it three times with a stopwatch. If you are over 3:00, cut in this order:
 Folder order = processing order. Statuses and verdicts are what the rules and name engine produce
 for a perfect reading (`truth.json`); `npm run test:synth` fails if they drift.
 
-| Folder                                | Names on the documents (form · Aadhaar · passbook)                                                                        | Expected status          | What the officer sees                                                                                    |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------- |
-| `demo-01-clean`                       | Chabungbam Ibobi Singh (father Late Chabungbam Rajen Singh) · Chabungbam Ibobi Singh · CHABUNGBAM IBOBI SINGH, + voter ID | Ready                    | All names Same; age 84, widower                                                                          |
-| `demo-02-clean`                       | Nemneilhing Touthang · Nemneilhing Touthang · NEMNEILHING TOUTHANG                                                        | Ready                    | Kuki-Zo widow; info: voter ID not provided                                                               |
-| `demo-03-ongbi-married-name`          | Khundrakpam Ongbi Tamphasana Devi · Khundrakpam Tamphasana Devi · KHUNDRAKPAM TAMPHASANA DEVI, + voter ID                 | Ready                    | Ongbi married name → Same                                                                                |
-| `demo-04-kh-loken-ambiguous`          | Kh. Loken Singh (father blank) · Khuraijam Loken Singh · KHURAIJAM LOKEN SINGH                                            | Officer attention        | 2 × _Name needs confirmation_: "Kh." could be 13 yumnaks, nothing in the packet narrows it               |
-| `demo-05-dob-mismatch`                | Gaikhangam Dangmei · Gaikhangam Dangmei · GAIKHANGAM DANGMEI                                                              | Needs citizen correction | _Date of birth differs_: form 14/01/1951 vs Aadhaar 24/01/1951 → notice                                  |
-| `demo-06-duplicate-of-01`             | CHABUNGBAM IBOBI SINGH · Chabungbam Ibobi Singh · CHABUNGBAM IBOBI SINGH                                                  | Officer attention        | _Possible duplicate_ of the demo-01 case (same Aadhaar last 4, DOB, name) — only if demo-01 came first   |
-| `demo-07-thomas-o-resolved-by-father` | O. Thomas Meitei (father Okram Ibomcha Singh) · Okram Thomas Meitei · THOMAS OKRAM                                        | Ready                    | All pairs Same: "O. = Okram, written in full elsewhere in the packet" (father's yumnak); the live upload |
+| Folder                               | Names on the documents (form · Aadhaar · passbook)                                                                        | Expected status          | What the officer sees                                                                                       |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `demo-01-clean`                      | Chabungbam Ibobi Singh (father Late Chabungbam Rajen Singh) · Chabungbam Ibobi Singh · CHABUNGBAM IBOBI SINGH, + voter ID | Ready                    | All names Same; age 84, widower                                                                             |
+| `demo-02-clean`                      | Nemneilhing Touthang · Nemneilhing Touthang · NEMNEILHING TOUTHANG                                                        | Ready                    | Kuki-Zo widow; info: voter ID not provided                                                                  |
+| `demo-03-ongbi-married-name`         | Khundrakpam Ongbi Tamphasana Devi · Khundrakpam Tamphasana Devi · KHUNDRAKPAM TAMPHASANA DEVI, + voter ID                 | Ready                    | Ongbi married name → Same                                                                                   |
+| `demo-04-kh-loken-ambiguous`         | Kh. Loken Singh (father blank) · Khuraijam Loken Singh · KHURAIJAM LOKEN SINGH                                            | Officer attention        | 2 × _Name needs confirmation_: "Kh." could be 13 yumnaks, nothing in the packet narrows it                  |
+| `demo-05-dob-mismatch`               | Gaikhangam Dangmei · Gaikhangam Dangmei · GAIKHANGAM DANGMEI                                                              | Needs citizen correction | _Date of birth differs_: form 14/01/1951 vs Aadhaar 24/01/1951 → notice                                     |
+| `demo-06-duplicate-of-01`            | CHABUNGBAM IBOBI SINGH · Chabungbam Ibobi Singh · CHABUNGBAM IBOBI SINGH                                                  | Officer attention        | _Possible duplicate_ of the demo-01 case (same Aadhaar last 4, DOB, name) — only if demo-01 came first      |
+| `demo-07-tomba-l-resolved-by-father` | L. Tomba Meitei (father Laishram Ibohal Singh) · Laishram Tomba Meitei · TOMBA LAISHRAM                                   | Ready                    | All pairs Same: "L. = Laishram, written in full elsewhere in the packet" (father's yumnak); the live upload |
 
-Without the father's name, "O. Thomas Meitei" vs "Okram Thomas Meitei" is **Ambiguous** (Okram or
-Oinam) — that is why the eval's context-free `name_checks` for demo-07 say AMBIGUOUS while the case
+Without the father's name, "L. Tomba Meitei" vs "Laishram Tomba Meitei" is **Ambiguous** (Laishram,
+Loitongbam, …) — that is why the eval's context-free `name_checks` for demo-07 say AMBIGUOUS while the case
 itself is Ready.

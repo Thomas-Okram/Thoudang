@@ -94,7 +94,7 @@
       "duplicate_of": "demo-01-clean"
     },
     {
-      "id": "demo-07-thomas-o-resolved-by-father",
+      "id": "demo-07-tomba-l-resolved-by-father",
       "scenario": "name_variant",
       "plants": [
         "name_variant:abbreviation_resolved_by_relative"

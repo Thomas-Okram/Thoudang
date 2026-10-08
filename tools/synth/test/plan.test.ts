@@ -182,7 +182,7 @@ describe('demo set', () => {
       ['demo-04-kh-loken-ambiguous', 'OFFICER_ATTENTION'],
       ['demo-05-dob-mismatch', 'NEEDS_CITIZEN_CORRECTION'],
       ['demo-06-duplicate-of-01', 'OFFICER_ATTENTION'],
-      ['demo-07-thomas-o-resolved-by-father', 'READY'],
+      ['demo-07-tomba-l-resolved-by-father', 'READY'],
     ]);
     expect(demo[2]!.spec.form!.fields.applicant_name).toMatch(/ Ongbi /i);
     expect(demo[4]!.expectation.flags.map((f) => f.code)).toContain('DOB_MISMATCH');
@@ -190,13 +190,13 @@ describe('demo set', () => {
     expect(demo[5]!.spec.duplicateOf).toBe(0);
   });
 
-  it('Thomas packet: "O." is resolved to Okram by the father\'s full yumnak on the form', () => {
-    const p = byId('demo-07-thomas-o-resolved-by-father');
+  it('Tomba packet: "L." is resolved to Laishram by the father\'s full yumnak on the form', () => {
+    const p = byId('demo-07-tomba-l-resolved-by-father');
     expect(names(p)).toEqual({
-      form: 'O. Thomas Meitei',
-      father: 'Okram Ibomcha Singh',
-      aadhaar: 'Okram Thomas Meitei',
-      passbook: 'THOMAS OKRAM',
+      form: 'L. Tomba Meitei',
+      father: 'Laishram Ibohal Singh',
+      aadhaar: 'Laishram Tomba Meitei',
+      passbook: 'TOMBA LAISHRAM',
     });
     expect(p.spec.epic).toBeNull();
     expect(p.spec.person).toMatchObject({
@@ -206,9 +206,9 @@ describe('demo set', () => {
     });
     expect(p.expectation.flags.filter((f) => f.action !== 'none')).toEqual([]);
     const m = matrix(p);
-    expect(m.knownYumnaks).toEqual(['Okram']);
+    expect(m.knownYumnaks).toEqual(['Laishram']);
     expect(m.pairs.map((x) => x.verdict)).toEqual(['SAME', 'SAME', 'SAME']);
-    // Without the father's name the same names are ambiguous (Okram / Oinam).
+    // Without the father's name the same names are ambiguous (Laishram / Loitongbam / …).
     expect(matchNames(names(p).form!, names(p).aadhaar).verdict).toBe('AMBIGUOUS');
     expect(nameChecks(p.spec).map((c) => [c.expected, c.same_person])).toEqual([
       ['AMBIGUOUS', true],

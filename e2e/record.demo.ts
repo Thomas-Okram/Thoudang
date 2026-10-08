@@ -55,8 +55,8 @@ test('record the demo', async ({ page }) => {
   await beat(page, 1200);
   await press(page, page.getByRole('switch'), 900); // Presentation mode for the projector
 
-  // 1. Hero: "O. Thomas Meitei" — resolved by the father's full yumnak on the form
-  await screenPacket(page, 'demo-07-thomas-o-resolved-by-father', [
+  // 1. Hero: "L. Tomba Meitei" — resolved by the father's full yumnak on the form
+  await screenPacket(page, 'demo-07-tomba-l-resolved-by-father', [
     'form.jpg',
     'aadhaar.jpg',
     'passbook.jpg',

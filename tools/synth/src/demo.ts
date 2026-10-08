@@ -3,7 +3,7 @@
  * Folder order = processing order:
  *  - demo-06 is a resubmission of demo-01 and is only flagged as a duplicate when demo-01 was
  *    processed first;
- *  - demo-07 (the "Thomas" packet) is the one uploaded LIVE on stage, after demo-01…06 have been
+ *  - demo-07 (the "Tomba" packet) is the one uploaded LIVE on stage, after demo-01…06 have been
  *    primed into the queue. Never create a case for it before the demo, or the live upload is
  *    (correctly) flagged as a duplicate.
  * The two name stories (demo-04, demo-07) pin the exact names written on the documents; see
@@ -71,26 +71,26 @@ export const DEMO_PACKETS: NonNullable<PlanOptions['scenarios']> = [
     overrides: { noDisplacedOverlay: true },
   },
   {
-    // "O." alone could be Okram or Oinam; the father's FULL yumnak on the form (Okram) resolves
+    // "L." alone could be Laishram, Loitongbam, …; the father's FULL yumnak on the form (Laishram) resolves
     // it (core knownYumnaks) → SAME on every pair → READY.
-    id: 'demo-07-thomas-o-resolved-by-father',
+    id: 'demo-07-tomba-l-resolved-by-father',
     scenario: 'name_variant',
     originalOf: null,
     overrides: {
       nameVariant: 'abbreviation_resolved_by_relative',
-      abbr: 'o',
+      abbr: 'l',
       person: {
         community: 'Meitei',
         gender: 'male',
         marital: 'married',
-        clans: ['Okram'],
+        clans: ['Laishram'],
         district: 'Imphal West',
       },
       names: {
-        applicant: 'O. Thomas Meitei',
-        relative: 'Okram Ibomcha Singh',
-        aadhaar: 'Okram Thomas Meitei',
-        passbook: 'THOMAS OKRAM',
+        applicant: 'L. Tomba Meitei',
+        relative: 'Laishram Ibohal Singh',
+        aadhaar: 'Laishram Tomba Meitei',
+        passbook: 'TOMBA LAISHRAM',
       },
       epic: false,
       noDisplacedOverlay: true,

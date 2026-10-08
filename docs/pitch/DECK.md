@@ -8,7 +8,7 @@ footnote line.
 
 ## 1. Problem — "Same person. Three documents."
 
-- Okram Thomas Meitei · O. Thomas Meitei · Thomas Okram — one pensioner, three spellings.
+- Laishram Tomba Meitei · L. Tomba Meitei · Tomba Laishram — one pensioner, three spellings.
 - CAG (Report 2 of 2022): all 100 sampled Manipur pensioners got benefits 4 to 44 months late.
 - CAG NSAP audit (Report 10 of 2023): 68 got more than one pension; 89 under-80s paid the 80+ rate.
 

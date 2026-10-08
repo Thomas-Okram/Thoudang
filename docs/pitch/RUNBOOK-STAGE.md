@@ -18,7 +18,7 @@ Technical detail for each command is in [../demo-runbook.md](../demo-runbook.md)
 - [ ] **Prime the queue** — cases for `demo-01` … `demo-06` only, one folder at a time, in order
       (demo-01 must precede its duplicate demo-06; all cache hits, no API calls):
       `for d in demo-packets/demo-0[1-6]-*; do npm run demo:prime -- --dir "./$d" --with-cases; done`
-      Never create a case for `demo-07-thomas-o-resolved-by-father` — it is the live upload, and an
+      Never create a case for `demo-07-tomba-l-resolved-by-father` — it is the live upload, and an
       existing case would make it a _Possible duplicate_.
       Check the queue: _Ready_ 3, _Needs citizen correction_ 1 (**Gaikhangam Dangmei**),
       _Officer attention_ 2 (**Kh. Loken Singh**, and **CHABUNGBAM IBOBI SINGH** as a possible
@@ -50,7 +50,7 @@ Technical detail for each command is in [../demo-runbook.md](../demo-runbook.md)
 ### Physical kit
 
 - [ ] Printed SPECIMEN packet for the hook (form, Aadhaar, passbook), printed from
-      `demo-packets/demo-07-thomas-o-resolved-by-father/` (`form.jpg`, `aadhaar.jpg`,
+      `demo-packets/demo-07-tomba-l-resolved-by-father/` (`form.jpg`, `aadhaar.jpg`,
       `passbook.jpg`). Note: a phone photo of the paper is a new image and always calls the API —
       only the original image **files** replay from the cache. Copy those three files to a desktop folder
       `stage-packet/` ready to drag.
@@ -93,7 +93,7 @@ Decide in **5 seconds**, say one sentence, move down one rung. Never debug on st
 | 3. Already-screened cases                     | Upload itself fails             | Skip upload; go straight to `/queue` and open the primed cases                                                                                           | "Let me show you a packet that was screened this morning."                                                                     |
 | 4. Recorded video                             | Laptop, projector or app fails  | Switch to `thoudang-demo-backup.mov` and narrate over it                                                                                                 | "Here is a recording of exactly this flow; I'll talk you through it."                                                          |
 
-If the Thomas packet was already screened from the phone, dropping the same packet again will
+If the Tomba packet was already screened from the phone, dropping the same packet again will
 (correctly) raise a suspected-duplicate flag. Either say so — "it caught the duplicate" — or skip to
 rung 3.
 

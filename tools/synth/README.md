@@ -41,9 +41,9 @@ displaced (relief-camp address; ~8% of other packets also get one — priority o
 `demo-01-clean`, `demo-02-clean`, `demo-03-ongbi-married-name` (READY) · `demo-04-kh-loken-ambiguous`
 (OFFICER_ATTENTION, NAME_AMBIGUOUS) · `demo-05-dob-mismatch` (NEEDS_CITIZEN_CORRECTION) ·
 `demo-06-duplicate-of-01` (OFFICER_ATTENTION, DUPLICATE_SUSPECTED) ·
-`demo-07-thomas-o-resolved-by-father` (READY). demo-04 and demo-07 pin the exact document names
+`demo-07-tomba-l-resolved-by-father` (READY). demo-04 and demo-07 pin the exact document names
 (`overrides.names`) instead of drawing them; demo-07 uses the pinned-only name variant
-`abbreviation_resolved_by_relative` — "O." is ambiguous alone, the father's full yumnak on the
+`abbreviation_resolved_by_relative` — "L." is ambiguous alone, the father's full yumnak on the
 form resolves it, so its context-free `name_checks` say AMBIGUOUS while the case screens READY.
 demo-07 is the live stage upload: prime it into the cache, never into a case (see
 `docs/pitch/RUNBOOK-STAGE.md`).
