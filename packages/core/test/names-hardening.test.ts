@@ -162,9 +162,10 @@ describe('OCR-ish noise', () => {
     expect(normaliseName('Okram.Thomas')).toBe('okram thomas');
   });
 
-  it('a one-letter OCR slip in a long given name is a minor spelling difference', () => {
+  it('a one-letter OCR slip in a given name is referred to an officer, never auto-matched', () => {
     const r = matchNames('Okram lbemcha Devi', 'Okram Ibemcha Devi');
-    expect(MATCH).toContain(r.verdict);
+    expect(r.verdict).toBe('AMBIGUOUS');
+    expect(r.reasons[0]).toMatch(/Given names differ slightly/);
   });
 });
 

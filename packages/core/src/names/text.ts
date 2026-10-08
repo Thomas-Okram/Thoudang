@@ -107,9 +107,40 @@ export function normaliseName(raw: string): string {
 }
 
 /**
- * Romanisation-insensitive key: Meitei names are transliterated inconsistently
- * (th/t, kh/k, ph/f, sh/s, w/b/v, doubled letters, ee/i, oo/u).
+ * The explicit romanisation-variant table. Two spellings are "the same name" only if this table
+ * maps them to the same key — that is the ONLY way two different given-name spellings can count as
+ * a match (edit-distance similarity never can). Rules are applied in order to one lowercase word.
+ * Each rule is a known way Manipur names are transliterated inconsistently from Meetei Mayek /
+ * Bengali script into Latin letters — not a pattern learned from any test set.
  */
+export interface RomanisationVariant {
+  pattern: RegExp;
+  replacement: string;
+  /** What the rule means, with an example pair it makes equal. */
+  note: string;
+}
+
+export const ROMANISATION_VARIANTS: readonly RomanisationVariant[] = Object.freeze([
+  { pattern: /ph/g, replacement: 'f', note: 'ph / f (Phajabati / Fajabati)' },
+  { pattern: /sh/g, replacement: 's', note: 'sh / s (Sharma / Sarma)' },
+  { pattern: /kh/g, replacement: 'k', note: 'kh / k aspiration (Khuraijam / Kuraijam)' },
+  { pattern: /th/g, replacement: 't', note: 'th / t aspiration (Thomas / Tomas)' },
+  { pattern: /bh/g, replacement: 'b', note: 'bh / b aspiration' },
+  { pattern: /dh/g, replacement: 'd', note: 'dh / d aspiration' },
+  { pattern: /gh/g, replacement: 'g', note: 'gh / g aspiration' },
+  // "-shwor" / "-shwar" (Rameshwor / Rameshwar): the same Bengali-script ending, two romanisations.
+  { pattern: /wor$/, replacement: 'war', note: 'word-final -wor / -war (Rameshwor / Rameshwar)' },
+  { pattern: /[wv]/g, replacement: 'b', note: 'w / b / v (Wangkhem / Vangkhem, Devi / Debi)' },
+  { pattern: /ee/g, replacement: 'i', note: 'ee / i (Leeta / Lita)' },
+  { pattern: /oo/g, replacement: 'u', note: 'oo / u' },
+  {
+    pattern: /(.)\1+/g,
+    replacement: '$1',
+    note: 'doubled letters (Ibemcha / Ibemchaa, Thoiba / Thoibaa, Hussain / Husain)',
+  },
+]);
+
+/** Romanisation-insensitive key: applies {@link ROMANISATION_VARIANTS} in order. */
 export function phoneticKey(raw: string): string {
   const hit = keyCache.get(raw);
   if (hit !== undefined) return hit;
@@ -125,18 +156,8 @@ const keyCache = new Map<string, string>();
 
 function computePhoneticKey(raw: string): string {
   let s = raw.toLowerCase().replace(/[^a-z]/g, '');
-  s = s
-    .replace(/ph/g, 'f')
-    .replace(/sh/g, 's')
-    .replace(/kh/g, 'k')
-    .replace(/th/g, 't')
-    .replace(/bh/g, 'b')
-    .replace(/dh/g, 'd')
-    .replace(/gh/g, 'g')
-    .replace(/[wv]/g, 'b')
-    .replace(/ee/g, 'i')
-    .replace(/oo/g, 'u');
-  return s.replace(/(.)\1+/g, '$1');
+  for (const v of ROMANISATION_VARIANTS) s = s.replace(v.pattern, v.replacement);
+  return s;
 }
 
 export function levenshtein(a: string, b: string): number {

@@ -197,10 +197,10 @@ describe('Meitei names', () => {
     expect(r.reasons.join(' ')).toMatch(/marriage/i);
   });
 
-  it('minor spelling variant of a given name → match with a reason', () => {
+  it('-wor / -war romanisation of a given name (variant table) → match with a reason', () => {
     const r = matchNames('Ningthoujam Rameshwor Singh', 'Ningthoujam Rameshwar Singh');
     expect(MATCH).toContain(r.verdict);
-    expect(r.reasons.join(' ')).toMatch(/spelling/i);
+    expect(r.reasons.join(' ')).toMatch(/romanisation variants/i);
   });
 
   it('ph/f romanisation in a given name → SAME', () => {

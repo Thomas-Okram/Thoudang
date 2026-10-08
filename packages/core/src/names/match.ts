@@ -40,7 +40,6 @@ export interface MatchContext {
 
 /** Score penalties. Kept together so the scoring is auditable. */
 const PENALTY = {
-  givenSpelling: 8,
   extraNamePart: 12,
   familyVariant: 3,
   abbreviationResolved: 5,
@@ -66,8 +65,17 @@ const VOWELS = new Set(['a', 'e', 'i', 'o', 'u']);
 // Given names
 // ---------------------------------------------------------------------------------------------
 
-type GivenKind = 'exact' | 'variant' | 'spelling' | 'initial' | 'gender-vowel' | 'different';
+type GivenKind = 'exact' | 'variant' | 'initial' | 'gender-vowel' | 'near-miss' | 'different';
 
+/** Largest key edit distance that still counts as a near-miss (and only on long enough names). */
+const NEAR_MISS_MAX_DISTANCE = 2;
+
+/**
+ * Given names match ONLY when they are equal after normalisation or equal under the explicit
+ * romanisation-variant table (`phoneticKey`). Edit-distance similarity is never a match: a near-miss
+ * (Tomba / Thoiba, Rajen / Rajesh) is usually a different person — brothers, or a common name with
+ * a one-letter change — so it is referred to an officer ('near-miss'), never auto-matched.
+ */
 function compareGiven(
   a: string,
   b: string,
@@ -86,13 +94,18 @@ function compareGiven(
   const ka = phoneticKey(a);
   const kb = phoneticKey(b);
   if (ka === kb) return { kind: 'variant', score: 0.97 };
-  if (levenshtein(ka, kb) === 1 && Math.min(ka.length, kb.length) >= 5) {
+  const distance = levenshtein(ka, kb);
+  const shorter = Math.min(ka.length, kb.length);
+  if (distance === 1 && shorter >= 5) {
     // Meitei given names often mark gender with the final vowel: Tomba/Tombi, Chaoba/Chaobi.
     const sameStem = ka.length === kb.length && ka.slice(0, -1) === kb.slice(0, -1);
     if (sameStem && VOWELS.has(ka.at(-1)!) && VOWELS.has(kb.at(-1)!)) {
       return { kind: 'gender-vowel', score: 0 };
     }
-    return { kind: 'spelling', score: 0.85 };
+  }
+  // Short names need proportionally fewer edits to count as "close" (Ali / Ari yes, Ali / Abu no).
+  if (distance <= NEAR_MISS_MAX_DISTANCE && distance <= Math.floor(shorter / 3)) {
+    return { kind: 'near-miss', score: 0 };
   }
   return { kind: 'different', score: 0 };
 }
@@ -110,11 +123,13 @@ function alignGiven(A: ParsedName, B: ParsedName) {
   const b = B.given;
   const candidates: GivenPair[] = [];
   const genderVowel: GivenPair[] = [];
+  const nearMiss: GivenPair[] = [];
   a.forEach((ta, i) =>
     b.forEach((tb, j) => {
       const c = compareGiven(ta, tb, A.givenInitial[i], B.givenInitial[j]);
       if (c.score > 0) candidates.push({ a: i, b: j, ...c });
       else if (c.kind === 'gender-vowel') genderVowel.push({ a: i, b: j, ...c });
+      else if (c.kind === 'near-miss') nearMiss.push({ a: i, b: j, ...c });
     }),
   );
   candidates.sort((x, y) => y.score - x.score || x.a - y.a || x.b - y.b);
@@ -127,8 +142,17 @@ function alignGiven(A: ParsedName, B: ParsedName) {
     usedB.add(c.b);
     pairs.push(c);
   }
+  // Near-misses can only pair up tokens that found no real match (first come, deterministic).
+  const nearMissPairs: GivenPair[] = [];
+  for (const c of nearMiss) {
+    if (usedA.has(c.a) || usedB.has(c.b)) continue;
+    usedA.add(c.a);
+    usedB.add(c.b);
+    nearMissPairs.push(c);
+  }
   return {
     pairs,
+    nearMissPairs,
     leftA: a.map((_, i) => i).filter((i) => !usedA.has(i)),
     leftB: b.map((_, j) => j).filter((j) => !usedB.has(j)),
     genderVowel,
@@ -148,6 +172,7 @@ type FamilyQuality =
   | 'abbr-unverified'
   | 'abbr-ambiguous'
   | 'abbr-unknown-full'
+  | 'clan-near-miss'
   | 'none';
 
 const QUALITY_RANK: Record<FamilyQuality, number> = {
@@ -159,6 +184,7 @@ const QUALITY_RANK: Record<FamilyQuality, number> = {
   'abbr-unverified': 3,
   'abbr-ambiguous': 2,
   'abbr-unknown-full': 2,
+  'clan-near-miss': 1,
   none: 0,
 };
 
@@ -197,9 +223,11 @@ function compareAbbrToFull(
 function compareFamily(a: FamilyToken, b: FamilyToken, knownKeys: Set<string>): FamilyComparison {
   const base = { a, b, candidates: [] as string[] };
   if (a.kind === 'full' && b.kind === 'full') {
-    if (a.key === b.key) return { ...base, quality: 'exact' };
+    if (a.key === b.key || (a.entry && a.entry === b.entry)) return { ...base, quality: 'exact' };
     if (Math.min(a.key.length, b.key.length) >= 6 && levenshtein(a.key, b.key) <= 1) {
-      return { ...base, quality: 'variant' };
+      // A misspelling of a known yumnak is a variant; two DIFFERENT known clans one letter apart
+      // (Thangjam / Wangjam, Gangte / Mangte) are different families until an officer says otherwise.
+      return { ...base, quality: a.entry && b.entry ? 'clan-near-miss' : 'variant' };
     }
     return { ...base, quality: 'none' };
   }
@@ -335,7 +363,7 @@ function evaluate(a: string, b: string, ctx: MatchContext): Evaluation {
     );
   } else if (A.given.length === 0 || B.given.length === 0) {
     unsure('The given name is missing on one document.', 'Given name is missing on one document.');
-  } else if (g.pairs.length === 0) {
+  } else if (g.pairs.length === 0 && g.nearMissPairs.length === 0) {
     hardDifferent = true;
     score = GIVEN_MISMATCH_SCORE;
     say(
@@ -352,13 +380,6 @@ function evaluate(a: string, b: string, ctx: MatchContext): Evaluation {
           `${quote(da)} and ${quote(db)} are romanisation variants of the same name.`,
           `${da} / ${db}: same name, spelled differently.`,
         );
-      if (p.kind === 'spelling') {
-        score -= PENALTY.givenSpelling;
-        say(
-          `${quote(da)} vs ${quote(db)}: minor spelling difference.`,
-          `${da} / ${db}: small spelling difference.`,
-        );
-      }
       if (p.kind === 'initial') {
         if (!initialPenalised) score -= PENALTY.givenInitial;
         initialPenalised = true;
@@ -378,10 +399,22 @@ function evaluate(a: string, b: string, ctx: MatchContext): Evaluation {
         `Given names differ: ${list(la.map(quote))} vs ${list(lb.map(quote))}. A given-name mismatch outweighs everything else.`,
         `Given names differ: ${brief(la.map(quote), 1)} vs ${brief(lb.map(quote), 1)}.`,
       );
+    } else {
+      for (const p of g.nearMissPairs) {
+        const da = A.givenDisplay[p.a]!;
+        const db = B.givenDisplay[p.b]!;
+        unsure(
+          `Given names differ slightly (${da} vs ${db}) — officer to confirm. Similar-looking given names often belong to different people (brothers, sisters, or a common name one letter apart), so the engine never treats them as a match on its own.`,
+          `Given names differ slightly (${da} vs ${db}) — officer to confirm.`,
+        );
+      }
     }
   }
   for (const p of g.genderVowel) {
-    if ((leftA.includes(p.a) && leftB.includes(p.b)) || g.pairs.length === 0) {
+    if (
+      (leftA.includes(p.a) && leftB.includes(p.b)) ||
+      (g.pairs.length === 0 && g.nearMissPairs.length === 0)
+    ) {
       const da = A.givenDisplay[p.a]!;
       const db = B.givenDisplay[p.b]!;
       say(
@@ -392,8 +425,34 @@ function evaluate(a: string, b: string, ctx: MatchContext): Evaluation {
   }
 
   // One-sided extra given-name parts (may turn out to be an unknown family name).
-  const extrasA = leftB.length ? [] : leftA.map((i) => A.givenDisplay[i]!);
-  const extrasB = leftA.length ? [] : leftB.map((j) => B.givenDisplay[j]!);
+  let extrasA = leftB.length ? [] : leftA;
+  let extrasB = leftA.length ? [] : leftB;
+  // The same word can parse as a given name on one document and a family name on the other
+  // ("Abdul Salim" vs "Abdul Salam", where Salam is also a sagei). A near-miss across that split is
+  // still a near-miss given name: refer it rather than wave it through as an extra name part.
+  const crossNearMiss = (own: ParsedName, other: ParsedName, idx: number[]) =>
+    idx.filter((i) => {
+      const fam = other.family.find(
+        (f) =>
+          f.kind === 'full' &&
+          !own.family.some((o) => o.kind === 'full' && o.key === f.key) &&
+          compareGiven(own.given[i]!, f.display.toLowerCase()).kind === 'near-miss',
+      );
+      if (!fam) return true;
+      const [da, db] =
+        own === A ? [A.givenDisplay[i]!, fam.display] : [fam.display, B.givenDisplay[i]!];
+      unsure(
+        `Given names differ slightly (${da} vs ${db}) — officer to confirm. Similar-looking given names often belong to different people (brothers, sisters, or a common name one letter apart), so the engine never treats them as a match on its own.`,
+        `Given names differ slightly (${da} vs ${db}) — officer to confirm.`,
+      );
+      return false;
+    });
+  if (!hardDifferent) {
+    extrasA = crossNearMiss(A, B, extrasA);
+    extrasB = crossNearMiss(B, A, extrasB);
+  }
+  const extrasNamesA = extrasA.map((i) => A.givenDisplay[i]!);
+  const extrasNamesB = extrasB.map((j) => B.givenDisplay[j]!);
   let extrasConsumed = false;
 
   // --- Family names ------------------------------------------------------------------------
@@ -476,6 +535,12 @@ function evaluate(a: string, b: string, ctx: MatchContext): Evaluation {
             `${abbr?.display} fits ${full?.display}, but is not a known abbreviation.`,
           );
           break;
+        case 'clan-near-miss':
+          unsure(
+            `Family names differ slightly (${best.a.display} vs ${best.b.display}), and both are separate clans in the gazetteer — officer to confirm.`,
+            `Family names differ slightly (${best.a.display} vs ${best.b.display}) — officer to confirm.`,
+          );
+          break;
         case 'abbr-ambiguous':
           ambiguousYumnaks = best.candidates;
           unsure(
@@ -496,7 +561,7 @@ function evaluate(a: string, b: string, ctx: MatchContext): Evaluation {
     }
   } else if (A.family.length || B.family.length) {
     const withFamily = A.family.length ? A : B;
-    const extras = A.family.length ? extrasB : extrasA;
+    const extras = A.family.length ? extrasNamesB : extrasNamesA;
     const fam = list(withFamily.family.map(familyLabel));
     const famShort = brief(withFamily.family.map(familyLabel), 1);
     if (extras.length) {
@@ -551,7 +616,7 @@ function evaluate(a: string, b: string, ctx: MatchContext): Evaluation {
   }
 
   if (!extrasConsumed && !hardDifferent) {
-    for (const x of [...extrasA, ...extrasB]) {
+    for (const x of [...extrasNamesA, ...extrasNamesB]) {
       score -= PENALTY.extraNamePart;
       say(
         `${quote(x)} appears in only one of the two names.`,
