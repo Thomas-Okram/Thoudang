@@ -25,7 +25,7 @@ const cookieFrom = (res: request.Response) => {
 
 describe('PIN sign-in and signed session cookie', () => {
   it('login sets an httpOnly SameSite=Strict cookie; /me reflects it; logout revokes it', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     expect((await request(t.app).get('/api/auth/me')).body.officer).toBeNull();
 
     const res = await request(t.app)
@@ -50,7 +50,7 @@ describe('PIN sign-in and signed session cookie', () => {
   });
 
   it('a real login can approve; a spoofed X-Officer-Id header alone gets 401', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const id = await screenedCase();
     const spoof = await request(t.app).post(`/api/cases/${id}/approve`).set('X-Officer-Id', DSWO);
     expect(spoof.status).toBe(401);
@@ -64,16 +64,14 @@ describe('PIN sign-in and signed session cookie', () => {
       .set('Cookie', cookieFrom(login));
     expect(ok.status).toBe(200);
     expect(
-      t.handle.db
-        .select()
-        .from(auditLog)
-        .all()
-        .some((a) => a.action === 'OFFICER_APPROVE' && a.actor === `officer:${DSWO}`),
+      (await t.handle.db.select().from(auditLog)).some(
+        (a) => a.action === 'OFFICER_APPROVE' && a.actor === `officer:${DSWO}`,
+      ),
     ).toBe(true);
   });
 
   it('the session identity wins over a header naming someone else (no privilege escalation)', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const id = await screenedCase();
     const res = await request(t.app)
       .post(`/api/cases/${id}/approve`)
@@ -83,7 +81,7 @@ describe('PIN sign-in and signed session cookie', () => {
   });
 
   it('tampered or forged cookies are ignored', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const good = t.cookie(DA);
     const [name, token] = good.split('=') as [string, string];
     const [payload, mac] = token.split('.') as [string, string];
@@ -96,7 +94,7 @@ describe('PIN sign-in and signed session cookie', () => {
   });
 
   it('wrong PINs are refused and lock the officer out after 5 tries', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     for (let i = 0; i < 4; i++) {
       const r = await request(t.app).post('/api/auth/login').send({ officerId: DA, pin: '0000' });
       expect(r.status).toBe(401);
@@ -118,7 +116,7 @@ describe('PIN sign-in and signed session cookie', () => {
   });
 
   it('login attempts are rate limited per client', async () => {
-    t = setupApp(packetVision(), 'live', {
+    t = await setupApp(packetVision(), 'live', {
       security: testSecurity({ RATE_LIMIT_LOGIN_PER_5MIN: '3', PIN_MAX_FAILED: '100' }),
     });
     const statuses: number[] = [];
@@ -130,7 +128,7 @@ describe('PIN sign-in and signed session cookie', () => {
   });
 
   it('the no-JS sign-in page works with a plain HTML form and never open-redirects', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const page = await request(t.app).get('/api/auth/login');
     expect(page.status).toBe(200);
     expect(page.text).toContain('<form method="post" action="/api/auth/login">');
@@ -150,14 +148,14 @@ describe('PIN sign-in and signed session cookie', () => {
   });
 
   it('AUTH_MODE=header keeps the legacy dropdown identity working', async () => {
-    t = setupApp(packetVision(), 'live', { security: testSecurity({ AUTH_MODE: 'header' }) });
+    t = await setupApp(packetVision(), 'live', { security: testSecurity({ AUTH_MODE: 'header' }) });
     const id = await screenedCase();
     const res = await request(t.app).post(`/api/cases/${id}/approve`).set('X-Officer-Id', DSWO);
     expect(res.status).toBe(200);
   });
 
   it('officer list exposes who can sign in, never PINs', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const res = await request(t.app).get('/api/auth/officers');
     expect(res.body.mode).toBe('session');
     expect(res.body.officers.map((o: { id: string }) => o.id).sort()).toEqual([DA, DSWO]);
@@ -165,7 +163,9 @@ describe('PIN sign-in and signed session cookie', () => {
   });
 
   it('REQUIRE_SIGN_IN=1 protects reads and uploads; phone QR flow and citizen status stay public', async () => {
-    t = setupApp(packetVision(), 'live', { security: testSecurity({ REQUIRE_SIGN_IN: '1' }) });
+    t = await setupApp(packetVision(), 'live', {
+      security: testSecurity({ REQUIRE_SIGN_IN: '1' }),
+    });
     for (const [method, url] of [
       ['get', '/api/cases'],
       ['get', '/api/dashboard'],

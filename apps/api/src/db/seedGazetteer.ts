@@ -1,17 +1,18 @@
 import { sql } from 'drizzle-orm';
 import { gazetteerEntries, type GazetteerEntry } from '@thoudang/core';
-import type { Db } from './client.js';
+import { transaction, type Db } from './client.js';
 import { nameGazetteer } from './schema.js';
 
 /** Idempotent upsert of the gazetteer into name_gazetteer. Returns the number of rows written. */
-export function seedGazetteer(
+export async function seedGazetteer(
   db: Db,
   entries: readonly GazetteerEntry[] = gazetteerEntries,
-): number {
+): Promise<number> {
   if (!entries.length) return 0;
-  db.transaction((tx) => {
+  await transaction(db, async (tx) => {
     for (const e of entries) {
-      tx.insert(nameGazetteer)
+      await tx
+        .insert(nameGazetteer)
         .values({
           surname: e.surname,
           community: e.community,
@@ -29,8 +30,7 @@ export function seedGazetteer(
             confidence: sql`excluded.confidence`,
             tribe: sql`excluded.tribe`,
           },
-        })
-        .run();
+        });
     }
   });
   return entries.length;

@@ -33,7 +33,7 @@ async function main() {
   const { flags } = parseArgs(process.argv.slice(2));
   const dir =
     typeof flags.dir === 'string' ? fromInvocationDir(flags.dir) : path.join(repoRoot, 'eval-data');
-  const handle = openDb();
+  const handle = await openDb();
   const keyMaker = new ExtractionService({
     db: handle.db,
     vision: null,
@@ -44,8 +44,8 @@ async function main() {
     effortExtract: 'medium',
     logger: silentLogger,
   });
-  const put = (key: string, sha256: string, stage: string, result: Record<string, unknown>) =>
-    handle.db
+  const put = async (key: string, sha256: string, stage: string, result: Record<string, unknown>) =>
+    await handle.db
       .insert(extractionCache)
       .values({
         key,
@@ -58,8 +58,7 @@ async function main() {
         inputTokens: 0,
         outputTokens: 0,
       })
-      .onConflictDoUpdate({ target: extractionCache.key, set: { result, model: FIXTURE_MODEL } })
-      .run();
+      .onConflictDoUpdate({ target: extractionCache.key, set: { result, model: FIXTURE_MODEL } });
 
   let images = 0;
   for (const packet of fs.readdirSync(dir).sort()) {
@@ -80,7 +79,7 @@ async function main() {
       const meta = await sharp(raw).metadata();
       const image = await preprocessImage(raw);
       const k = image.width / (meta.width ?? image.width);
-      put(keyMaker.cacheKey('classify', image.sha256), image.sha256, 'classify', {
+      await put(keyMaker.cacheKey('classify', image.sha256), image.sha256, 'classify', {
         type: doc.type,
         confidence: 'high',
         legibility: 'good',
@@ -110,7 +109,7 @@ async function main() {
           { legibility: 'good', notes: 'Fixture data (no AI)', fields },
           image,
         );
-        put(
+        await put(
           keyMaker.cacheKey(`extract:${type}`, image.sha256),
           image.sha256,
           `extract:${type}`,
@@ -121,7 +120,7 @@ async function main() {
     }
     console.log(`  ${packet}: ${Object.keys(truth.documents).length} image(s)`);
   }
-  handle.close();
+  await handle.close();
   console.log(`\nSeeded fixture results for ${images} image(s) into ${env.dbPath}.`);
   console.log(
     'Upload those images with DEMO_MODE=cache_first or cache_only (npm run demo). Shown as "Fixture data (no AI)".',

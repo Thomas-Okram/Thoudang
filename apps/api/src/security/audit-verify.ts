@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import { dbExists, openDb } from '../db/client.js';
 import { env } from '../env.js';
 import { AuditChain, anchorPathFor } from './audit-chain.js';
 import { loadSecurityConfig } from './config.js';
@@ -9,19 +9,21 @@ import { loadSecurityConfig } from './config.js';
  * --seal first chains entries written since the server last sealed (only do this when you trust
  * that nothing was tampered with in the meantime, e.g. right after a seed script).
  */
-export function verifyAuditCli(opts: {
+export async function verifyAuditCli(opts: {
   dbPath: string;
   key: string;
   seal?: boolean;
   print?: (line: string) => void;
-}): number {
+}): Promise<number> {
   const print = opts.print ?? ((l: string) => console.log(l));
-  const sqlite = new Database(opts.dbPath, { fileMustExist: true });
+  // SQLite: the file must already exist. Postgres: DATABASE_URL (or the database for dbPath).
+  if (!(await dbExists(opts.dbPath))) throw new Error(`Database not found: ${opts.dbPath}`);
+  const handle = await openDb(opts.dbPath);
   try {
-    const chain = new AuditChain(sqlite, opts.key, anchorPathFor(opts.dbPath));
-    if (opts.seal) print(`Sealed ${chain.seal().sealed} new audit entries.`);
-    const v = chain.verify();
-    print(`Audit log: ${opts.dbPath}`);
+    const chain = await AuditChain.open(handle.raw, opts.key, anchorPathFor(opts.dbPath));
+    if (opts.seal) print(`Sealed ${(await chain.seal()).sealed} new audit entries.`);
+    const v = await chain.verify();
+    print(`Audit log: ${handle.location}`);
     print(
       `Verified entries: ${v.verified}   (head ${v.head.slice(0, 16)}…, last sealed #${v.lastSealedId})`,
     );
@@ -38,7 +40,7 @@ export function verifyAuditCli(opts: {
       print(`  ${p.auditId === null ? '' : `#${p.auditId}: `}${p.problem}`);
     return 1;
   } finally {
-    sqlite.close();
+    await handle.close();
   }
 }
 
@@ -47,7 +49,7 @@ if (isMain) {
   const sec = loadSecurityConfig();
   if (sec.auditChainKeyIsDefault)
     console.warn('Note: AUDIT_CHAIN_KEY not set — using the public default key (prototype only).');
-  process.exitCode = verifyAuditCli({
+  process.exitCode = await verifyAuditCli({
     dbPath: env.dbPath,
     key: sec.auditChainKey,
     seal: process.argv.includes('--seal'),

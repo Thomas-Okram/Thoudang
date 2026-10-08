@@ -79,14 +79,14 @@ async function main() {
   }
   let handle;
   if (flags['keep-db'] === true) {
-    handle = openDb(config.dbPath);
+    handle = await openDb(config.dbPath);
   } else {
-    const fresh = openFreshEvalDb(config.dbPath, config.uploadsDir);
+    const fresh = await openFreshEvalDb(config.dbPath, config.uploadsDir);
     handle = fresh.handle;
     console.log(`Fresh eval database (${fresh.carriedCacheRows} cached extraction(s) kept).`);
   }
   const logger = createLogger({ file: config.logFile, console: false });
-  const { pipeline, bus } = createApp({ db: handle.db, config, vision, logger });
+  const { pipeline, bus } = await createApp({ db: handle.db, config, vision, logger });
 
   const doneAt = new Map<string, number>();
   bus.subscribe((e) => {
@@ -136,7 +136,7 @@ async function main() {
     const started = Date.now();
     const created = await pipeline.createCase({ files, source: 'eval', packetName: name });
     await pipeline.whenIdle();
-    const detail = caseDetail(handle.db, created.caseId)!;
+    const detail = (await caseDetail(handle.db, created.caseId))!;
 
     const extracted: ExtractedForEval[] = detail.documents.map((d) => ({
       fileName: d.originalName,
@@ -145,11 +145,10 @@ async function main() {
     }));
     scores.push(scorePacket(name, truth, extracted, detail.case.status));
 
-    const calls = handle.db
+    const calls = await handle.db
       .select()
       .from(extractions)
-      .where(eq(extractions.caseId, created.caseId))
-      .all();
+      .where(eq(extractions.caseId, created.caseId));
     usage.packets += 1;
     for (const c of calls) {
       if (c.model === FIXTURE_MODEL) fixtureExtractions += 1;
@@ -184,7 +183,7 @@ async function main() {
     console.warn(
       `\n⚠ ${fixtureExtractions} extraction(s) were FIXTURE data (truth replayed, no AI) — this is a pipeline check, not an accuracy measurement.`,
     );
-  handle.close();
+  await handle.close();
 }
 
 main().catch((err: unknown) => {

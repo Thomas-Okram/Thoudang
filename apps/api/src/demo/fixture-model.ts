@@ -6,9 +6,10 @@ import { extractionCache } from '../db/schema.js';
 export const FIXTURE_MODEL = 'fixture-truth';
 
 /** Removes fixture rows for one image so real Claude results can replace them. */
-export function purgeFixtures(db: Db, sha256: string): number {
-  return db
+export async function purgeFixtures(db: Db, sha256: string): Promise<number> {
+  const removed = await db
     .delete(extractionCache)
     .where(and(eq(extractionCache.sha256, sha256), eq(extractionCache.model, FIXTURE_MODEL)))
-    .run().changes;
+    .returning({ key: extractionCache.key });
+  return removed.length;
 }

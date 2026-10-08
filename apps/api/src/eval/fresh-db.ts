@@ -1,6 +1,5 @@
 import fs from 'node:fs';
-import path from 'node:path';
-import { openDb, type DbHandle } from '../db/client.js';
+import { dbExists, dropDb, openDb, transaction, type DbHandle } from '../db/client.js';
 import { extractionCache } from '../db/schema.js';
 
 /**
@@ -9,36 +8,28 @@ import { extractionCache } from '../db/schema.js';
  * over (it is keyed by image hash + model + prompt version, so it is still valid) — that keeps
  * `--mode cache_only` / `dev:fixtures` runs working and avoids paying for the same Claude calls.
  */
-export function openFreshEvalDb(
+export async function openFreshEvalDb(
   dbPath: string,
   uploadsDir: string,
-): { handle: DbHandle; carriedCacheRows: number } {
+): Promise<{ handle: DbHandle; carriedCacheRows: number }> {
   let rows: (typeof extractionCache.$inferSelect)[] = [];
-  if (fs.existsSync(dbPath)) {
-    const old = openDb(dbPath);
+  if (await dbExists(dbPath)) {
+    const old = await openDb(dbPath);
     try {
-      rows = old.db.select().from(extractionCache).all();
+      rows = await old.db.select().from(extractionCache);
     } finally {
-      old.close();
+      await old.close();
     }
   }
-  const dir = path.dirname(dbPath);
-  const base = path.basename(dbPath);
-  if (fs.existsSync(dir)) {
-    for (const f of fs.readdirSync(dir)) {
-      // eval.db, eval.db-wal, eval.db-shm, eval.db.audit-anchor.json
-      if (f === base || f.startsWith(`${base}-`) || f.startsWith(`${base}.`)) {
-        fs.rmSync(path.join(dir, f), { force: true });
-      }
-    }
-  }
+  // eval.db (+ -wal, -shm, .audit-anchor.json) — or, on Postgres, the eval database.
+  await dropDb(dbPath);
   fs.rmSync(uploadsDir, { recursive: true, force: true });
 
-  const handle = openDb(dbPath);
+  const handle = await openDb(dbPath);
   if (rows.length) {
-    handle.sqlite.transaction(() => {
-      for (const r of rows) handle.db.insert(extractionCache).values(r).run();
-    })();
+    await transaction(handle.db, async (tx) => {
+      for (const r of rows) await tx.insert(extractionCache).values(r);
+    });
   }
   return { handle, carriedCacheRows: rows.length };
 }

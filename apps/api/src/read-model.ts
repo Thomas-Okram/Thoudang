@@ -80,9 +80,9 @@ export interface ListFilters {
  * Queue listing, sorted by priority. `q` searches names with the Manipur-aware name engine, so
  * "Thomas Okram" finds "O. Thomas Meitei"; reference numbers and packet names match by substring.
  */
-export function listCases(db: Db, filters: ListFilters = {}) {
-  const rows = db.select().from(cases).all();
-  const flagRows = db.select().from(flagsTable).all();
+export async function listCases(db: Db, filters: ListFilters = {}) {
+  const rows = await db.select().from(cases);
+  const flagRows = await db.select().from(flagsTable);
   const byCase = new Map<string, FlagRow[]>();
   for (const f of flagRows) byCase.set(f.caseId, [...(byCase.get(f.caseId) ?? []), f]);
   const today = istToday();
@@ -123,8 +123,8 @@ export function listCases(db: Db, filters: ListFilters = {}) {
     .sort((a, b) => b.priorityScore - a.priorityScore || a.receivedAt.localeCompare(b.receivedAt));
 }
 
-export function caseStats(db: Db) {
-  const all = listCases(db);
+export async function caseStats(db: Db) {
+  const all = await listCases(db);
   const byStatus = {
     READY: 0,
     NEEDS_CITIZEN_CORRECTION: 0,
@@ -133,11 +133,9 @@ export function caseStats(db: Db) {
   } as Record<string, number>;
   for (const c of all) byStatus[c.status] = (byStatus[c.status] ?? 0) + 1;
   const timed = all.map((c) => c.screeningMs).filter((n): n is number => n !== null);
-  const flagsCaught = db
-    .select()
-    .from(flagsTable)
-    .all()
-    .filter((f) => f.severity !== 'info').length;
+  const flagsCaught = (await db.select().from(flagsTable)).filter(
+    (f) => f.severity !== 'info',
+  ).length;
   return {
     total: all.length,
     byStatus,
@@ -175,29 +173,30 @@ export interface IdentityView {
   relatives: string[];
 }
 
-export function caseDetail(db: Db, id: string, viewer?: Officer | null) {
-  const row = db.select().from(cases).where(eq(cases.id, id)).get();
+export async function caseDetail(db: Db, id: string, viewer?: Officer | null) {
+  const row = (await db.select().from(cases).where(eq(cases.id, id)))[0];
   if (!row) return null;
-  const docs = db
+  const docs = await db
     .select()
     .from(documents)
     .where(eq(documents.caseId, id))
-    .orderBy(documents.position)
-    .all();
-  const calls = db
+    .orderBy(documents.position);
+  const calls = await db
     .select()
     .from(extractions)
     .where(eq(extractions.caseId, id))
-    .orderBy(asc(extractions.createdAt))
-    .all();
-  const flagRows = db.select().from(flagsTable).where(eq(flagsTable.caseId, id)).all();
-  const audit = db
+    .orderBy(asc(extractions.createdAt));
+  const flagRows = await db
+    .select()
+    .from(flagsTable)
+    .where(eq(flagsTable.caseId, id))
+    .orderBy(asc(flagsTable.createdAt));
+  const audit = await db
     .select()
     .from(auditLog)
     .where(eq(auditLog.caseId, id))
-    .orderBy(asc(auditLog.id))
-    .all();
-  const officerRows = db.select().from(officers).all();
+    .orderBy(asc(auditLog.id));
+  const officerRows = await db.select().from(officers);
   const latest = (docId: string, stage: 'classify' | 'extract') =>
     calls.filter((c) => c.documentId === docId && c.stage === stage).at(-1) ?? null;
 

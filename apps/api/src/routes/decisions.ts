@@ -67,12 +67,12 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
   const router = Router();
   const today = () => (deps.today ?? istToday)();
 
-  const loadCase = (id: string) => {
-    const row = db.select().from(cases).where(eq(cases.id, id)).get();
+  const loadCase = async (id: string) => {
+    const row = (await db.select().from(cases).where(eq(cases.id, id)))[0];
     if (!row) throw new HttpError(404, 'Case not found');
     return row;
   };
-  const audit = (
+  const audit = async (
     caseId: string,
     officer: Officer,
     action: (typeof auditLog.$inferInsert)['action'],
@@ -82,19 +82,16 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
     after: unknown,
     reason?: string,
   ) =>
-    db
-      .insert(auditLog)
-      .values({
-        caseId,
-        actor: officerActor(officer),
-        action,
-        entityType,
-        entityId,
-        before,
-        after,
-        reason: reason ?? null,
-      })
-      .run();
+    await db.insert(auditLog).values({
+      caseId,
+      actor: officerActor(officer),
+      action,
+      entityType,
+      entityId,
+      before,
+      after,
+      reason: reason ?? null,
+    });
   const updated = (
     row: { id: string; reference: string; batchId: string | null },
     status: string,
@@ -107,35 +104,36 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
       stage: 'updated',
       status,
     });
-  const respond = (req: Request, id: string, officer: Officer) =>
-    caseDetail(db, id, officer) ?? { error: 'gone' };
+  const respond = async (req: Request, id: string, officer: Officer) =>
+    (await caseDetail(db, id, officer)) ?? { error: 'gone' };
   const notApproved = (row: { status: string }) => {
     if (row.status === 'APPROVED_BY_OFFICER')
       throw new HttpError(409, 'This case is already approved');
   };
 
-  router.get('/meta', (_req, res) => {
+  router.get('/meta', async (_req, res) => {
     res.json({
-      officers: db
-        .select()
-        .from(officers)
-        .all()
-        .map((o) => ({ ...o, roleLabel: ROLE_LABEL[o.role], permissions: permissionsOf(o.role) })),
+      officers: (await db.select().from(officers)).map((o) => ({
+        ...o,
+        roleLabel: ROLE_LABEL[o.role],
+        permissions: permissionsOf(o.role),
+      })),
       overrideReasons: OVERRIDE_REASONS,
       editReasons: EDIT_REASONS,
     });
   });
 
   /** { decision: 'accept' | 'override' | 'reopen', reasonCode?, reasonText? } */
-  router.post('/cases/:id/flags/:flagId/resolve', (req, res) => {
-    const officer = requireOfficer(db, req, 'resolve_flag');
-    const row = loadCase(req.params.id);
+  router.post('/cases/:id/flags/:flagId/resolve', async (req, res) => {
+    const officer = await requireOfficer(db, req, 'resolve_flag');
+    const row = await loadCase(req.params.id);
     notApproved(row);
-    const flag = db
-      .select()
-      .from(flagsTable)
-      .where(and(eq(flagsTable.id, req.params.flagId), eq(flagsTable.caseId, row.id)))
-      .get();
+    const flag = (
+      await db
+        .select()
+        .from(flagsTable)
+        .where(and(eq(flagsTable.id, req.params.flagId), eq(flagsTable.caseId, row.id)))
+    )[0];
     if (!flag) throw new HttpError(404, 'Flag not found');
     const body = (req.body ?? {}) as {
       decision?: unknown;
@@ -154,16 +152,16 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
           : undefined;
     const resolution =
       decision === 'accept' ? 'ACCEPTED' : decision === 'override' ? 'OVERRIDDEN' : 'OPEN';
-    db.update(flagsTable)
+    await db
+      .update(flagsTable)
       .set({
         resolution,
         resolvedBy: decision === 'reopen' ? null : officer.id,
         resolvedAt: decision === 'reopen' ? null : new Date(),
         resolutionReason: reason ?? null,
       })
-      .where(eq(flagsTable.id, flag.id))
-      .run();
-    audit(
+      .where(eq(flagsTable.id, flag.id));
+    await audit(
       row.id,
       officer,
       decision === 'accept'
@@ -177,26 +175,35 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
       { code: flag.code, title: flagTitle(flag.code), resolution, officer: officer.name },
       reason,
     );
-    const status = refreshStatus(db, row.id);
+    const status = await refreshStatus(db, row.id);
     if (status !== row.status) {
-      audit(row.id, officer, 'STATUS_CHANGE', 'case', row.id, { status: row.status }, { status });
+      await audit(
+        row.id,
+        officer,
+        'STATUS_CHANGE',
+        'case',
+        row.id,
+        { status: row.status },
+        { status },
+      );
     }
     updated(row, status);
-    res.json(respond(req, row.id, officer));
+    res.json(await respond(req, row.id, officer));
   });
 
   /** { documentId, field, value, reasonCode?, reasonText? } — re-screens with code only, no AI. */
-  router.patch('/cases/:id/fields', (req, res) => {
-    const officer = requireOfficer(db, req, 'edit_field');
-    const row = loadCase(req.params.id);
+  router.patch('/cases/:id/fields', async (req, res) => {
+    const officer = await requireOfficer(db, req, 'edit_field');
+    const row = await loadCase(req.params.id);
     notApproved(row);
     const body = (req.body ?? {}) as { documentId?: unknown; field?: unknown; value?: unknown };
     const reason = reasonFrom(EDIT_REASONS, req.body ?? {});
-    const doc = db
-      .select()
-      .from(documents)
-      .where(and(eq(documents.id, String(body.documentId)), eq(documents.caseId, row.id)))
-      .get();
+    const doc = (
+      await db
+        .select()
+        .from(documents)
+        .where(and(eq(documents.id, String(body.documentId)), eq(documents.caseId, row.id)))
+    )[0];
     if (!doc || !doc.detectedType || doc.detectedType === 'other')
       throw new HttpError(404, 'Document not found');
     const field = String(body.field ?? '');
@@ -210,18 +217,19 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
       );
     if (body.value !== null && typeof body.value !== 'string')
       throw new HttpError(400, 'value must be a string or null');
-    const ext = db
-      .select()
-      .from(extractions)
-      .where(
-        and(
-          eq(extractions.documentId, doc.id),
-          eq(extractions.stage, 'extract'),
-          eq(extractions.status, 'OK'),
-        ),
-      )
-      .orderBy(desc(extractions.createdAt))
-      .get();
+    const ext = (
+      await db
+        .select()
+        .from(extractions)
+        .where(
+          and(
+            eq(extractions.documentId, doc.id),
+            eq(extractions.stage, 'extract'),
+            eq(extractions.status, 'OK'),
+          ),
+        )
+        .orderBy(desc(extractions.createdAt))
+    )[0];
     if (!ext?.result) throw new HttpError(409, 'This document has no extracted fields to edit');
 
     const result = ext.result as unknown as ExtractedDocument;
@@ -241,11 +249,11 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
         },
       },
     };
-    db.update(extractions)
+    await db
+      .update(extractions)
       .set({ result: next as unknown as Record<string, unknown> })
-      .where(eq(extractions.id, ext.id))
-      .run();
-    audit(
+      .where(eq(extractions.id, ext.id));
+    await audit(
       row.id,
       officer,
       'FIELD_EDITED',
@@ -255,39 +263,37 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
       { document: DOC_TITLE[doc.detectedType], field, value },
       reason,
     );
-    const { result: screened, status } = rescreenCase(db, row.id, { today: today() });
-    db.insert(auditLog)
-      .values({
-        caseId: row.id,
-        actor: 'system:rules',
-        action: 'RULE_RESULT',
-        entityType: 'case',
-        entityId: row.id,
-        after: {
-          status,
-          trigger: 'officer edit',
-          priorityScore: screened.priorityScore,
-          flags: screened.flags.map((f) => ({
-            code: f.code,
-            severity: f.severity,
-            action: f.action,
-          })),
-        },
-      })
-      .run();
+    const { result: screened, status } = await rescreenCase(db, row.id, { today: today() });
+    await db.insert(auditLog).values({
+      caseId: row.id,
+      actor: 'system:rules',
+      action: 'RULE_RESULT',
+      entityType: 'case',
+      entityId: row.id,
+      after: {
+        status,
+        trigger: 'officer edit',
+        priorityScore: screened.priorityScore,
+        flags: screened.flags.map((f) => ({
+          code: f.code,
+          severity: f.severity,
+          action: f.action,
+        })),
+      },
+    });
     updated(row, status);
-    res.json(respond(req, row.id, officer));
+    res.json(await respond(req, row.id, officer));
   });
 
-  router.post('/cases/:id/approve', (req, res) => {
-    const officer = requireOfficer(db, req, 'approve');
-    const row = loadCase(req.params.id);
+  router.post('/cases/:id/approve', async (req, res) => {
+    const officer = await requireOfficer(db, req, 'approve');
+    const row = await loadCase(req.params.id);
     notApproved(row);
     if (row.processingState === 'RECEIVED' || row.processingState === 'EXTRACTING') {
       throw new HttpError(409, 'The case is still being processed');
     }
     const blockers = blockingFlags(
-      db.select().from(flagsTable).where(eq(flagsTable.caseId, row.id)).all(),
+      await db.select().from(flagsTable).where(eq(flagsTable.caseId, row.id)),
     );
     if (blockers.length) {
       throw new HttpError(
@@ -298,16 +304,16 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
     }
     const note =
       typeof req.body?.note === 'string' && req.body.note.trim() ? req.body.note.trim() : undefined;
-    db.update(cases)
+    await db
+      .update(cases)
       .set({
         status: 'APPROVED_BY_OFFICER',
         decidedBy: officer.id,
         decidedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(cases.id, row.id))
-      .run();
-    audit(
+      .where(eq(cases.id, row.id));
+    await audit(
       row.id,
       officer,
       'OFFICER_APPROVE',
@@ -318,15 +324,15 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
       note,
     );
     updated(row, 'APPROVED_BY_OFFICER');
-    res.json(respond(req, row.id, officer));
+    res.json(await respond(req, row.id, officer));
   });
 
-  router.post('/cases/:id/send-for-correction', (req, res) => {
-    const officer = requireOfficer(db, req, 'send_for_correction');
-    const row = loadCase(req.params.id);
+  router.post('/cases/:id/send-for-correction', async (req, res) => {
+    const officer = await requireOfficer(db, req, 'send_for_correction');
+    const row = await loadCase(req.params.id);
     notApproved(row);
     const inForce = effectiveFlags(
-      db.select().from(flagsTable).where(eq(flagsTable.caseId, row.id)).all(),
+      await db.select().from(flagsTable).where(eq(flagsTable.caseId, row.id)),
     );
     const notice = noticeEligibility(inForce);
     if (notice.blockedBy.length) throw new HttpError(409, notice.reasons[0] ?? 'Blocked');
@@ -334,15 +340,15 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
       throw new HttpError(409, 'There is nothing for the citizen to correct');
     const note =
       typeof req.body?.note === 'string' && req.body.note.trim() ? req.body.note.trim() : undefined;
-    db.update(cases)
+    await db
+      .update(cases)
       .set({
         status: 'NEEDS_CITIZEN_CORRECTION',
         correctionRequestedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(cases.id, row.id))
-      .run();
-    audit(
+      .where(eq(cases.id, row.id));
+    await audit(
       row.id,
       officer,
       'SENT_FOR_CORRECTION',
@@ -353,15 +359,15 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
       note,
     );
     updated(row, 'NEEDS_CITIZEN_CORRECTION');
-    res.json(respond(req, row.id, officer));
+    res.json(await respond(req, row.id, officer));
   });
 
   /** Bulk: { caseIds } — only READY cases are forwarded to the DSWO. */
-  router.post('/cases/forward', (req, res) => {
-    const officer = requireOfficer(db, req, 'forward');
+  router.post('/cases/forward', async (req, res) => {
+    const officer = await requireOfficer(db, req, 'forward');
     const ids = Array.isArray(req.body?.caseIds) ? (req.body.caseIds as unknown[]).map(String) : [];
     if (!ids.length) throw new HttpError(400, 'Select at least one case');
-    const rows = db.select().from(cases).where(inArray(cases.id, ids)).all();
+    const rows = await db.select().from(cases).where(inArray(cases.id, ids));
     const forwarded: string[] = [];
     const skipped: { id: string; reason: string }[] = [];
     for (const r of rows) {
@@ -369,11 +375,11 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
         skipped.push({ id: r.id, reason: 'Only Ready cases can be forwarded' });
         continue;
       }
-      db.update(cases)
+      await db
+        .update(cases)
         .set({ forwardedAt: new Date(), forwardedBy: officer.id, updatedAt: new Date() })
-        .where(eq(cases.id, r.id))
-        .run();
-      audit(r.id, officer, 'FORWARDED_FOR_APPROVAL', 'case', r.id, null, { to: 'DSWO' });
+        .where(eq(cases.id, r.id));
+      await audit(r.id, officer, 'FORWARDED_FOR_APPROVAL', 'case', r.id, null, { to: 'DSWO' });
       updated(r, r.status);
       forwarded.push(r.id);
     }
@@ -382,14 +388,14 @@ export function decisionsRouter(deps: { db: Db; bus: EventBus; today?: () => str
     res.json({ forwarded, skipped });
   });
 
-  router.post('/cases/:id/notes', (req, res) => {
-    const officer = requireOfficer(db, req, 'add_note');
-    const row = loadCase(req.params.id);
+  router.post('/cases/:id/notes', async (req, res) => {
+    const officer = await requireOfficer(db, req, 'add_note');
+    const row = await loadCase(req.params.id);
     const text = typeof req.body?.text === 'string' ? req.body.text.trim().slice(0, 1000) : '';
     if (!text) throw new HttpError(400, 'The note is empty');
-    audit(row.id, officer, 'OFFICER_NOTE', 'case', row.id, null, { text });
+    await audit(row.id, officer, 'OFFICER_NOTE', 'case', row.id, null, { text });
     updated(row, row.status);
-    res.status(201).json(respond(req, row.id, officer));
+    res.status(201).json(await respond(req, row.id, officer));
   });
 
   return router;

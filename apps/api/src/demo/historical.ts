@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { computePriority, flagTitle, schemeConfig, type Flag } from '@thoudang/core';
 import { eq } from 'drizzle-orm';
-import type { Db } from '../db/client.js';
+import { transaction, type Db } from '../db/client.js';
 import { cases, flags as flagsTable } from '../db/schema.js';
 
 /**
@@ -303,13 +303,18 @@ export function generateHistoricalCases(
 }
 
 /** Replaces all historical cases (idempotent). Returns how many were written. */
-export function seedHistorical(db: Db, count = 400, seed = 2026, now = new Date()): number {
+export async function seedHistorical(
+  db: Db,
+  count = 400,
+  seed = 2026,
+  now = new Date(),
+): Promise<number> {
   const data = generateHistoricalCases(count, seed, now);
-  db.transaction((tx) => {
-    tx.delete(cases).where(eq(cases.historical, true)).run();
+  await transaction(db, async (tx) => {
+    await tx.delete(cases).where(eq(cases.historical, true));
     for (const c of data) {
-      tx.insert(cases).values(c.row).run();
-      for (const f of c.flags) tx.insert(flagsTable).values(f).run();
+      await tx.insert(cases).values(c.row);
+      for (const f of c.flags) await tx.insert(flagsTable).values(f);
     }
   });
   return data.length;

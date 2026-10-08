@@ -1,6 +1,5 @@
 import { Router } from 'express';
-import { sql } from 'drizzle-orm';
-import type { Db } from '../db/client.js';
+import { rawOf, type Db } from '../db/client.js';
 import type { DemoMode } from '../env.js';
 
 export function healthRouter(
@@ -14,10 +13,10 @@ export function healthRouter(
   },
 ): Router {
   const router = Router();
-  router.get('/health', (_req, res) => {
+  router.get('/health', async (_req, res) => {
     let dbOk: boolean;
     try {
-      db.get(sql`select 1`);
+      await rawOf(db).all('select 1');
       dbOk = true;
     } catch {
       dbOk = false;

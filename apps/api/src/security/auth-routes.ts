@@ -35,7 +35,7 @@ export function authRouter(deps: {
     message: 'Too many sign-in attempts. Wait a few minutes and try again.',
   });
 
-  const list = () => db.select().from(officers).all();
+  const list = async () => await db.select().from(officers);
   const view = (o: typeof officers.$inferSelect) => ({
     id: o.id,
     name: o.name,
@@ -45,16 +45,16 @@ export function authRouter(deps: {
     permissions: permissionsOf(o.role),
   });
 
-  router.get('/auth/officers', (_req, res) => {
+  router.get('/auth/officers', async (_req, res) => {
     res.json({
       mode: sec.authMode,
-      officers: list().map((o) => ({ ...view(o), canSignIn: pins.hasPin(o.id) })),
+      officers: (await list()).map((o) => ({ ...view(o), canSignIn: pins.hasPin(o.id) })),
     });
   });
 
-  router.get('/auth/me', (req, res) => {
+  router.get('/auth/me', async (req, res) => {
     const o = req.session
-      ? db.select().from(officers).where(eq(officers.id, req.session.sub)).get()
+      ? (await db.select().from(officers).where(eq(officers.id, req.session.sub)))[0]
       : undefined;
     res.set('Cache-Control', 'no-store').json({
       mode: sec.authMode,
@@ -63,48 +63,51 @@ export function authRouter(deps: {
     });
   });
 
-  router.get('/auth/login', (req, res) => {
+  router.get('/auth/login', async (req, res) => {
     res
       .set('Cache-Control', 'no-store')
       .type('html')
-      .send(loginPage(list(), { next: safeNext(req.query.next) }));
+      .send(loginPage(await list(), { next: safeNext(req.query.next) }));
   });
   router.get('/auth/login.css', (_req, res) => {
     res.type('css').set('Cache-Control', 'public, max-age=3600').send(LOGIN_CSS);
   });
 
-  router.post('/auth/login', loginLimiter, form, json, (req: Request, res: Response) => {
+  router.post('/auth/login', loginLimiter, form, json, async (req: Request, res: Response) => {
     const isForm =
       req.is('application/x-www-form-urlencoded') === 'application/x-www-form-urlencoded';
     const body = (req.body ?? {}) as Record<string, unknown>;
     const officerId = typeof body.officerId === 'string' ? body.officerId : '';
     const pin = typeof body.pin === 'string' ? body.pin : String(body.pin ?? '');
     const next = safeNext(body.next);
-    const fail = (status: number, error: string) => {
+    const fail = async (status: number, error: string) => {
       logger.warn('Sign-in failed', { officerId, reason: error, ip: req.ip });
       if (isForm)
-        res.status(status).type('html').send(loginPage(list(), { error, officerId, next }));
+        res
+          .status(status)
+          .type('html')
+          .send(loginPage(await list(), { error, officerId, next }));
       else res.status(status).json({ error });
     };
 
     const officer = officerId
-      ? db.select().from(officers).where(eq(officers.id, officerId)).get()
+      ? (await db.select().from(officers).where(eq(officers.id, officerId)))[0]
       : undefined;
     if (!officer) {
-      fail(401, 'Choose an officer and enter the PIN');
+      await fail(401, 'Choose an officer and enter the PIN');
       return;
     }
     const result = pins.check(officer.id, pin);
     if (result === 'locked') {
       const until = pins.lockedUntil(officer.id) ?? Date.now();
-      fail(
+      await fail(
         429,
         `Too many wrong PINs. Try again in ${Math.ceil((until - Date.now()) / 60_000)} minute(s).`,
       );
       return;
     }
     if (result !== 'ok') {
-      fail(401, result === 'no_pin' ? 'This officer has no PIN configured' : 'Wrong PIN');
+      await fail(401, result === 'no_pin' ? 'This officer has no PIN configured' : 'Wrong PIN');
       return;
     }
     const { token } = signer.sign(officer.id);

@@ -2,6 +2,8 @@
 
 How to run Thoudang on a VM in the Manipur State Data Centre (or any on-prem Linux server) with
 `docker compose`. Architecture: [ARCHITECTURE.md](ARCHITECTURE.md). Pilot: [PILOT-PLAN.md](PILOT-PLAN.md).
+Cloud (Railway + PostgreSQL): [RAILWAY.md](RAILWAY.md). Database: SQLite by default; PostgreSQL with
+`THOUDANG_DB_DRIVER=postgres docker compose --profile postgres up -d` (migrations run on boot).
 
 > **Status:** the images were written and the runtime stage was simulated locally (production-only
 > dependencies, migrations, seed, health check, SPA served). They have **not yet been built with

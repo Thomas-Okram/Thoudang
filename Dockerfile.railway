@@ -1,0 +1,70 @@
+# syntax=docker/dockerfile:1.7
+# Thoudang on Railway — ONE service: the API also serves the built web UI (SERVE_WEB=1), so there
+# is no nginx. Database: the Railway Postgres plugin (DB_DRIVER=postgres + DATABASE_URL); Drizzle
+# migrations run on every boot. Everything that is a FILE (uploads, notice audio, templates,
+# audit-chain anchor, logs) lives under /data — mount the service's single Railway volume there.
+# Docs: docs/deploy/RAILWAY.md. On-prem images stay in ./Dockerfile.
+
+ARG NODE_IMAGE=node:20-bookworm-slim
+ARG TSX_VERSION=4.23.15
+
+FROM ${NODE_IMAGE} AS deps
+WORKDIR /app
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3 make g++ ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+COPY packages/core/package.json packages/core/
+RUN npm ci --no-audit --no-fund
+
+FROM deps AS web-build
+COPY tsconfig.base.json ./
+COPY packages/core packages/core
+COPY apps/web apps/web
+RUN npm run build -w @thoudang/web
+
+FROM deps AS prod-deps
+RUN rm -rf node_modules apps/*/node_modules packages/*/node_modules \
+ && npm ci --omit=dev --no-audit --no-fund \
+      -w @thoudang/api -w @thoudang/core --include-workspace-root=false
+
+FROM ${NODE_IMAGE} AS railway
+ARG TSX_VERSION
+# PORT is injected by Railway at runtime (the app listens on $PORT); 3001 is only a local default.
+ENV NODE_ENV=production \
+    PORT=3001 \
+    SERVE_WEB=1 \
+    DEMO_MODE=live \
+    DB_DRIVER=postgres \
+    PG_POOL_MAX=5 \
+    DB_PATH=/data/thoudang.db \
+    UPLOADS_DIR=/data/uploads \
+    LOG_FILE=/data/logs/api.log \
+    AUDIO_DIR=/data/audio \
+    TEMPLATES_PATH=/data/templates/templates.json
+RUN npm install -g --no-audit --no-fund "tsx@${TSX_VERSION}" \
+ && npm cache clean --force \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends tini \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY package.json tsconfig.base.json ./
+COPY packages/core/package.json packages/core/tsconfig.json packages/core/
+COPY packages/core/src packages/core/src
+COPY packages/core/config packages/core/config
+COPY packages/core/data packages/core/data
+COPY packages/core/notices packages/core/notices
+COPY apps/api/package.json apps/api/tsconfig.json apps/api/
+COPY apps/api/src apps/api/src
+# Migrations for both drivers: drizzle/pg (used here) and drizzle/sqlite.
+COPY apps/api/drizzle apps/api/drizzle
+COPY --from=web-build /app/apps/web/dist apps/web/dist
+COPY --chmod=755 deploy/docker-entrypoint.sh /usr/local/bin/thoudang-entrypoint
+# Runs as root: Railway mounts volumes root-owned, and the container is the isolation boundary.
+RUN mkdir -p /data
+EXPOSE 3001
+ENTRYPOINT ["/usr/bin/tini", "--", "thoudang-entrypoint"]
+CMD ["tsx", "apps/api/src/server.ts"]

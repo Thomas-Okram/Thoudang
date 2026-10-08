@@ -1,9 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { and, eq, inArray, lte } from 'drizzle-orm';
-import type { Db } from '../db/client.js';
+import { rawOf, transaction, type Db } from '../db/client.js';
 import { cases, documents } from '../db/schema.js';
-import { sqliteOf } from './audit-chain.js';
 
 export interface RetentionResult {
   cases: string[];
@@ -22,13 +21,13 @@ const DAY_MS = 86_400_000;
  * Paths are cleared on the document rows so the image endpoint answers 404 ("no preview") instead
  * of failing. Synthetic historical cases have no images and are skipped. days <= 0 disables.
  */
-export function runRetention(opts: {
+export async function runRetention(opts: {
   db: Db;
   uploadsDir: string;
   days: number;
   now?: Date;
   dryRun?: boolean;
-}): RetentionResult {
+}): Promise<RetentionResult> {
   const { db, uploadsDir, days } = opts;
   const dryRun = opts.dryRun ?? false;
   const result: RetentionResult = { cases: [], filesDeleted: 0, bytesFreed: 0, dryRun };
@@ -36,7 +35,7 @@ export function runRetention(opts: {
   const now = opts.now ?? new Date();
   const cutoff = new Date(now.getTime() - days * DAY_MS);
 
-  const due = db
+  const due = await db
     .select({ id: cases.id, decidedAt: cases.decidedAt })
     .from(cases)
     .where(
@@ -45,8 +44,7 @@ export function runRetention(opts: {
         eq(cases.historical, false),
         lte(cases.decidedAt, cutoff),
       ),
-    )
-    .all();
+    );
   if (!due.length) return result;
 
   const root = path.resolve(uploadsDir);
@@ -54,7 +52,7 @@ export function runRetention(opts: {
     const abs = path.resolve(p);
     return abs.startsWith(root + path.sep);
   };
-  const docs = db
+  const docs = await db
     .select({
       id: documents.id,
       caseId: documents.caseId,
@@ -67,13 +65,14 @@ export function runRetention(opts: {
         documents.caseId,
         due.map((c) => c.id),
       ),
-    )
-    .all();
+    );
 
-  const audit = sqliteOf(db).prepare(
-    `INSERT INTO audit_log (case_id, actor, action, entity_type, entity_id, after_json, reason, created_at)
-     VALUES (?, 'system:retention', 'IMAGES_PURGED', 'case', ?, ?, ?, ?)`,
-  );
+  const audit = (...params: unknown[]) =>
+    rawOf(db).run(
+      `INSERT INTO audit_log (case_id, actor, action, entity_type, entity_id, after_json, reason, created_at)
+       VALUES (?, 'system:retention', 'IMAGES_PURGED', 'case', ?, ?, ?, ?)`,
+      params,
+    );
 
   for (const c of due) {
     const caseDir = path.join(root, c.id);
@@ -95,13 +94,13 @@ export function runRetention(opts: {
 
     for (const f of present) fs.rmSync(f, { force: true });
     if (fs.existsSync(caseDir)) fs.rmSync(caseDir, { recursive: true, force: true });
-    db.transaction((tx) => {
-      tx.update(documents)
+    await transaction(db, async (tx) => {
+      await tx
+        .update(documents)
         .set({ storedPath: '', processedPath: '' })
-        .where(eq(documents.caseId, c.id))
-        .run();
+        .where(eq(documents.caseId, c.id));
     });
-    audit.run(
+    await audit(
       c.id,
       c.id,
       JSON.stringify({ filesDeleted: present.length, bytesFreed: bytes, retentionDays: days }),

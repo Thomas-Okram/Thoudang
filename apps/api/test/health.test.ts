@@ -7,9 +7,9 @@ import { createApp } from '../src/app.js';
 import { loadConfig } from '../src/env.js';
 import { silentLogger } from '../src/logger.js';
 
-const handle = openDb(':memory:');
+const handle = await openDb(':memory:');
 const config = loadConfig({ UPLOADS_DIR: path.join(os.tmpdir(), 'thoudang-health-test') });
-const { app } = createApp({ db: handle.db, config, vision: null, logger: silentLogger });
+const { app } = await createApp({ db: handle.db, config, vision: null, logger: silentLogger });
 afterAll(() => handle.close());
 
 describe('GET /api/health', () => {

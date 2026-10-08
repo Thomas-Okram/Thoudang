@@ -34,7 +34,7 @@ const tmpFiles = () => {
 
 describe('upload guard', () => {
   it('stored originals have GPS stripped, random names, and are never served raw', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const photo = await gpsPhoto('form');
     expect(countGps(photo)).toBeGreaterThan(0);
     const res = await request(t.app)
@@ -46,11 +46,10 @@ describe('upload guard', () => {
       });
     expect(res.status).toBe(202);
     await t.pipeline.whenIdle();
-    const docs = t.handle.db
+    const docs = await t.handle.db
       .select()
       .from(documents)
-      .where(eq(documents.caseId, res.body.caseId))
-      .all();
+      .where(eq(documents.caseId, res.body.caseId));
     expect(docs).toHaveLength(2);
     for (const d of docs) {
       const stored = fs.readFileSync(d.storedPath);
@@ -67,7 +66,7 @@ describe('upload guard', () => {
   });
 
   it('refuses files whose content is not JPEG/PNG/WebP/HEIC, whatever their name or MIME', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const cases: [Buffer, string][] = [
       [Buffer.from('<?php system($_GET["c"]); ?>'), 'form.jpg'],
       [Buffer.from('GIF89a\x01\x00\x01\x00'), 'aadhaar.gif'],
@@ -95,7 +94,7 @@ describe('upload guard', () => {
   });
 
   it('a real image with a misleading name is stored under its true extension', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const png = await sharp(await makeImage('#eee', 300, 200, 'form'))
       .png()
       .toBuffer();
@@ -104,17 +103,19 @@ describe('upload guard', () => {
       .attach('files', png, { filename: 'form.php', contentType: 'application/x-php' });
     expect(res.status).toBe(202);
     await t.pipeline.whenIdle();
-    const doc = t.handle.db
-      .select()
-      .from(documents)
-      .where(eq(documents.caseId, res.body.caseId))
-      .get()!;
+    const doc = (
+      await t.handle.db
+        .select()
+        .from(documents)
+        .where(eq(documents.caseId, res.body.caseId))
+        .limit(1)
+    )[0]!;
     expect(doc.storedPath).toMatch(/-original\.png$/);
     expect(doc.mimeType).toBe('image/png');
   });
 
   it('enforces per-file size and file-count limits', async () => {
-    t = setupApp(packetVision(), 'live', {
+    t = await setupApp(packetVision(), 'live', {
       security: testSecurity({ MAX_UPLOAD_FILE_MB: '0.05' }),
     });
     const side = 1200;
@@ -127,8 +128,8 @@ describe('upload guard', () => {
     const tooBig = await request(t.app).post('/api/cases').attach('files', big, 'form.jpg');
     expect(tooBig.status).toBe(413);
 
-    t.cleanup();
-    t = setupApp(packetVision());
+    await t.cleanup();
+    t = await setupApp(packetVision());
     let req = request(t.app).post('/api/cases');
     for (let i = 0; i < 7; i++) req = req.attach('files', await makeImage('#eee'), `p${i}.jpg`);
     const tooMany = await req;
@@ -138,7 +139,7 @@ describe('upload guard', () => {
   });
 
   it('batch: folder junk is dropped quietly; zips are checked entry by entry and GPS-stripped', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     // Folder upload with a .DS_Store and a truth.json next to the images.
     const folder = await request(t.app)
       .post('/api/cases/batch')
@@ -162,7 +163,7 @@ describe('upload guard', () => {
     expect(ok.status).toBe(202);
     await t.pipeline.whenIdle();
     const caseId = ok.body.cases[0].caseId as string;
-    for (const d of t.handle.db.select().from(documents).where(eq(documents.caseId, caseId)).all())
+    for (const d of await t.handle.db.select().from(documents).where(eq(documents.caseId, caseId)))
       expect(countGps(fs.readFileSync(d.storedPath))).toBe(0);
 
     const evil = new AdmZip();
@@ -176,7 +177,7 @@ describe('upload guard', () => {
   });
 
   it('phone upload sessions go through the same guard', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const s = await request(t.app).post('/api/sessions');
     const bad = await request(t.app)
       .post(`/api/sessions/${s.body.sessionId}/files?from=phone`)
@@ -192,7 +193,7 @@ describe('upload guard', () => {
         contentType: 'image/jpeg',
       });
     expect(good.status).toBe(201);
-    const file = t.sessions.get(s.body.sessionId)!.files[0]!;
+    const file = (await t.sessions.get(s.body.sessionId))!.files[0]!;
     expect(countGps(fs.readFileSync(file.path))).toBe(0);
   });
 });

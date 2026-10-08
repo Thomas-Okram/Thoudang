@@ -25,7 +25,7 @@ async function postPacket(app: TestApp['app'], seed = 0) {
 
 describe('POST /api/cases → full pipeline (mocked Claude)', () => {
   it('screens a clean packet and persists documents, extractions, flags and audit', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const res = await postPacket(t.app);
     expect(res.status).toBe(202);
     expect(res.body).toMatchObject({
@@ -55,9 +55,9 @@ describe('POST /api/cases → full pipeline (mocked Claude)', () => {
     expect(detail.body.documents[1].extraction.fields.name.value).toBe('Thokchom Ibemcha Devi');
 
     const db = t.handle.db;
-    expect(db.select().from(documents).all()).toHaveLength(4);
-    expect(db.select().from(extractions).all()).toHaveLength(8); // classify + extract per image
-    const audit = db.select().from(auditLog).all();
+    expect(await db.select().from(documents)).toHaveLength(4);
+    expect(await db.select().from(extractions)).toHaveLength(8); // classify + extract per image
+    const audit = await db.select().from(auditLog);
     const count = (a: string) => audit.filter((r) => r.action === a).length;
     expect(count('CASE_CREATED')).toBe(1);
     expect(count('DOCUMENT_UPLOADED')).toBe(4);
@@ -75,13 +75,13 @@ describe('POST /api/cases → full pipeline (mocked Claude)', () => {
     expect(audit.find((r) => r.action === 'RULE_RESULT')!.after).toMatchObject({ status: 'READY' });
 
     // Original + processed images are kept.
-    const doc = db.select().from(documents).all()[0]!;
+    const doc = (await db.select().from(documents))[0]!;
     expect(fs.existsSync(doc.storedPath)).toBe(true);
     expect(fs.existsSync(doc.processedPath)).toBe(true);
   });
 
   it('emits SSE progress in order: uploaded → classifying → extracting → screening → done', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const res = await postPacket(t.app);
     await t.pipeline.whenIdle();
     const stages = t.events
@@ -97,7 +97,7 @@ describe('POST /api/cases → full pipeline (mocked Claude)', () => {
   });
 
   it('Claude down, no cache → OFFICER_ATTENTION with "extraction failed — manual review", never crashes', async () => {
-    t = setupApp(
+    t = await setupApp(
       new FakeVision(() => {
         throw new Error('Could not reach the Claude API');
       }),
@@ -120,7 +120,7 @@ describe('POST /api/cases → full pipeline (mocked Claude)', () => {
 
   it('DEMO_MODE=cache_first replays a packet with zero Claude calls', async () => {
     const vision = packetVision();
-    t = setupApp(vision, 'cache_first');
+    t = await setupApp(vision, 'cache_first');
     await postPacket(t.app, 7);
     await t.pipeline.whenIdle();
     const callsAfterFirst = vision.calls.length;
@@ -132,7 +132,7 @@ describe('POST /api/cases → full pipeline (mocked Claude)', () => {
   });
 
   it('an undecodable image is stored, marked failed, and routed to the officer', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const res = await request(t.app)
       .post('/api/cases')
       .attach('files', await makeImage('#fff'), { filename: 'form.jpg', contentType: 'image/jpeg' })
@@ -154,7 +154,7 @@ describe('POST /api/cases → full pipeline (mocked Claude)', () => {
   });
 
   it('rejects empty and oversized packets', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     expect((await request(t.app).post('/api/cases')).status).toBe(400);
     let req = request(t.app).post('/api/cases');
     for (let i = 0; i < 7; i++)
@@ -168,7 +168,7 @@ describe('POST /api/cases → full pipeline (mocked Claude)', () => {
 
 describe('duplicates from the database', () => {
   it('a second application with the same Aadhaar last-4 + DOB + name → DUPLICATE_SUSPECTED, notice blocked', async () => {
-    t = setupApp(packetVision({ bank_passbook: { ifsc: 'BAD' } }));
+    t = await setupApp(packetVision({ bank_passbook: { ifsc: 'BAD' } }));
     const first = await postPacket(t.app, 1);
     await t.pipeline.whenIdle();
     const second = await postPacket(t.app, 2);
@@ -186,7 +186,7 @@ describe('duplicates from the database', () => {
   });
 
   it('GET /api/cases filters by status and sorts by priority', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     await postPacket(t.app, 3);
     await t.pipeline.whenIdle();
     const ready = await request(t.app).get('/api/cases?status=READY');
@@ -197,14 +197,13 @@ describe('duplicates from the database', () => {
   });
 
   it('extraction rows for a document are queryable by case', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const res = await postPacket(t.app, 4);
     await t.pipeline.whenIdle();
-    const rows = t.handle.db
+    const rows = await t.handle.db
       .select()
       .from(extractions)
-      .where(eq(extractions.caseId, res.body.caseId))
-      .all();
+      .where(eq(extractions.caseId, res.body.caseId));
     expect(rows.every((r) => r.status === 'OK')).toBe(true);
   });
 });

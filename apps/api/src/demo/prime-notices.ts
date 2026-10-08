@@ -21,13 +21,16 @@ async function main() {
   });
   const audio = new AudioCache(env.audioDir);
   const templates = new TemplateStore(env.templatesPath).load();
-  const handle = openDb();
-  const rows = handle.db.select().from(cases).where(eq(cases.historical, false)).all();
+  const handle = await openDb();
+  const rows = await handle.db.select().from(cases).where(eq(cases.historical, false));
   let made = 0;
   let cached = 0;
   let failed = 0;
   for (const r of rows) {
-    const n = buildNotice(handle.db, r.id, { templates, statusLinkSecret: env.statusLinkSecret });
+    const n = await buildNotice(handle.db, r.id, {
+      templates,
+      statusLinkSecret: env.statusLinkSecret,
+    });
     if (!n?.allowed || !n.audioText) continue;
     try {
       const started = Date.now();
@@ -42,7 +45,7 @@ async function main() {
       console.log(`  ${r.reference}: FAILED — ${err instanceof Error ? err.message : 'error'}`);
     }
   }
-  handle.close();
+  await handle.close();
   console.log(
     `\nNotice audio: ${made} generated, ${cached} already cached, ${failed} failed (model ${env.tts.model}, voice ${env.tts.voice}).`,
   );

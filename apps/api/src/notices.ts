@@ -135,21 +135,24 @@ export interface BuiltNotice {
   date: string;
 }
 
-export function buildNotice(
+export async function buildNotice(
   db: Db,
   caseId: string,
   opts: { templates: TemplateSet; statusLinkSecret: string; now?: Date },
-): BuiltNotice | null {
-  const row = db.select().from(cases).where(eq(cases.id, caseId)).get();
+): Promise<BuiltNotice | null> {
+  const row = (await db.select().from(cases).where(eq(cases.id, caseId)))[0];
   if (!row) return null;
-  const flagRows = db.select().from(flagsTable).where(eq(flagsTable.caseId, caseId)).all();
-  const docs = db.select().from(documents).where(eq(documents.caseId, caseId)).all();
-  const calls = db
+  const flagRows = await db
+    .select()
+    .from(flagsTable)
+    .where(eq(flagsTable.caseId, caseId))
+    .orderBy(asc(flagsTable.createdAt));
+  const docs = await db.select().from(documents).where(eq(documents.caseId, caseId));
+  const calls = await db
     .select()
     .from(extractions)
     .where(eq(extractions.caseId, caseId))
-    .orderBy(asc(extractions.createdAt))
-    .all();
+    .orderBy(asc(extractions.createdAt));
   const docsByType = new Map<string, ExtractedDocument[]>();
   for (const d of docs) {
     const ext = calls

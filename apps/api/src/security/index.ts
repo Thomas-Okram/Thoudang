@@ -1,5 +1,5 @@
 import type express from 'express';
-import type { Db } from '../db/client.js';
+import { handleOf, isOpen, type Db } from '../db/client.js';
 import type { AppConfig } from '../env.js';
 import type { EventBus } from '../events.js';
 import type { Logger } from '../logger.js';
@@ -8,7 +8,7 @@ import { originPolicy } from '../middleware/origin.js';
 import { rateLimit } from '../middleware/rate-limit.js';
 import { securityHeaders } from '../middleware/security-headers.js';
 import { uploadGuard, uploadRoutes } from '../middleware/upload-guard.js';
-import { AuditChain, anchorPathFor, sqliteOf } from './audit-chain.js';
+import { AuditChain, anchorPathFor } from './audit-chain.js';
 import { authRouter } from './auth-routes.js';
 import type { SecurityConfig } from './config.js';
 import { PinBook, SessionSigner } from './session.js';
@@ -21,7 +21,7 @@ export interface SecurityBundle {
   pins: PinBook;
   chain: AuditChain;
   /** Chains any audit rows written since the last seal (also runs automatically). */
-  sealNow: () => number;
+  sealNow: () => Promise<number>;
   /** Message for a 401 from requireOfficer, adjusted to the auth mode. */
   unauthenticatedMessage: (original: string) => string;
   /** Startup warnings (demo PINs, ephemeral secret, …) for the server log. */
@@ -34,27 +34,28 @@ export interface SecurityBundle {
  * upload guard → /api/auth routes. Audit rows are sealed into the hash chain after every response
  * and on every pipeline event.
  */
-export function installSecurity(
+export async function installSecurity(
   app: express.Express,
   deps: { db: Db; config: AppConfig; sec: SecurityConfig; logger: Logger; bus: EventBus },
-): SecurityBundle {
+): Promise<SecurityBundle> {
   const { db, config, sec, logger } = deps;
   const signer = new SessionSigner(sec.sessionSecret, sec.sessionTtlMs);
   const pins = new PinBook(sec.officerPins, sec.rateLimit.maxFailedPins, sec.rateLimit.lockoutMs);
-  const sqlite = sqliteOf(db);
-  const chain = new AuditChain(sqlite, sec.auditChainKey, anchorPathFor(config.dbPath));
+  const handle = handleOf(db);
+  const chain = await AuditChain.open(handle.raw, sec.auditChainKey, anchorPathFor(config.dbPath));
 
   let anchorWarned = false;
-  const sealNow = () => {
-    if (!sqlite.open) return 0; // shutting down
+  const sealNow = async () => {
+    if (!isOpen(handle)) return 0; // shutting down
     try {
-      const { sealed, anchorMismatch } = chain.seal();
+      const { sealed, anchorMismatch } = await chain.seal();
       if (anchorMismatch && !anchorWarned) {
         anchorWarned = true;
         logger.error('Audit chain does not match its anchor — run `npm run audit:verify`');
       }
       return sealed;
     } catch (err) {
+      if (!isOpen(handle)) return 0;
       logger.error('Audit chain seal failed', {
         message: err instanceof Error ? err.message : 'unknown',
       });
@@ -67,10 +68,10 @@ export function installSecurity(
     pending = true;
     setImmediate(() => {
       pending = false;
-      sealNow();
+      void sealNow();
     });
   };
-  sealNow();
+  await sealNow();
   deps.bus.subscribe(() => sealSoon());
 
   const routes = uploadRoutes(sec.upload);

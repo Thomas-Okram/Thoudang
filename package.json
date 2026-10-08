@@ -33,8 +33,10 @@
     "test:synth": "vitest run --root tools/synth",
     "synth": "tsx tools/synth/src/cli.ts",
     "e2e": "playwright test",
+    "e2e:pg": "tsx e2e/pg.ts",
     "demo:record": "DEMO_RECORD=1 playwright test",
-    "build": "npm run build --workspaces --if-present"
+    "build": "npm run build --workspaces --if-present",
+    "test:pg": "npm run test:pg -w @thoudang/api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -8,7 +8,7 @@ import { loadSecurityConfig } from './security/index.js';
 import { runRetention } from './security/retention.js';
 
 const logger = createLogger({ file: env.logFile });
-const { db, close } = openDb();
+const { db, close, location } = await openDb();
 const provider = resolveProvider();
 const vision = provider.configured
   ? createVisionClient({
@@ -20,7 +20,7 @@ const vision = provider.configured
     })
   : null;
 const securityConfig = loadSecurityConfig();
-const { app, pipeline, security } = createApp({
+const { app, pipeline, security } = await createApp({
   db,
   config: env,
   vision,
@@ -31,12 +31,16 @@ for (const w of security.warnings()) logger.warn(w);
 
 // Backstop for audit rows written outside a request/pipeline event (they are normally sealed
 // within milliseconds). Then the image-retention job: at start-up and every 24 h.
-const sealTimer = setInterval(() => security.sealNow(), 30_000);
-const retention = () => {
+const sealTimer = setInterval(() => void security.sealNow(), 30_000);
+const retention = async () => {
   try {
-    const r = runRetention({ db, uploadsDir: env.uploadsDir, days: securityConfig.retentionDays });
+    const r = await runRetention({
+      db,
+      uploadsDir: env.uploadsDir,
+      days: securityConfig.retentionDays,
+    });
     if (r.cases.length) {
-      security.sealNow();
+      await security.sealNow();
       logger.info('Retention: deleted images of closed cases', {
         cases: r.cases.length,
         files: r.filesDeleted,
@@ -49,14 +53,14 @@ const retention = () => {
     });
   }
 };
-retention();
-const retentionTimer = setInterval(retention, 24 * 3_600_000);
+await retention();
+const retentionTimer = setInterval(() => void retention(), 24 * 3_600_000);
 sealTimer.unref();
 retentionTimer.unref();
 
 const server = app.listen(env.port, '0.0.0.0', () => {
   logger.info(`Thoudang API on http://localhost:${env.port}`, {
-    db: env.dbPath,
+    db: location,
     demoMode: env.demoMode,
     aiProvider: provider.provider,
     model: provider.model,
@@ -76,16 +80,26 @@ const server = app.listen(env.port, '0.0.0.0', () => {
     );
 });
 
+// Graceful shutdown (Railway sends SIGTERM on redeploy): stop accepting requests, let running
+// cases finish, seal the audit chain, then close the database (SQLite file / Postgres pool).
+let shuttingDown = false;
 function shutdown(): void {
+  if (shuttingDown) return;
+  shuttingDown = true;
   clearInterval(sealTimer);
   clearInterval(retentionTimer);
-  server.close(() => {
-    security.sealNow();
-    void pipeline.whenIdle().finally(() => {
-      close();
+  const force = setTimeout(() => process.exit(1), 25_000);
+  force.unref();
+  server.close();
+  void (async () => {
+    try {
+      await pipeline.whenIdle();
+      await security.sealNow();
+    } finally {
+      await close().catch(() => undefined);
       process.exit(0);
-    });
-  });
+    }
+  })();
 }
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);

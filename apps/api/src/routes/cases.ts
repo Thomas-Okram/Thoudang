@@ -91,10 +91,10 @@ export function casesRouter(deps: { db: Db; pipeline: Pipeline; uploadsDir: stri
     res.status(202).json({ batchId, cases: created, skipped });
   });
 
-  router.get('/cases', (req, res) => {
+  router.get('/cases', async (req, res) => {
     const status = CaseStatusSchema.safeParse(req.query.status);
     res.json({
-      cases: listCases(db, {
+      cases: await listCases(db, {
         status: status.success ? status.data : undefined,
         batchId: typeof req.query.batchId === 'string' ? req.query.batchId : undefined,
         q: typeof req.query.q === 'string' ? req.query.q : undefined,
@@ -102,16 +102,16 @@ export function casesRouter(deps: { db: Db; pipeline: Pipeline; uploadsDir: stri
     });
   });
 
-  router.get('/stats', (_req, res) => {
-    res.json(caseStats(db));
+  router.get('/stats', async (_req, res) => {
+    res.json(await caseStats(db));
   });
 
-  router.get('/cases/:id', (req, res) => {
+  router.get('/cases/:id', async (req, res) => {
     const viewerId = req.header('x-officer-id');
     const viewer = viewerId
-      ? (db.select().from(officers).where(eq(officers.id, viewerId)).get() ?? null)
+      ? ((await db.select().from(officers).where(eq(officers.id, viewerId)))[0] ?? null)
       : null;
-    const detail = caseDetail(db, req.params.id, viewer);
+    const detail = await caseDetail(db, req.params.id, viewer);
     if (!detail) {
       res.status(404).json({ error: 'Case not found' });
       return;
@@ -124,7 +124,7 @@ export function casesRouter(deps: { db: Db; pipeline: Pipeline; uploadsDir: stri
    * location is unknown). The unredacted file never leaves the server — not even ?variant=original.
    */
   router.get('/documents/:id/image', async (req, res) => {
-    const doc = db.select().from(documents).where(eq(documents.id, req.params.id)).get();
+    const doc = (await db.select().from(documents).where(eq(documents.id, req.params.id)))[0];
     if (!doc) {
       res.status(404).json({ error: 'Document not found' });
       return;
@@ -133,18 +133,19 @@ export function casesRouter(deps: { db: Db; pipeline: Pipeline; uploadsDir: stri
       res.status(404).json({ error: 'No preview available — the image could not be opened' });
       return;
     }
-    const ext = db
-      .select()
-      .from(extractions)
-      .where(
-        and(
-          eq(extractions.documentId, doc.id),
-          eq(extractions.stage, 'extract'),
-          eq(extractions.status, 'OK'),
-        ),
-      )
-      .orderBy(desc(extractions.createdAt))
-      .get();
+    const ext = (
+      await db
+        .select()
+        .from(extractions)
+        .where(
+          and(
+            eq(extractions.documentId, doc.id),
+            eq(extractions.stage, 'extract'),
+            eq(extractions.status, 'OK'),
+          ),
+        )
+        .orderBy(desc(extractions.createdAt))
+    )[0];
     const size = { width: doc.widthPx, height: doc.heightPx };
     const redaction = redactionFor(
       doc.detectedType,

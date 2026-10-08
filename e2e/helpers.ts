@@ -4,10 +4,22 @@ import { expect, type ConsoleMessage, type Page } from '@playwright/test';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const PACKETS = path.join(ROOT, 'demo-packets');
+/** The database e2e/server.ts creates on DB_DRIVER=postgres (DATABASE_URL = the server). */
+export function e2ePgUrl(serverUrl: string): string {
+  const url = new URL(serverUrl);
+  url.pathname = '/thoudang_e2e';
+  return url.toString();
+}
+
 /** Must match e2e/server.ts — lets `audit:verify` check the E2E database. */
 export const E2E_CHAIN_ENV = {
   DB_PATH: path.join(ROOT, 'e2e/.data/e2e.db'),
   AUDIT_CHAIN_KEY: 'e2e-audit-chain-key',
+  DB_DRIVER: process.env.DB_DRIVER === 'postgres' ? 'postgres' : 'sqlite',
+  DATABASE_URL:
+    process.env.DB_DRIVER === 'postgres' && process.env.DATABASE_URL
+      ? e2ePgUrl(process.env.DATABASE_URL)
+      : '',
 };
 
 export const SLOT_OF: Record<string, string> = {

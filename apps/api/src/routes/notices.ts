@@ -27,8 +27,8 @@ export function noticesRouter(deps: {
 }): Router {
   const { db, bus, templates, tts, audio } = deps;
   const router = Router();
-  const build = (id: string) => {
-    const n = buildNotice(db, id, {
+  const build = async (id: string) => {
+    const n = await buildNotice(db, id, {
       templates: templates.load(),
       statusLinkSecret: deps.statusLinkSecret,
     });
@@ -59,14 +59,14 @@ export function noticesRouter(deps: {
         };
   };
 
-  router.get('/cases/:id/notice', (req, res) => {
-    const n = build(req.params.id);
+  router.get('/cases/:id/notice', async (req, res) => {
+    const n = await build(req.params.id);
     res.json({ ...n, audio: audioInfo(n.audioText, n.caseId) });
   });
 
   /** Generates (or returns cached) audio. Never fails the notice: errors → available:false. */
   router.post('/cases/:id/notice/audio', async (req, res) => {
-    const n = build(req.params.id);
+    const n = await build(req.params.id);
     if (!n.audioText) {
       res.json({ available: false, reason: n.blockedReason ?? 'No notice to read' });
       return;
@@ -103,16 +103,17 @@ export function noticesRouter(deps: {
     fs.createReadStream(audio.pathFor(hash)).pipe(res);
   });
 
-  router.post('/cases/:id/notice/sent', (req, res) => {
-    const officer = requireOfficer(db, req, 'send_for_correction');
-    const n = build(req.params.id);
+  router.post('/cases/:id/notice/sent', async (req, res) => {
+    const officer = await requireOfficer(db, req, 'send_for_correction');
+    const n = await build(req.params.id);
     if (!n.allowed) throw new HttpError(409, n.blockedReason ?? 'Notice not allowed');
     const channel = ['print', 'whatsapp', 'in_person'].includes(req.body?.channel)
       ? (req.body.channel as string)
       : 'print';
-    const row = db.select().from(cases).where(eq(cases.id, n.caseId)).get()!;
+    const row = (await db.select().from(cases).where(eq(cases.id, n.caseId)))[0]!;
     const now = new Date();
-    db.update(cases)
+    await db
+      .update(cases)
       .set({
         noticeSentAt: now,
         noticeSentBy: officer.id,
@@ -120,22 +121,19 @@ export function noticesRouter(deps: {
         status: row.status === 'APPROVED_BY_OFFICER' ? row.status : 'NEEDS_CITIZEN_CORRECTION',
         updatedAt: now,
       })
-      .where(eq(cases.id, n.caseId))
-      .run();
-    db.insert(auditLog)
-      .values({
-        caseId: n.caseId,
-        actor: officerActor(officer),
-        action: 'NOTICE_SENT',
-        entityType: 'case',
-        entityId: n.caseId,
-        after: {
-          channel,
-          items: n.rendered?.codes ?? [],
-          templatesPendingReview: n.rendered?.review.pendingCount ?? 0,
-        },
-      })
-      .run();
+      .where(eq(cases.id, n.caseId));
+    await db.insert(auditLog).values({
+      caseId: n.caseId,
+      actor: officerActor(officer),
+      action: 'NOTICE_SENT',
+      entityType: 'case',
+      entityId: n.caseId,
+      after: {
+        channel,
+        items: n.rendered?.codes ?? [],
+        templatesPendingReview: n.rendered?.review.pendingCount ?? 0,
+      },
+    });
     bus.publish({
       type: 'case',
       caseId: n.caseId,
@@ -144,19 +142,27 @@ export function noticesRouter(deps: {
       stage: 'updated',
       status: 'NEEDS_CITIZEN_CORRECTION',
     });
-    const fresh = build(n.caseId);
+    const fresh = await build(n.caseId);
     res.json({ ...fresh, audio: audioInfo(fresh.audioText, fresh.caseId) });
   });
 
   /** Cases that need (or are blocked from) a citizen notice. */
-  router.get('/notices', (_req, res) => {
-    const rows = db.select().from(cases).where(eq(cases.historical, false)).all();
+  router.get('/notices', async (_req, res) => {
+    const rows = await db.select().from(cases).where(eq(cases.historical, false));
     const set = templates.load();
-    const list = rows
-      .map((r) => ({
+    const built: {
+      r: (typeof rows)[number];
+      n: NonNullable<Awaited<ReturnType<typeof buildNotice>>>;
+    }[] = [];
+    for (const r of rows)
+      built.push({
         r,
-        n: buildNotice(db, r.id, { templates: set, statusLinkSecret: deps.statusLinkSecret })!,
-      }))
+        n: (await buildNotice(db, r.id, {
+          templates: set,
+          statusLinkSecret: deps.statusLinkSecret,
+        }))!,
+      });
+    const list = built
       .filter(
         ({ r, n }) =>
           n.allowed ||
@@ -197,8 +203,8 @@ export function noticesRouter(deps: {
     });
   });
 
-  router.patch('/templates/:kind/:key', (req, res) => {
-    const officer = requireOfficer(db, req, 'edit_templates');
+  router.patch('/templates/:kind/:key', async (req, res) => {
+    const officer = await requireOfficer(db, req, 'edit_templates');
     const kind =
       req.params.kind === 'block' ? 'block' : req.params.kind === 'template' ? 'template' : null;
     if (!kind) throw new HttpError(400, 'kind must be template or block');
@@ -217,29 +223,28 @@ export function noticesRouter(deps: {
     } catch (err) {
       throw new HttpError(400, err instanceof Error ? err.message : 'Invalid template');
     }
-    db.insert(auditLog)
-      .values({
-        caseId: null,
-        actor: officerActor(officer),
-        action: 'TEMPLATE_EDITED',
-        entityType: kind,
-        entityId: req.params.key,
-        before: result.before,
-        after: result.after,
-      })
-      .run();
+    await db.insert(auditLog).values({
+      caseId: null,
+      actor: officerActor(officer),
+      action: 'TEMPLATE_EDITED',
+      entityType: kind,
+      entityId: req.params.key,
+      before: result.before,
+      after: result.after,
+    });
     res.json({ ok: true, entry: result.after });
   });
 
   // ---- Citizen status page (/s/<ref>?k=…) --------------------------------------------------
 
-  router.get('/public/status/:ref', (req, res) => {
+  router.get('/public/status/:ref', async (req, res) => {
     const ref = req.params.ref;
-    const row = db
-      .select()
-      .from(cases)
-      .where(and(eq(cases.reference, ref), eq(cases.historical, false)))
-      .get();
+    const row = (
+      await db
+        .select()
+        .from(cases)
+        .where(and(eq(cases.reference, ref), eq(cases.historical, false)))
+    )[0];
     // Same answer for unknown references and bad tokens — no enumeration oracle.
     if (!row || !verifyStatusToken(deps.statusLinkSecret, ref, req.query.k)) {
       res.status(404).json({ error: 'Status not found. Check the link on your notice.' });

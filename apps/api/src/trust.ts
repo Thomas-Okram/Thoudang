@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import {
   evaluateFairness,
   fairnessDevPairs,
@@ -67,7 +67,7 @@ const fairnessView = (label: string, description: string, pairs: readonly Fairne
   return { label, description, pairs: pairs.length, rows: r.rows, overall: r.overall, errors };
 };
 
-export function trustReport(
+export async function trustReport(
   db: Db,
   config: AppConfig,
   templates: TemplateStore,
@@ -146,34 +146,21 @@ export function trustReport(
   };
 
   // 3. Safeguards with live proof
-  const auditEntries =
-    db
-      .select({ n: sql<number>`count(*)` })
-      .from(auditLog)
-      .get()?.n ?? 0;
+  const auditEntries = (await db.select({ n: sql<number>`count(*)` }).from(auditLog))[0]?.n ?? 0;
   // Officer-decision numbers come from LIVE cases only (synthetic history is excluded).
   const liveIds = new Set(
-    db
-      .select({ id: cases.id, historical: cases.historical })
-      .from(cases)
-      .all()
+    (await db.select({ id: cases.id, historical: cases.historical }).from(cases))
       .filter((c) => !c.historical)
       .map((c) => c.id),
   );
-  const flagRows = db
-    .select()
-    .from(flags)
-    .all()
-    .filter((f) => liveIds.has(f.caseId));
+  const flagRows = (await db.select().from(flags)).filter((f) => liveIds.has(f.caseId));
   const decided = flagRows.filter((f) => f.resolution !== 'OPEN' && f.severity !== 'info');
   const overridden = decided.filter((f) => f.resolution === 'OVERRIDDEN').length;
-  const approvals = db
-    .select()
-    .from(auditLog)
-    .all()
-    .filter((a) => a.action === 'OFFICER_APPROVE');
-  const docRows = db.select().from(documents).all();
-  const extRows = db.select().from(extractions).all();
+  const approvals = (await db.select().from(auditLog)).filter(
+    (a) => a.action === 'OFFICER_APPROVE',
+  );
+  const docRows = await db.select().from(documents);
+  const extRows = await db.select().from(extractions);
   let redacted = 0;
   for (const d of docRows) {
     const ext = extRows
@@ -191,17 +178,14 @@ export function trustReport(
   const set = templates.load();
   const entries = [...set.templates, ...set.blocks];
   const reviewed = entries.filter((e) => e.reviewed).length;
-  const liveCases = db
-    .select()
-    .from(cases)
-    .all()
-    .filter((c) => !c.historical);
+  const liveCases = (await db.select().from(cases)).filter((c) => !c.historical);
   const historical =
-    db
-      .select({ n: sql<number>`count(*)` })
-      .from(cases)
-      .where(sql`historical = 1`)
-      .get()?.n ?? 0;
+    (
+      await db
+        .select({ n: sql<number>`count(*)` })
+        .from(cases)
+        .where(eq(cases.historical, true))
+    )[0]?.n ?? 0;
   const rules = getSchemeRules();
 
   const safeguards = {

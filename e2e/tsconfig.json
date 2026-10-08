@@ -5,5 +5,5 @@
     "types": ["node"]
   },
   "include": [".", "../playwright.config.ts"],
-  "exclude": [".data", ".results", ".report"]
+  "exclude": [".data", ".pgdata", ".results", ".report"]
 }

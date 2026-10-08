@@ -46,16 +46,16 @@ describe('synthetic historical cases (seed:dashboard)', () => {
   });
 
   it('do not shift live reference numbering', async () => {
-    t = setupApp(packetVision());
-    seedHistorical(t.handle.db, 25, 1, NOW);
+    t = await setupApp(packetVision());
+    await seedHistorical(t.handle.db, 25, 1, NOW);
     await liveCase();
     const [c] = (await request(t.app).get('/api/cases')).body.cases;
     expect(c.reference).toMatch(/^THD-\d{4}-0001$/);
   });
 
   it('stay out of the live queue and its stats by default', async () => {
-    t = setupApp(packetVision());
-    seedHistorical(t.handle.db, 30, 1, NOW);
+    t = await setupApp(packetVision());
+    await seedHistorical(t.handle.db, 30, 1, NOW);
     await liveCase();
     expect((await request(t.app).get('/api/cases')).body.cases).toHaveLength(1);
     expect((await request(t.app).get('/api/stats')).body.total).toBe(1);
@@ -64,9 +64,9 @@ describe('synthetic historical cases (seed:dashboard)', () => {
 
 describe('dashboard aggregation', () => {
   it('computes KPIs, top deficiencies, districts and the priority watch consistently', async () => {
-    t = setupApp(packetVision());
-    seedHistorical(t.handle.db, 120, 3, NOW);
-    const d = dashboard(t.handle.db, NOW);
+    t = await setupApp(packetVision());
+    await seedHistorical(t.handle.db, 120, 3, NOW);
+    const d = await dashboard(t.handle.db, NOW);
     const k = d.kpis;
     expect(k.received).toBe(120);
     expect(
@@ -96,8 +96,8 @@ describe('dashboard aggregation', () => {
   });
 
   it('GET /api/dashboard can exclude historical cases', async () => {
-    t = setupApp(packetVision());
-    seedHistorical(t.handle.db, 20, 2, NOW);
+    t = await setupApp(packetVision());
+    await seedHistorical(t.handle.db, 20, 2, NOW);
     await liveCase();
     expect((await request(t.app).get('/api/dashboard')).body.kpis.received).toBe(21);
     const live = (await request(t.app).get('/api/dashboard?historical=exclude')).body;
@@ -108,7 +108,7 @@ describe('dashboard aggregation', () => {
 
 describe('trust report', () => {
   it('without an eval report it explains how to produce one; fairness shows the dev set', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const r = (await request(t.app).get('/api/trust')).body;
     expect(r.evaluation).toMatchObject({ available: false });
     expect(r.fairness.dev).toMatchObject({ label: 'Development set', pairs: 58 });
@@ -118,7 +118,7 @@ describe('trust report', () => {
   });
 
   it('reads the latest eval report (₹ per application) and a held-out fairness set', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     fs.writeFileSync(
       t.config.evalReportPath,
       JSON.stringify({
@@ -174,7 +174,7 @@ describe('trust report', () => {
   });
 
   it('holdout v1 marked seen shows as "pre-fix" with its before/after; v2 is the blind set', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const pair = { a: 'Laishram Ibomcha Singh', b: 'Laishram Ibocha Singh', community: 'Meitei' };
     fs.writeFileSync(
       t.config.fairnessHoldoutPath,
@@ -206,7 +206,7 @@ describe('trust report', () => {
   });
 
   it('override rate and approvals come from real officer decisions', async () => {
-    t = setupApp(packetVision({ bank_passbook: { ifsc: 'BAD' } }));
+    t = await setupApp(packetVision({ bank_passbook: { ifsc: 'BAD' } }));
     const id = await liveCase();
     const d = (await request(t.app).get(`/api/cases/${id}`)).body;
     for (const f of d.flags.filter((x: { severity: string }) => x.severity !== 'info')) {
@@ -225,7 +225,7 @@ describe('trust report', () => {
   });
 
   it('statuses proof link lists exactly four statuses, none of them a rejection', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const r = (await request(t.app).get('/api/trust/statuses')).body;
     expect(r.statuses).toEqual([
       'READY',
@@ -238,23 +238,20 @@ describe('trust report', () => {
 
 describe('on-demand Aadhaar leak scan', () => {
   it('reports clean after real processing, and finds (without repeating) a planted leak', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     await liveCase();
     const clean = (await request(t.app).post('/api/trust/leak-scan')).body;
     expect(clean.clean).toBe(true);
     expect(clean.scanned.dbRows).toBeGreaterThan(10);
     expect(clean.scanned.apiResponses).toBeGreaterThan(1);
 
-    t.handle.db
-      .insert(auditLog)
-      .values({
-        caseId: null,
-        actor: 'test',
-        action: 'OFFICER_NOTE',
-        entityType: 'case',
-        after: { text: `oops ${FULL_AADHAAR}` },
-      })
-      .run();
+    await t.handle.db.insert(auditLog).values({
+      caseId: null,
+      actor: 'test',
+      action: 'OFFICER_NOTE',
+      entityType: 'case',
+      after: { text: `oops ${FULL_AADHAAR}` },
+    });
     const dirty = await request(t.app).post('/api/trust/leak-scan');
     expect(dirty.body.clean).toBe(false);
     expect(dirty.body.findings).toEqual([
@@ -270,29 +267,25 @@ describe('on-demand Aadhaar leak scan', () => {
 
 describe('demo reset', () => {
   it('is refused outside demo mode', async () => {
-    t = setupApp(packetVision(), 'live');
+    t = await setupApp(packetVision(), 'live');
     expect((await request(t.app).post('/api/demo/reset')).status).toBe(403);
   });
 
   it('removes live cases and sessions, keeps cache and historical cases, and is audited', async () => {
-    t = setupApp(packetVision(), 'cache_first');
-    seedHistorical(t.handle.db, 10, 1, NOW);
+    t = await setupApp(packetVision(), 'cache_first');
+    await seedHistorical(t.handle.db, 10, 1, NOW);
     await liveCase();
     await request(t.app).post('/api/sessions');
-    const cacheRows = t.handle.db.select().from(extractionCache).all().length;
+    const cacheRows = (await t.handle.db.select().from(extractionCache)).length;
     const res = await request(t.app).post('/api/demo/reset');
     expect(res.body).toMatchObject({ ok: true, removed: { cases: 1, sessions: 1 } });
-    const left = t.handle.db.select().from(cases).all();
+    const left = await t.handle.db.select().from(cases);
     expect(left).toHaveLength(10);
     expect(left.every((c) => c.historical)).toBe(true);
-    expect(t.handle.db.select().from(extractionCache).all().length).toBe(cacheRows);
-    expect(
-      t.handle.db
-        .select()
-        .from(auditLog)
-        .all()
-        .some((a) => a.action === 'DEMO_RESET'),
-    ).toBe(true);
+    expect((await t.handle.db.select().from(extractionCache)).length).toBe(cacheRows);
+    expect((await t.handle.db.select().from(auditLog)).some((a) => a.action === 'DEMO_RESET')).toBe(
+      true,
+    );
     // replaying the same packet is instant and not a duplicate of anything
     const again = await liveCase();
     expect((await request(t.app).get(`/api/cases/${again}`)).body.case.status).toBe('READY');

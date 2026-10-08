@@ -20,13 +20,13 @@ export function insightsRouter(deps: {
   const router = Router();
   let lastScan: LeakScanResult | null = null;
 
-  router.get('/trust', (_req, res) => {
-    res.json(trustReport(db, config, templates, lastScan));
+  router.get('/trust', async (_req, res) => {
+    res.json(await trustReport(db, config, templates, lastScan));
   });
 
   /** Runs the Aadhaar leak scanner on demand (DB, logs, live API responses). */
-  router.post('/trust/leak-scan', (_req, res) => {
-    lastScan = runLeakScan(db, {
+  router.post('/trust/leak-scan', async (_req, res) => {
+    lastScan = await runLeakScan(db, {
       logFile: config.logFile,
       templates,
       statusLinkSecret: config.statusLinkSecret,
@@ -43,15 +43,17 @@ export function insightsRouter(deps: {
     });
   });
 
-  router.get('/dashboard', (req, res) => {
-    res.json(dashboard(db, new Date(), { includeHistorical: req.query.historical !== 'exclude' }));
+  router.get('/dashboard', async (req, res) => {
+    res.json(
+      await dashboard(db, new Date(), { includeHistorical: req.query.historical !== 'exclude' }),
+    );
   });
 
   /** Demo-only (DEMO_MODE cache_first/cache_only or npm run demo): restore the primed state. */
-  router.post('/demo/reset', (req, res) => {
+  router.post('/demo/reset', async (req, res) => {
     if (config.demoMode === 'live' && !config.serveWeb)
       throw new HttpError(403, 'Demo reset is only available in demo mode');
-    const result = resetDemo(
+    const result = await resetDemo(
       db,
       config.uploadsDir,
       `officer:${req.header('x-officer-id') ?? 'demo'}`,

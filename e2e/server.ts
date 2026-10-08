@@ -7,11 +7,15 @@
  *   required (AUTH_MODE=session, REQUIRE_SIGN_IN=1).
  *
  *   tsx e2e/server.ts            (Playwright's webServer runs this; E2E_PORT, default 5199)
+ *
+ * DB_DRIVER=postgres (npm run e2e:pg, see e2e/pg.ts): DATABASE_URL points at a server; a fresh
+ * `thoudang_e2e` database is dropped + re-created on it, so the run is just as hermetic.
  */
 import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import pg from 'pg';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const data = path.join(root, 'e2e/.data');
@@ -20,12 +24,36 @@ const port = process.env.E2E_PORT ?? '5199';
 fs.rmSync(data, { recursive: true, force: true });
 fs.mkdirSync(data, { recursive: true });
 
+const postgres = process.env.DB_DRIVER === 'postgres';
+
+/** Drops + re-creates `thoudang_e2e` on the DATABASE_URL server; returns its URL. */
+async function freshPgDatabase(): Promise<string> {
+  const raw = process.env.DATABASE_URL;
+  if (!raw) throw new Error('DB_DRIVER=postgres needs DATABASE_URL (npm run e2e:pg sets it)');
+  const admin = new pg.Client({ connectionString: raw });
+  await admin.connect();
+  try {
+    await admin.query('DROP DATABASE IF EXISTS thoudang_e2e WITH (FORCE)');
+    await admin.query('CREATE DATABASE thoudang_e2e');
+  } finally {
+    await admin.end();
+  }
+  // Same name as e2ePgUrl() in helpers.ts (not imported: that file loads @playwright/test).
+  const url = new URL(raw);
+  url.pathname = '/thoudang_e2e';
+  return url.toString();
+}
+const databaseUrl = postgres ? await freshPgDatabase() : '';
+
 // Keys are set to '' so dotenv (apps/api/.env) can never fill them in.
 const env: NodeJS.ProcessEnv = {
   ...process.env,
   ANTHROPIC_API_KEY: '',
   GEMINI_API_KEY: '',
   AI_PROVIDER: 'anthropic',
+  // Explicit, so a developer's apps/api/.env (DB_DRIVER / DATABASE_URL) can never leak in.
+  DB_DRIVER: postgres ? 'postgres' : 'sqlite',
+  DATABASE_URL: databaseUrl,
   DB_PATH: path.join(data, 'e2e.db'),
   UPLOADS_DIR: path.join(data, 'uploads'),
   LOG_FILE: path.join(data, 'api.log'),

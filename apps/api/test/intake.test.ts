@@ -15,7 +15,7 @@ afterEach(() => t?.cleanup());
 
 describe('PUBLIC_BASE_URL', () => {
   it('the phone QR link uses PUBLIC_BASE_URL when set (Docker / reverse proxy / tunnel)', async () => {
-    t = setupApp(packetVision(), 'live', {
+    t = await setupApp(packetVision(), 'live', {
       env: { PUBLIC_BASE_URL: 'https://thoudang.example.in/' },
     });
     const s = await request(t.app).post('/api/sessions').expect(201);
@@ -27,7 +27,7 @@ describe('PUBLIC_BASE_URL', () => {
   });
 
   it('is ignored when it is not an http(s) URL', async () => {
-    t = setupApp(packetVision(), 'live', { env: { PUBLIC_BASE_URL: 'javascript:alert(1)' } });
+    t = await setupApp(packetVision(), 'live', { env: { PUBLIC_BASE_URL: 'javascript:alert(1)' } });
     const s = await request(t.app).post('/api/sessions').expect(201);
     expect(s.body.mobileUrl).toMatch(/^http:\/\/.+:5173\/m\/upload\/[\w-]+$/);
     const net = await request(t.app).get('/api/network').expect(200);
@@ -37,7 +37,7 @@ describe('PUBLIC_BASE_URL', () => {
 
 describe('phone/desk upload sessions', () => {
   it('desk + phone add images to one session; submit creates a phone-sourced case', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const s = await request(t.app).post('/api/sessions');
     expect(s.status).toBe(201);
     expect(s.body.mobileUrl).toMatch(/^http:\/\/.+:5173\/m\/upload\/[\w-]+$/);
@@ -88,7 +88,7 @@ describe('phone/desk upload sessions', () => {
   });
 
   it('a session holds at most 6 images', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const id = (await request(t.app).post('/api/sessions')).body.sessionId;
     for (let i = 0; i < 6; i++) {
       await request(t.app)
@@ -108,7 +108,7 @@ describe('phone/desk upload sessions', () => {
 
 describe('batch intake', () => {
   it('folder upload (one sub-folder per packet) → one case per packet', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     let req = request(t.app).post('/api/cases/batch');
     for (const p of ['packet-01', 'packet-02']) {
       for (const name of ['form.jpg', 'aadhaar.jpg', 'passbook.jpg']) {
@@ -143,7 +143,7 @@ describe('batch intake', () => {
   });
 
   it('zip upload is expanded and grouped the same way', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const zip = new AdmZip();
     for (const p of ['p1', 'p2', 'p3']) {
       for (const name of ['form.jpg', 'aadhaar.jpg'])
@@ -182,7 +182,7 @@ describe('batch intake', () => {
 
 describe('GET /api/events (SSE)', () => {
   it('streams events as text/event-stream data lines, filtered by caseId', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const server = t.app.listen(0);
     const { port } = server.address() as AddressInfo;
     const chunks: string[] = [];
@@ -231,7 +231,7 @@ describe('GET /api/events (SSE)', () => {
 
 describe('GET /api/sessions/:id/events (phone SSE)', () => {
   it('is public under REQUIRE_SIGN_IN=1 but only ever streams that upload session', async () => {
-    t = setupApp(packetVision(), 'live', {
+    t = await setupApp(packetVision(), 'live', {
       security: testSecurity({ REQUIRE_SIGN_IN: '1' }),
     });
     const s = await request(t.app).post('/api/sessions').set('Cookie', t.cookie(DA));

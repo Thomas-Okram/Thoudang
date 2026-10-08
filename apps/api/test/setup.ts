@@ -23,7 +23,7 @@ export interface TestApp extends AppBundle {
   config: ReturnType<typeof loadConfig>;
   /** Cookie header value for a signed-in officer (as after a PIN login). */
   cookie: (officerId: string) => string;
-  cleanup: () => void;
+  cleanup: () => Promise<void>;
 }
 
 /** Demo PINs (same as .env.example); session auth on, as in production. */
@@ -39,7 +39,7 @@ export const testSecurity = (vars: NodeJS.ProcessEnv = {}): SecurityConfig =>
   });
 
 /** Full app on a temp directory with a FILE database (so the leak test can scan it). */
-export function setupApp(
+export async function setupApp(
   vision: VisionClient | null,
   demoMode: DemoMode = 'live',
   opts: {
@@ -48,7 +48,7 @@ export function setupApp(
     security?: SecurityConfig;
     env?: Record<string, string>;
   } = {},
-): TestApp {
+): Promise<TestApp> {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'thoudang-test-'));
   const dbPath = path.join(dir, 'test.db');
   const logFile = path.join(dir, 'logs', 'api.log');
@@ -67,8 +67,8 @@ export function setupApp(
     FAIRNESS_HOLDOUT_V2: path.join(dir, 'fairness-holdout-v2.json'),
     ...opts.env,
   });
-  const handle = openDb(dbPath);
-  const bundle = createApp({
+  const handle = await openDb(dbPath);
+  const bundle = await createApp({
     db: handle.db,
     config,
     vision,
@@ -89,8 +89,9 @@ export function setupApp(
     templatesPath,
     config,
     cookie: (officerId) => `${SESSION_COOKIE}=${bundle.security.signer.sign(officerId).token}`,
-    cleanup: () => {
-      handle.close();
+    cleanup: async () => {
+      await bundle.pipeline.whenIdle().catch(() => undefined);
+      await handle.close();
       fs.rmSync(dir, { recursive: true, force: true });
     },
   };

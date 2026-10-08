@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1.7
 # Thoudang — on-prem images, both non-root:
-#   target `api` (default) : Node 20 + tsx running apps/api, SQLite on a volume, SERVE_WEB=0
+#   target `api` (default) : Node 20 + tsx running apps/api, SQLite on a volume (or DB_DRIVER=postgres
+#                            + DATABASE_URL), SERVE_WEB=0
 #   target `web`           : unprivileged nginx serving apps/web/dist and proxying /api → api
 # Build:  docker compose build        Run: docker compose up -d
 # Docs:   docs/deploy/SDC-DEPLOYMENT.md
@@ -70,6 +71,7 @@ COPY --chown=node:node packages/core/data packages/core/data
 COPY --chown=node:node packages/core/notices packages/core/notices
 COPY --chown=node:node apps/api/package.json apps/api/tsconfig.json apps/api/
 COPY --chown=node:node apps/api/src apps/api/src
+# Migrations for both drivers: drizzle/sqlite (default) and drizzle/pg (DB_DRIVER=postgres).
 COPY --chown=node:node apps/api/drizzle apps/api/drizzle
 COPY --chown=node:node --chmod=755 deploy/docker-entrypoint.sh /usr/local/bin/thoudang-entrypoint
 # Volume mount points owned by the unprivileged user so named volumes inherit the ownership.

@@ -36,7 +36,7 @@ async function screened(
   reuse = false,
 ) {
   current = overrides;
-  if (!reuse) t = setupApp(claude(), 'live', opts);
+  if (!reuse) t = await setupApp(claude(), 'live', opts);
   let req = request(t.app).post('/api/cases');
   seed += 1;
   for (const [name, type] of [

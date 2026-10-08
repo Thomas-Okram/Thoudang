@@ -7,7 +7,7 @@ import {
   type Flag,
   type ScreeningResult,
 } from '@thoudang/core';
-import type { Db } from '../db/client.js';
+import { transaction, type Db } from '../db/client.js';
 import { cases, documents, extractions, flags as flagsTable } from '../db/schema.js';
 import {
   EXTRACTABLE_TYPES,
@@ -19,19 +19,17 @@ import { toExtractedCase, type DocOutcome } from './mapping.js';
 type FlagRow = typeof flagsTable.$inferSelect;
 
 /** Rebuilds per-document outcomes from the DB (latest classify/extract row per document). */
-export function outcomesFromDb(db: Db, caseId: string): DocOutcome[] {
-  const docs = db
+export async function outcomesFromDb(db: Db, caseId: string): Promise<DocOutcome[]> {
+  const docs = await db
     .select()
     .from(documents)
     .where(eq(documents.caseId, caseId))
-    .orderBy(asc(documents.position))
-    .all();
-  const calls = db
+    .orderBy(asc(documents.position));
+  const calls = await db
     .select()
     .from(extractions)
     .where(eq(extractions.caseId, caseId))
-    .orderBy(asc(extractions.createdAt))
-    .all();
+    .orderBy(asc(extractions.createdAt));
   return docs.map((d): DocOutcome => {
     const mine = calls.filter((c) => c.documentId === d.id);
     const extract = mine.filter((c) => c.stage === 'extract').at(-1);
@@ -110,12 +108,27 @@ export function rescreenCase(
   db: Db,
   caseId: string,
   opts: { today?: string } = {},
-): RescreenResult {
-  const row = db.select().from(cases).where(eq(cases.id, caseId)).get();
+): Promise<RescreenResult> {
+  // One screening at a time: each reads the other cases as duplicate candidates, so two packets
+  // screened concurrently (batch upload) must not both miss each other. Was implicit when every
+  // query was synchronous (better-sqlite3); explicit now that Postgres queries yield.
+  const next = screeningQueue.then(() => rescreenCaseNow(db, caseId, opts));
+  screeningQueue = next.catch(() => undefined);
+  return next;
+}
+
+let screeningQueue: Promise<unknown> = Promise.resolve();
+
+async function rescreenCaseNow(
+  db: Db,
+  caseId: string,
+  opts: { today?: string },
+): Promise<RescreenResult> {
+  const row = (await db.select().from(cases).where(eq(cases.id, caseId)))[0];
   if (!row) throw new Error(`Case ${caseId} not found`);
-  const outcomes = outcomesFromDb(db, caseId);
+  const outcomes = await outcomesFromDb(db, caseId);
   const extracted = toExtractedCase(caseId, row.receivedAt, outcomes);
-  const existingCases: DuplicateCandidate[] = db
+  const existingCases: DuplicateCandidate[] = await db
     .select({
       caseId: cases.reference,
       aadhaarLast4: cases.aadhaarLast4,
@@ -123,17 +136,14 @@ export function rescreenCase(
       applicantName: cases.applicantName,
     })
     .from(cases)
-    .where(and(ne(cases.id, caseId), isNotNull(cases.aadhaarLast4)))
-    .all();
+    .where(and(ne(cases.id, caseId), isNotNull(cases.aadhaarLast4)));
   const result = screenCase(extracted, { today: opts.today ?? istToday(), existingCases });
 
   const previous = new Map(
-    db
-      .select()
-      .from(flagsTable)
-      .where(eq(flagsTable.caseId, caseId))
-      .all()
-      .map((f) => [flagKey(f), f]),
+    (await db.select().from(flagsTable).where(eq(flagsTable.caseId, caseId))).map((f) => [
+      flagKey(f),
+      f,
+    ]),
   );
   const allFailed =
     outcomes.length > 0 &&
@@ -144,28 +154,35 @@ export function rescreenCase(
       : null;
 
   let stored: FlagRow[] = [];
-  db.transaction((tx) => {
-    tx.delete(flagsTable).where(eq(flagsTable.caseId, caseId)).run();
-    for (const flag of result.flags) {
+  await transaction(db, async (tx) => {
+    await tx.delete(flagsTable).where(eq(flagsTable.caseId, caseId));
+    // Strictly increasing created_at keeps the rules-engine order when read back ORDER BY
+    // created_at (Postgres, unlike SQLite rowids, does not return rows in insertion order).
+    const t0 = Date.now();
+    for (const [i, flag] of result.flags.entries()) {
       const before = previous.get(flagKey(flag));
-      tx.insert(flagsTable)
-        .values({
-          id: before?.id ?? crypto.randomUUID(),
-          caseId,
-          ...flag,
-          resolution: before?.resolution ?? 'OPEN',
-          resolvedBy: before?.resolvedBy ?? null,
-          resolvedAt: before?.resolvedAt ?? null,
-          resolutionReason: before?.resolutionReason ?? null,
-        })
-        .run();
+      await tx.insert(flagsTable).values({
+        id: before?.id ?? crypto.randomUUID(),
+        caseId,
+        createdAt: new Date(t0 + i),
+        ...flag,
+        resolution: before?.resolution ?? 'OPEN',
+        resolvedBy: before?.resolvedBy ?? null,
+        resolvedAt: before?.resolvedAt ?? null,
+        resolutionReason: before?.resolutionReason ?? null,
+      });
     }
-    stored = tx.select().from(flagsTable).where(eq(flagsTable.caseId, caseId)).all();
+    stored = await tx
+      .select()
+      .from(flagsTable)
+      .where(eq(flagsTable.caseId, caseId))
+      .orderBy(asc(flagsTable.createdAt));
   });
 
   const status =
     row.status === 'APPROVED_BY_OFFICER' ? row.status : deriveStatus(effectiveFlags(stored));
-  db.update(cases)
+  await db
+    .update(cases)
     .set({
       status,
       processingState: allFailed ? 'EXTRACTION_FAILED' : 'SCREENED',
@@ -180,19 +197,18 @@ export function rescreenCase(
         row.firstScreenStatus ?? (status === 'APPROVED_BY_OFFICER' ? null : status),
       updatedAt: new Date(),
     })
-    .where(eq(cases.id, caseId))
-    .run();
+    .where(eq(cases.id, caseId));
   return { result, status, allFailed };
 }
 
 /** Re-derives status from stored flags after an officer decision (no rules re-run needed). */
-export function refreshStatus(db: Db, caseId: string): string {
-  const row = db.select().from(cases).where(eq(cases.id, caseId)).get();
+export async function refreshStatus(db: Db, caseId: string): Promise<string> {
+  const row = (await db.select().from(cases).where(eq(cases.id, caseId)))[0];
   if (!row) throw new Error(`Case ${caseId} not found`);
   if (row.status === 'APPROVED_BY_OFFICER') return row.status;
   const status = deriveStatus(
-    effectiveFlags(db.select().from(flagsTable).where(eq(flagsTable.caseId, caseId)).all()),
+    effectiveFlags(await db.select().from(flagsTable).where(eq(flagsTable.caseId, caseId))),
   );
-  db.update(cases).set({ status, updatedAt: new Date() }).where(eq(cases.id, caseId)).run();
+  await db.update(cases).set({ status, updatedAt: new Date() }).where(eq(cases.id, caseId));
   return status;
 }

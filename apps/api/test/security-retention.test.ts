@@ -23,37 +23,34 @@ async function makeCase(tag: string): Promise<string> {
   await t.pipeline.whenIdle();
   return res.body.caseId as string;
 }
-const close = (id: string, daysAgo: number) =>
-  t.handle.db
+const close = async (id: string, daysAgo: number) =>
+  await t.handle.db
     .update(cases)
     .set({ status: 'APPROVED_BY_OFFICER', decidedAt: new Date(NOW.getTime() - daysAgo * DAY) })
-    .where(eq(cases.id, id))
-    .run();
-const filesOf = (id: string) =>
-  t.handle.db
-    .select()
-    .from(documents)
-    .where(eq(documents.caseId, id))
-    .all()
-    .flatMap((d) => [d.storedPath, d.processedPath]);
+    .where(eq(cases.id, id));
+const filesOf = async (id: string) =>
+  (await t.handle.db.select().from(documents).where(eq(documents.caseId, id))).flatMap((d) => [
+    d.storedPath,
+    d.processedPath,
+  ]);
 
 describe('data retention', () => {
   it('deletes images of cases closed more than N days ago, keeping masked data and audit', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const old = await makeCase('a');
     const recent = await makeCase('b');
     const open = await makeCase('c');
-    close(old, 31);
-    close(recent, 10);
-    const oldFiles = filesOf(old);
+    await close(old, 31);
+    await close(recent, 10);
+    const oldFiles = await filesOf(old);
     expect(oldFiles.every((f) => fs.existsSync(f))).toBe(true);
     const before = {
-      extractions: t.handle.db.select().from(extractions).where(eq(extractions.caseId, old)).all()
+      extractions: (await t.handle.db.select().from(extractions).where(eq(extractions.caseId, old)))
         .length,
-      flags: t.handle.db.select().from(flags).where(eq(flags.caseId, old)).all().length,
+      flags: (await t.handle.db.select().from(flags).where(eq(flags.caseId, old))).length,
     };
 
-    const dry = runRetention({
+    const dry = await runRetention({
       db: t.handle.db,
       uploadsDir: t.config.uploadsDir,
       days: 30,
@@ -63,7 +60,7 @@ describe('data retention', () => {
     expect(dry.cases).toEqual([old]);
     expect(oldFiles.every((f) => fs.existsSync(f))).toBe(true);
 
-    const res = runRetention({
+    const res = await runRetention({
       db: t.handle.db,
       uploadsDir: t.config.uploadsDir,
       days: 30,
@@ -74,40 +71,45 @@ describe('data retention', () => {
     expect(oldFiles.some((f) => fs.existsSync(f))).toBe(false);
     expect(fs.existsSync(path.join(t.config.uploadsDir, old))).toBe(false);
     // Recent and still-open cases are untouched.
-    for (const id of [recent, open]) expect(filesOf(id).every((f) => fs.existsSync(f))).toBe(true);
+    for (const id of [recent, open])
+      expect((await filesOf(id)).every((f) => fs.existsSync(f))).toBe(true);
 
     // Masked extracted data, flags, the case and the audit trail survive.
     expect(
-      t.handle.db.select().from(extractions).where(eq(extractions.caseId, old)).all(),
+      await t.handle.db.select().from(extractions).where(eq(extractions.caseId, old)),
     ).toHaveLength(before.extractions);
-    expect(t.handle.db.select().from(flags).where(eq(flags.caseId, old)).all()).toHaveLength(
+    expect(await t.handle.db.select().from(flags).where(eq(flags.caseId, old))).toHaveLength(
       before.flags,
     );
     const detail = await request(t.app).get(`/api/cases/${old}`);
     expect(detail.status).toBe(200);
-    const purge = t.handle.db.select().from(auditLog).where(eq(auditLog.caseId, old)).all();
+    const purge = await t.handle.db.select().from(auditLog).where(eq(auditLog.caseId, old));
     expect(
       purge.some((a) => (a.action as string) === 'IMAGES_PURGED' && a.actor === 'system:retention'),
     ).toBe(true);
     expect(purge.some((a) => a.action === 'CASE_CREATED')).toBe(true);
 
     // The image endpoint degrades to a clean 404, not a crash.
-    const docId = t.handle.db.select().from(documents).where(eq(documents.caseId, old)).get()!.id;
+    const docId = (
+      await t.handle.db.select().from(documents).where(eq(documents.caseId, old)).limit(1)
+    )[0]!.id;
     expect((await request(t.app).get(`/api/documents/${docId}/image`)).status).toBe(404);
 
     // Idempotent: a second run finds nothing to do.
     expect(
-      runRetention({ db: t.handle.db, uploadsDir: t.config.uploadsDir, days: 30, now: NOW }).cases,
+      (await runRetention({ db: t.handle.db, uploadsDir: t.config.uploadsDir, days: 30, now: NOW }))
+        .cases,
     ).toEqual([]);
   });
 
   it('days = 0 disables retention', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const id = await makeCase('d');
-    close(id, 400);
+    await close(id, 400);
     expect(
-      runRetention({ db: t.handle.db, uploadsDir: t.config.uploadsDir, days: 0, now: NOW }).cases,
+      (await runRetention({ db: t.handle.db, uploadsDir: t.config.uploadsDir, days: 0, now: NOW }))
+        .cases,
     ).toEqual([]);
-    expect(filesOf(id).every((f) => fs.existsSync(f))).toBe(true);
+    expect((await filesOf(id)).every((f) => fs.existsSync(f))).toBe(true);
   });
 });

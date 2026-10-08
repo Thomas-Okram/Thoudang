@@ -49,10 +49,10 @@ export interface AppBundle {
   security: SecurityBundle;
 }
 
-export function createApp(deps: AppDeps): AppBundle {
+export async function createApp(deps: AppDeps): Promise<AppBundle> {
   const { db, config } = deps;
   const logger = deps.logger ?? createLogger({ file: config.logFile });
-  ensureOfficers(db);
+  await ensureOfficers(db);
   const bus = new EventBus();
   const extraction = new ExtractionService({
     db,
@@ -76,7 +76,7 @@ export function createApp(deps: AppDeps): AppBundle {
 
   const app = express();
   // Security first: headers, origin lock, limits, identity, upload guard, /api/auth.
-  const security = installSecurity(app, {
+  const security = await installSecurity(app, {
     db,
     config,
     sec: deps.security ?? loadSecurityConfig(),

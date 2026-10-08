@@ -120,8 +120,10 @@ export class ExtractionService {
     return `${stage}|${sha256}|${this.model}|${PROMPT_VERSION}`;
   }
 
-  private readCache(key: string) {
-    return this.opts.db.select().from(extractionCache).where(eq(extractionCache.key, key)).get();
+  private async readCache(key: string) {
+    return (
+      await this.opts.db.select().from(extractionCache).where(eq(extractionCache.key, key))
+    )[0];
   }
 
   private async run<T>(args: {
@@ -135,7 +137,7 @@ export class ExtractionService {
   }): Promise<StageOutcome<T>> {
     const { demoMode, vision, logger } = this.opts;
     const key = this.cacheKey(args.stage, args.image.sha256);
-    const cached = this.readCache(key);
+    const cached = await this.readCache(key);
     const fromCache = (row: NonNullable<typeof cached>): StageOutcome<T> => ({
       ok: true,
       value: row.result as unknown as T,
@@ -167,7 +169,7 @@ export class ExtractionService {
     const started = performance.now();
     try {
       const { res, value } = await this.limit(() => args.call(vision));
-      this.opts.db
+      await this.opts.db
         .insert(extractionCache)
         .values({
           key,
@@ -189,8 +191,7 @@ export class ExtractionService {
             outputTokens: res.outputTokens,
             createdAt: new Date(),
           },
-        })
-        .run();
+        });
       return {
         ok: true,
         value,

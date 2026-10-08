@@ -35,7 +35,7 @@ async function screened(
   current = overrides;
   const vision = existing ? (existing as TestApp & { vision: FakeVision }).vision : fakeClaude();
   if (!existing) {
-    t = setupApp(vision);
+    t = await setupApp(vision);
     (t as TestApp & { vision: FakeVision }).vision = vision;
   }
   let req = request(t.app).post('/api/cases');
@@ -73,11 +73,9 @@ describe('roles and approval', () => {
     expect(ok.status).toBe(200);
     expect(ok.body.case.status).toBe('APPROVED_BY_OFFICER');
     expect(
-      t.handle.db
-        .select()
-        .from(auditLog)
-        .all()
-        .some((a) => a.action === 'OFFICER_APPROVE' && a.actor === `officer:${DSWO}`),
+      (await t.handle.db.select().from(auditLog)).some(
+        (a) => a.action === 'OFFICER_APPROVE' && a.actor === `officer:${DSWO}`,
+      ),
     ).toBe(true);
   });
 
@@ -229,11 +227,9 @@ describe('field edits', () => {
       d.documents.find((x: { id: string }) => x.id === passbook.id).extraction.fields.ifsc,
     ).toMatchObject({ value: 'SBIN0001234', editedBy: 'Dealing Assistant', confidence: 'high' });
 
-    const edit = t.handle.db
-      .select()
-      .from(auditLog)
-      .all()
-      .find((a) => a.action === 'FIELD_EDITED')!;
+    const edit = (await t.handle.db.select().from(auditLog)).find(
+      (a) => a.action === 'FIELD_EDITED',
+    )!;
     expect(edit.before).toMatchObject({ value: 'SBIN1001234' });
     expect(edit.after).toMatchObject({ field: 'ifsc', value: 'SBIN0001234' });
     expect(edit.reason).toBe('AI misread — corrected from the image');
@@ -433,7 +429,7 @@ describe('read model', () => {
   });
 
   it('meta lists officers with roles and the reason dropdowns', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const meta = (await request(t.app).get('/api/meta')).body;
     expect(meta.officers.map((o: { name: string; role: string }) => [o.name, o.role])).toEqual([
       ['DSWO Imphal West', 'DSWO'],

@@ -52,7 +52,7 @@ async function main() {
       .map((d) => path.join(dir, d.name)),
   ];
   const logger = createLogger({ file: env.logFile, console: false });
-  const handle = openDb();
+  const handle = await openDb();
   const vision = createAnthropicVisionClient({
     model: env.claude.model,
     timeoutMs: env.claude.timeoutMs,
@@ -84,7 +84,7 @@ async function main() {
         images += 1;
         const image = await preprocessImage(fs.readFileSync(path.join(folder, file)));
         // Fixture rows (npm run dev:fixtures) must not stop real results from being primed.
-        if (purgeFixtures(handle.db, image.sha256))
+        if (await purgeFixtures(handle.db, image.sha256))
           console.log(`  ${file}: replacing fixture data with real AI results`);
         const cls = await extraction.classify(image, file);
         if (!cls.cacheHit && cls.ok) calls += 1;
@@ -109,7 +109,7 @@ async function main() {
     );
 
     if (flags['with-cases'] === true) {
-      const { pipeline } = createApp({
+      const { pipeline } = await createApp({
         db: handle.db,
         config: { ...env, demoMode: 'cache_first' },
         vision,
@@ -144,7 +144,7 @@ async function main() {
       console.log(`  → case ${created.reference}`);
     }
   }
-  handle.close();
+  await handle.close();
   console.log(
     `\nPrimed ${images} image(s): ${calls} Claude call(s), ${failures} failure(s), ${((Date.now() - started) / 1000).toFixed(1)} s.`,
   );

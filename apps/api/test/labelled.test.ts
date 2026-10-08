@@ -22,7 +22,7 @@ const SLOTS = [
 describe('labelled intake slots (speed path)', () => {
   it('officer-labelled images skip classification: 4 Claude calls instead of 8, audited', async () => {
     const vision = packetVision();
-    t = setupApp(vision);
+    t = await setupApp(vision);
     let req = request(t.app).post('/api/cases');
     for (const [i, [name, type]] of SLOTS.entries()) {
       req = req.field('types', type).attach('files', await makeImage(`#e${i}e${i}e${i}`), {
@@ -42,7 +42,7 @@ describe('labelled intake slots (speed path)', () => {
       'officer',
       'officer',
     ]);
-    const audit = t.handle.db.select().from(auditLog).all();
+    const audit = await t.handle.db.select().from(auditLog);
     expect(audit.filter((a) => a.action === 'TYPE_SET_BY_OFFICER')).toHaveLength(4);
     expect(audit.filter((a) => a.action === 'AI_CLASSIFICATION')).toHaveLength(0);
     const docEvents = t.events.filter((e) => e.type === 'document' && e.stage === 'classified');
@@ -53,7 +53,7 @@ describe('labelled intake slots (speed path)', () => {
 
   it('mixed packet: only the unsorted image is classified', async () => {
     const vision = packetVision();
-    t = setupApp(vision);
+    t = await setupApp(vision);
     const res = await request(t.app)
       .post('/api/cases')
       .field('types', 'application_form')
@@ -74,7 +74,7 @@ describe('labelled intake slots (speed path)', () => {
 
   it('phone upload with a chosen type flows through the session into the case', async () => {
     const vision = packetVision();
-    t = setupApp(vision);
+    t = await setupApp(vision);
     const id = (await request(t.app).post('/api/sessions')).body.sessionId;
     const s = await request(t.app)
       .post(`/api/sessions/${id}/files?from=phone&type=aadhaar`)
@@ -111,7 +111,7 @@ describe('labelled intake slots (speed path)', () => {
 
 describe('intake previews never show an Aadhaar number', () => {
   it('blurs Aadhaar, form and unsorted previews; passbook/voter ID stay sharp', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const id = (await request(t.app).post('/api/sessions')).body.sessionId;
     const add = async (type: string | null, name: string) =>
       (
@@ -139,7 +139,7 @@ describe('intake previews never show an Aadhaar number', () => {
 
 describe('upload sessions survive an API restart', () => {
   it('a session created by one app instance is usable by the next (same DB file)', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     const id = (await request(t.app).post('/api/sessions')).body.sessionId;
     await request(t.app)
       .post(`/api/sessions/${id}/files?type=application_form`)
@@ -150,10 +150,10 @@ describe('upload sessions survive an API restart', () => {
       .expect(201);
 
     // "Restart": a fresh app on the same database file and uploads dir.
-    const second = openDb(t.dbPath);
+    const second = await openDb(t.dbPath);
     const config = loadConfig({ DB_PATH: t.dbPath, UPLOADS_DIR: path.join(t.dir, 'uploads') });
     const vision = packetVision();
-    const restarted = createApp({
+    const restarted = await createApp({
       db: second.db,
       config,
       vision,
@@ -168,6 +168,6 @@ describe('upload sessions survive an API restart', () => {
     expect(sub.status).toBe(202);
     await restarted.pipeline.whenIdle();
     expect((await request(restarted.app).get(`/api/sessions/${id}`)).status).toBe(404);
-    second.close();
+    await second.close();
   });
 });

@@ -58,15 +58,15 @@ export function permissionsOf(role: OfficerRole): readonly Permission[] {
   return PERMISSIONS[role];
 }
 
-export function ensureOfficers(db: Db): void {
+export async function ensureOfficers(db: Db): Promise<void> {
   for (const o of SEED_OFFICERS) {
-    db.insert(officers)
+    await db
+      .insert(officers)
       .values(o)
       .onConflictDoUpdate({
         target: officers.id,
         set: { name: o.name, role: o.role, district: o.district },
-      })
-      .run();
+      });
   }
 }
 
@@ -82,11 +82,15 @@ export class HttpError extends Error {
 }
 
 /** Resolves the acting officer from the X-Officer-Id header and checks the permission. */
-export function requireOfficer(db: Db, req: Request, permission: Permission): Officer {
+export async function requireOfficer(
+  db: Db,
+  req: Request,
+  permission: Permission,
+): Promise<Officer> {
   const id = req.header('x-officer-id');
   if (!id)
     throw new HttpError(401, 'Choose an officer (X-Officer-Id header) to perform this action');
-  const officer = db.select().from(officers).where(eq(officers.id, id)).get();
+  const [officer] = await db.select().from(officers).where(eq(officers.id, id)).limit(1);
   if (!officer) throw new HttpError(401, 'Unknown officer');
   if (!can(officer.role, permission)) {
     throw new HttpError(

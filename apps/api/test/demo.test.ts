@@ -11,14 +11,14 @@ import { typeFromName } from '../src/demo/type-from-name.js';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'thoudang-demo-'));
 fs.writeFileSync(path.join(dir, 'index.html'), '<!doctype html><title>Thoudang</title>');
-const handle = openDb(':memory:');
+const handle = await openDb(':memory:');
 const config = {
   ...loadConfig({ UPLOADS_DIR: path.join(dir, 'uploads'), SERVE_WEB: '1' }),
   webDist: dir,
 };
-const { app } = createApp({ db: handle.db, config, vision: null, logger: silentLogger });
-afterAll(() => {
-  handle.close();
+const { app } = await createApp({ db: handle.db, config, vision: null, logger: silentLogger });
+afterAll(async () => {
+  await handle.close();
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
@@ -60,22 +60,17 @@ describe('fixture rows never block real priming', () => {
       inputTokens: 0,
       outputTokens: 0,
     });
-    handle.db
+    await handle.db
       .insert(extractionCache)
       .values([
         row('a', 'img1', FIXTURE_MODEL),
         row('b', 'img1', 'claude-sonnet-5-5'),
         row('c', 'img2', FIXTURE_MODEL),
-      ])
-      .run();
-    expect(purgeFixtures(handle.db, 'img1')).toBe(1);
-    expect(
-      handle.db
-        .select()
-        .from(extractionCache)
-        .all()
-        .map((r) => r.key)
-        .sort(),
-    ).toEqual(['b', 'c']);
+      ]);
+    expect(await purgeFixtures(handle.db, 'img1')).toBe(1);
+    expect((await handle.db.select().from(extractionCache)).map((r) => r.key).sort()).toEqual([
+      'b',
+      'c',
+    ]);
   });
 });

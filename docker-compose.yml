@@ -6,6 +6,10 @@
 #
 # Two containers, both non-root: `web` (nginx: built UI + /api proxy, the only published port)
 # and `api` (Node 20, SQLite). Data lives in named volumes — back them up (docs/deploy).
+#
+# Optional PostgreSQL instead of SQLite (same app, DB_DRIVER=postgres; migrations run on boot):
+#   THOUDANG_DB_DRIVER=postgres docker compose --profile postgres up -d --build
+# Uploads, audio, templates, logs and the audit-chain anchor still live on the api volumes.
 
 name: thoudang
 
@@ -29,6 +33,14 @@ services:
       LOG_FILE: /app/apps/api/logs/api.log
       AUDIO_DIR: /app/apps/api/data/audio
       TEMPLATES_PATH: /app/apps/api/data/templates/templates.json
+      # sqlite (default) | postgres (`--profile postgres`, or point DATABASE_URL elsewhere).
+      DB_DRIVER: ${THOUDANG_DB_DRIVER:-sqlite}
+      DATABASE_URL: ${THOUDANG_DATABASE_URL:-postgres://thoudang:${THOUDANG_PG_PASSWORD:-thoudang}@postgres:5432/thoudang}
+      PG_POOL_MAX: ${THOUDANG_PG_POOL_MAX:-5}
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false # only with --profile postgres
     volumes:
       - thoudang-data:/app/apps/api/data
       - thoudang-uploads:/app/apps/api/uploads
@@ -67,7 +79,29 @@ services:
       timeout: 5s
       retries: 3
 
+  postgres:
+    profiles: [postgres]
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: thoudang
+      POSTGRES_PASSWORD: ${THOUDANG_PG_PASSWORD:-thoudang}
+      POSTGRES_DB: thoudang
+    volumes:
+      - thoudang-pg:/var/lib/postgresql/data
+    # Not published: only the api reaches it, on the compose network.
+    expose:
+      - '5432'
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U thoudang -d thoudang']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
 volumes:
+  thoudang-pg: # PostgreSQL data (only with --profile postgres)
   thoudang-data: # SQLite DB (+ WAL), notice templates, cached audio — the system of record
   thoudang-uploads: # application images (contain PII; redacted only when served)
   thoudang-logs: # JSON-lines API logs (Aadhaar-redacted)

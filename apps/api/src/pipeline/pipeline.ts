@@ -65,7 +65,15 @@ type DocRow = typeof documents.$inferSelect;
 export class Pipeline {
   private readonly inflight = new Set<Promise<void>>();
 
+  private referenceQueue: Promise<unknown> = Promise.resolve();
+
   constructor(private readonly deps: PipelineDeps) {}
+
+  private serially<T>(fn: () => Promise<T>): Promise<T> {
+    const next = this.referenceQueue.then(fn);
+    this.referenceQueue = next.catch(() => undefined);
+    return next;
+  }
 
   /** Resolves when every running case has finished (tests, eval, graceful shutdown). */
   async whenIdle(): Promise<void> {
@@ -79,17 +87,19 @@ export class Pipeline {
       throw new PacketError(`A packet must have 1–${MAX_IMAGES_PER_PACKET} images`);
     }
     const caseId = crypto.randomUUID();
-    const reference = this.nextReference();
-    db.insert(cases)
-      .values({
+    // Allocate + insert one case at a time: concurrent uploads must not read the same count.
+    const reference = await this.serially(async () => {
+      const ref = await this.nextReference();
+      await db.insert(cases).values({
         id: caseId,
-        reference,
+        reference: ref,
         source: input.source,
         batchId: input.batchId ?? null,
         packetName: input.packetName ?? null,
-      })
-      .run();
-    this.audit(caseId, SYSTEM_ACTOR, 'CASE_CREATED', 'case', caseId, null, {
+      });
+      return ref;
+    });
+    await this.audit(caseId, SYSTEM_ACTOR, 'CASE_CREATED', 'case', caseId, null, {
       reference,
       source: input.source,
       images: input.files.length,
@@ -113,22 +123,24 @@ export class Pipeline {
     return { caseId, reference, documents: input.files.length };
   }
 
-  private nextReference(): string {
+  private async nextReference(): Promise<string> {
     const year = new Date().getFullYear();
     // Count only live references for this year (synthetic HIST-… cases must not shift numbering).
-    const row = this.deps.db
-      .select({ n: sql<number>`count(*)` })
-      .from(cases)
-      .where(like(cases.reference, `THD-${year}-%`))
-      .get();
+    const row = (
+      await this.deps.db
+        .select({ n: sql<number>`count(*)` })
+        .from(cases)
+        .where(like(cases.reference, `THD-${year}-%`))
+    )[0];
     let n = (row?.n ?? 0) + 1;
     for (;;) {
       const reference = `THD-${year}-${String(n).padStart(4, '0')}`;
-      const exists = this.deps.db
-        .select({ id: cases.id })
-        .from(cases)
-        .where(eq(cases.reference, reference))
-        .get();
+      const exists = (
+        await this.deps.db
+          .select({ id: cases.id })
+          .from(cases)
+          .where(eq(cases.reference, reference))
+      )[0];
       if (!exists) return reference;
       n += 1;
     }
@@ -159,27 +171,24 @@ export class Pipeline {
       });
     }
 
-    this.deps.db
-      .insert(documents)
-      .values({
-        id: docId,
-        caseId,
-        originalName: path.basename(file.originalName),
-        storedPath: originalPath,
-        processedPath,
-        mimeType: file.mimeType,
-        sizeBytes: file.size,
-        widthPx: processed?.width ?? 0,
-        heightPx: processed?.height ?? 0,
-        sha256: processed?.sha256 ?? '',
-        position,
-        state: processed ? (file.docType ? 'CLASSIFIED' : 'UPLOADED') : 'FAILED',
-        detectedType: file.docType ?? null,
-        typeConfidence: file.docType ? 'high' : null,
-        typeSource: file.docType ? 'officer' : null,
-      })
-      .run();
-    this.audit(caseId, SYSTEM_ACTOR, 'DOCUMENT_UPLOADED', 'document', docId, null, {
+    await this.deps.db.insert(documents).values({
+      id: docId,
+      caseId,
+      originalName: path.basename(file.originalName),
+      storedPath: originalPath,
+      processedPath,
+      mimeType: file.mimeType,
+      sizeBytes: file.size,
+      widthPx: processed?.width ?? 0,
+      heightPx: processed?.height ?? 0,
+      sha256: processed?.sha256 ?? '',
+      position,
+      state: processed ? (file.docType ? 'CLASSIFIED' : 'UPLOADED') : 'FAILED',
+      detectedType: file.docType ?? null,
+      typeConfidence: file.docType ? 'high' : null,
+      typeSource: file.docType ? 'officer' : null,
+    });
+    await this.audit(caseId, SYSTEM_ACTOR, 'DOCUMENT_UPLOADED', 'document', docId, null, {
       originalName: path.basename(file.originalName),
       sizeBytes: file.size,
       sha256: processed?.sha256 ?? null,
@@ -188,7 +197,7 @@ export class Pipeline {
       decoded: Boolean(processed),
     });
     if (file.docType) {
-      this.audit(caseId, SYSTEM_ACTOR, 'TYPE_SET_BY_OFFICER', 'document', docId, null, {
+      await this.audit(caseId, SYSTEM_ACTOR, 'TYPE_SET_BY_OFFICER', 'document', docId, null, {
         detectedType: file.docType,
         note: 'Type set by officer (labelled intake slot) — AI classification skipped',
       });
@@ -198,20 +207,19 @@ export class Pipeline {
   /** Never throws: any unexpected error lands the case in OFFICER_ATTENTION. */
   private async process(caseId: string): Promise<void> {
     const { db } = this.deps;
-    const row = db.select().from(cases).where(eq(cases.id, caseId)).get();
+    const row = (await db.select().from(cases).where(eq(cases.id, caseId)))[0];
     if (!row) return;
     const ctx = { caseId, reference: row.reference, batchId: row.batchId };
     try {
-      db.update(cases)
+      await db
+        .update(cases)
         .set({ processingState: 'EXTRACTING', updatedAt: new Date() })
-        .where(eq(cases.id, caseId))
-        .run();
-      const docs = db
+        .where(eq(cases.id, caseId));
+      const docs = await db
         .select()
         .from(documents)
         .where(eq(documents.caseId, caseId))
-        .orderBy(documents.position)
-        .all();
+        .orderBy(documents.position);
 
       this.emitCase(ctx, 'classifying');
       const classified = await Promise.all(docs.map((d) => this.classifyDocument(ctx, d)));
@@ -220,9 +228,9 @@ export class Pipeline {
       await Promise.all(docs.map((d, i) => this.extractDocument(ctx, d, classified[i]!)));
 
       this.emitCase(ctx, 'screening');
-      this.screen(ctx);
+      await this.screen(ctx);
     } catch (err) {
-      this.fail(ctx, err);
+      await this.fail(ctx, err);
     }
   }
 
@@ -241,13 +249,13 @@ export class Pipeline {
     this.emitDoc(ctx, doc, 'classifying');
     const image = this.loadImage(doc);
     const out = await this.deps.extraction.classify(image, doc.originalName);
-    this.recordCall(ctx.caseId, doc.id, 'classify', out, out.ok ? out.value.type : null);
+    await this.recordCall(ctx.caseId, doc.id, 'classify', out, out.ok ? out.value.type : null);
     if (!out.ok) {
-      this.deps.db.update(documents).set({ state: 'FAILED' }).where(eq(documents.id, doc.id)).run();
+      await this.deps.db.update(documents).set({ state: 'FAILED' }).where(eq(documents.id, doc.id));
       this.emitDoc(ctx, doc, 'failed', { message: out.error, cacheHit: out.cacheHit });
       return { error: out.error };
     }
-    this.deps.db
+    await this.deps.db
       .update(documents)
       .set({
         detectedType: out.value.type,
@@ -255,8 +263,7 @@ export class Pipeline {
         typeSource: 'ai',
         state: 'CLASSIFIED',
       })
-      .where(eq(documents.id, doc.id))
-      .run();
+      .where(eq(documents.id, doc.id));
     this.emitDoc(ctx, doc, 'classified', { detectedType: out.value.type, cacheHit: out.cacheHit });
     return { type: out.value.type };
   }
@@ -268,11 +275,10 @@ export class Pipeline {
   ): Promise<DocOutcome> {
     if ('error' in classified) return { kind: 'unidentified', error: classified.error };
     if (classified.type === 'other' || !EXTRACTABLE_TYPES.includes(classified.type)) {
-      this.deps.db
+      await this.deps.db
         .update(documents)
         .set({ state: 'SKIPPED' })
-        .where(eq(documents.id, doc.id))
-        .run();
+        .where(eq(documents.id, doc.id));
       this.emitDoc(ctx, doc, 'skipped', {
         detectedType: 'other',
         message: 'Not part of the application packet',
@@ -282,12 +288,11 @@ export class Pipeline {
     const type = classified.type;
     this.emitDoc(ctx, doc, 'extracting', { detectedType: type });
     const out = await this.deps.extraction.extract(type, this.loadImage(doc), doc.originalName);
-    this.recordCall(ctx.caseId, doc.id, 'extract', out, type);
-    this.deps.db
+    await this.recordCall(ctx.caseId, doc.id, 'extract', out, type);
+    await this.deps.db
       .update(documents)
       .set({ state: out.ok ? 'EXTRACTED' : 'FAILED' })
-      .where(eq(documents.id, doc.id))
-      .run();
+      .where(eq(documents.id, doc.id));
     this.emitDoc(ctx, doc, out.ok ? 'extracted' : 'failed', {
       detectedType: type,
       cacheHit: out.cacheHit,
@@ -298,11 +303,11 @@ export class Pipeline {
       : { kind: 'extraction_failed', type, error: out.error };
   }
 
-  private screen(ctx: CaseCtx): void {
-    const { result, status } = rescreenCase(this.deps.db, ctx.caseId, {
+  private async screen(ctx: CaseCtx): Promise<void> {
+    const { result, status } = await rescreenCase(this.deps.db, ctx.caseId, {
       today: (this.deps.today ?? istToday)(),
     });
-    this.audit(ctx.caseId, RULES_ACTOR, 'RULE_RESULT', 'case', ctx.caseId, null, {
+    await this.audit(ctx.caseId, RULES_ACTOR, 'RULE_RESULT', 'case', ctx.caseId, null, {
       status,
       priorityScore: result.priorityScore,
       priorityReasons: result.priorityReasons,
@@ -320,32 +325,32 @@ export class Pipeline {
     });
   }
 
-  private fail(ctx: CaseCtx, err: unknown): void {
+  private async fail(ctx: CaseCtx, err: unknown): Promise<void> {
     const message = redactAadhaarInText(err instanceof Error ? err.message : 'unknown error');
     this.deps.logger.error('Pipeline failed', { reference: ctx.reference, message });
     try {
       const { db } = this.deps;
-      db.insert(flagsTable)
-        .values({
-          id: crypto.randomUUID(),
-          caseId: ctx.caseId,
-          code: 'EXTRACTION_FAILED',
-          severity: 'warn',
-          action: 'officer',
-          reason:
-            'Extraction failed — manual review needed. The system hit an unexpected error while processing this packet.',
-          evidence: [{ document: 'form', field: 'document', value: message }],
-        })
-        .run();
-      db.update(cases)
+      await db.insert(flagsTable).values({
+        id: crypto.randomUUID(),
+        caseId: ctx.caseId,
+        code: 'EXTRACTION_FAILED',
+        severity: 'warn',
+        action: 'officer',
+        reason:
+          'Extraction failed — manual review needed. The system hit an unexpected error while processing this packet.',
+        evidence: [{ document: 'form', field: 'document', value: message }],
+      });
+      await db
+        .update(cases)
         .set({
           status: 'OFFICER_ATTENTION',
           processingState: 'EXTRACTION_FAILED',
           updatedAt: new Date(),
         })
-        .where(eq(cases.id, ctx.caseId))
-        .run();
-      this.audit(ctx.caseId, SYSTEM_ACTOR, 'PIPELINE_ERROR', 'case', ctx.caseId, null, { message });
+        .where(eq(cases.id, ctx.caseId));
+      await this.audit(ctx.caseId, SYSTEM_ACTOR, 'PIPELINE_ERROR', 'case', ctx.caseId, null, {
+        message,
+      });
     } finally {
       this.emitCase(ctx, 'error', { message: 'Extraction failed — manual review' });
       this.emitCase(ctx, 'done', { status: 'OFFICER_ATTENTION' });
@@ -362,34 +367,31 @@ export class Pipeline {
     };
   }
 
-  private recordCall<T>(
+  private async recordCall<T>(
     caseId: string,
     documentId: string,
     stage: 'classify' | 'extract',
     out: StageOutcome<T>,
     detectedType: DocRow['detectedType'],
-  ): void {
+  ): Promise<void> {
     const result = out.ok ? (out.value as unknown as Record<string, unknown>) : null;
     const id = crypto.randomUUID();
-    this.deps.db
-      .insert(extractions)
-      .values({
-        id,
-        caseId,
-        documentId,
-        stage,
-        detectedType,
-        status: out.ok ? 'OK' : 'FAILED',
-        model: out.model,
-        result,
-        errorMessage: out.ok ? null : out.error,
-        cacheHit: out.cacheHit,
-        latencyMs: out.latencyMs,
-        inputTokens: out.inputTokens,
-        outputTokens: out.outputTokens,
-      })
-      .run();
-    this.audit(
+    await this.deps.db.insert(extractions).values({
+      id,
+      caseId,
+      documentId,
+      stage,
+      detectedType,
+      status: out.ok ? 'OK' : 'FAILED',
+      model: out.model,
+      result,
+      errorMessage: out.ok ? null : out.error,
+      cacheHit: out.cacheHit,
+      latencyMs: out.latencyMs,
+      inputTokens: out.inputTokens,
+      outputTokens: out.outputTokens,
+    });
+    await this.audit(
       caseId,
       AI_ACTOR,
       stage === 'classify' ? 'AI_CLASSIFICATION' : 'AI_EXTRACTION',
@@ -417,7 +419,7 @@ export class Pipeline {
     );
   }
 
-  private audit(
+  private async audit(
     caseId: string,
     actor: string,
     action: (typeof auditLog.$inferInsert)['action'],
@@ -425,11 +427,10 @@ export class Pipeline {
     entityId: string,
     before: unknown,
     after: unknown,
-  ): void {
-    this.deps.db
+  ): Promise<void> {
+    await this.deps.db
       .insert(auditLog)
-      .values({ caseId, actor, action, entityType, entityId, before, after })
-      .run();
+      .values({ caseId, actor, action, entityType, entityId, before, after });
   }
 
   private emitCase(

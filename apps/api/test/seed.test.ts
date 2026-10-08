@@ -4,14 +4,14 @@ import { openDb } from '../src/db/client.js';
 import { nameGazetteer } from '../src/db/schema.js';
 import { seedGazetteer } from '../src/db/seedGazetteer.js';
 
-const handle = openDb(':memory:');
+const handle = await openDb(':memory:');
 afterAll(() => handle.close());
 
 describe('seedGazetteer', () => {
-  it('loads every starter entry and is idempotent', () => {
-    seedGazetteer(handle.db);
-    seedGazetteer(handle.db);
-    const rows = handle.db.select().from(nameGazetteer).all();
+  it('loads every starter entry and is idempotent', async () => {
+    await seedGazetteer(handle.db);
+    await seedGazetteer(handle.db);
+    const rows = await handle.db.select().from(nameGazetteer);
     expect(rows).toHaveLength(gazetteerEntries.length);
     expect(rows.find((r) => r.surname === 'Khuraijam')).toMatchObject({
       community: 'Meitei',
@@ -19,9 +19,9 @@ describe('seedGazetteer', () => {
     });
   });
 
-  it('stores source, confidence and tribe from the gazetteer metadata', () => {
-    seedGazetteer(handle.db);
-    const rows = handle.db.select().from(nameGazetteer).all();
+  it('stores source, confidence and tribe from the gazetteer metadata', async () => {
+    await seedGazetteer(handle.db);
+    const rows = await handle.db.select().from(nameGazetteer);
     const withTribe = gazetteerEntries.find((e) => e.tribe);
     expect(withTribe).toBeDefined();
     expect(rows.find((r) => r.surname === withTribe!.surname)).toMatchObject({
@@ -37,15 +37,11 @@ describe('seedGazetteer', () => {
     });
   });
 
-  it('updates existing rows on re-seed', () => {
-    seedGazetteer(handle.db, [
+  it('updates existing rows on re-seed', async () => {
+    await seedGazetteer(handle.db, [
       { surname: 'Okram', community: 'Meitei', abbreviations: ['o', 'ok'] },
     ]);
-    const row = handle.db
-      .select()
-      .from(nameGazetteer)
-      .all()
-      .find((r) => r.surname === 'Okram');
+    const row = (await handle.db.select().from(nameGazetteer)).find((r) => r.surname === 'Okram');
     expect(row?.abbreviations).toEqual(['o', 'ok']);
   });
 });

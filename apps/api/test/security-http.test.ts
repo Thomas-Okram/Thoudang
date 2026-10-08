@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import { containsFullAadhaar } from '@thoudang/core';
 import { originAllowed } from '../src/middleware/origin.js';
@@ -21,7 +21,7 @@ const leaks = (text: string) =>
 
 describe('security headers', () => {
   it('sends a strict self-only CSP without upgrade-insecure-requests (LAN is plain HTTP)', async () => {
-    t = setupApp(null);
+    t = await setupApp(null);
     const res = await request(t.app).get('/api/health');
     const csp = res.headers['content-security-policy'] as string;
     expect(csp).toContain("default-src 'self'");
@@ -60,7 +60,7 @@ describe('CORS locked to LAN / demo origins', () => {
   ])('%s → %s', (origin, ok) => expect(originAllowed(origin, opts)).toBe(ok));
 
   it('allowed origins get credentialed CORS; foreign origins cannot POST (CSRF)', async () => {
-    t = setupApp(null);
+    t = await setupApp(null);
     const lan = await request(t.app).get('/api/health').set('Origin', 'http://192.168.1.20:5173');
     expect(lan.headers['access-control-allow-origin']).toBe('http://192.168.1.20:5173');
     expect(lan.headers['access-control-allow-credentials']).toBe('true');
@@ -83,7 +83,7 @@ describe('CORS locked to LAN / demo origins', () => {
 
 describe('request limits', () => {
   it('oversized JSON bodies are refused with 413', async () => {
-    t = setupApp(null);
+    t = await setupApp(null);
     const res = await request(t.app)
       .post('/api/cases/x/notes')
       .set('Content-Type', 'application/json')
@@ -92,7 +92,7 @@ describe('request limits', () => {
   });
 
   it('uploads are rate limited', async () => {
-    t = setupApp(packetVision(), 'live', {
+    t = await setupApp(packetVision(), 'live', {
       security: testSecurity({ RATE_LIMIT_UPLOADS_PER_MIN: '2' }),
     });
     const img = await makeImage('#eee', 200, 150, 'form');
@@ -108,7 +108,7 @@ describe('request limits', () => {
 
 describe('audit hash chain in the running app', () => {
   it('every audit row written by requests and the background pipeline is sealed and verifies', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     let req = request(t.app).post('/api/cases');
     for (const name of ['form.jpg', 'aadhaar.jpg', 'passbook.jpg'])
       req = req.attach('files', await makeImage('#ececec', 400, 300, name), name);
@@ -117,12 +117,15 @@ describe('audit hash chain in the running app', () => {
     await request(t.app)
       .post(`/api/cases/${res.body.caseId}/approve`)
       .set('Cookie', t.cookie('dswo-imphal-west'));
-    await new Promise((r) => setImmediate(r));
-    const v = t.security.chain.verify();
+    // Sealed automatically after the response (asynchronously — no explicit seal here).
+    await vi.waitFor(async () => expect((await t.security.chain.verify()).unsealed).toBe(0));
+    const v = await t.security.chain.verify();
     expect(v.ok).toBe(true);
     expect(v.unsealed).toBe(0);
     expect(v.verified).toBeGreaterThan(5);
-    expect(verifyAuditCli({ dbPath: t.dbPath, key: 'test-chain-key', print: () => {} })).toBe(0);
+    expect(await verifyAuditCli({ dbPath: t.dbPath, key: 'test-chain-key', print: () => {} })).toBe(
+      0,
+    );
     // The anchor file next to the DB holds no Aadhaar-like digits.
     expect(containsFullAadhaar(fs.readFileSync(`${t.dbPath}.audit-anchor.json`, 'utf8'))).toBe(
       false,
@@ -130,14 +133,14 @@ describe('audit hash chain in the running app', () => {
   });
 
   it('the Aadhaar leak scanner stays at 0 findings with the security layer on', async () => {
-    t = setupApp(packetVision());
+    t = await setupApp(packetVision());
     let req = request(t.app).post('/api/cases');
     for (const name of ['form.jpg', 'aadhaar.jpg', 'passbook.jpg'])
       req = req.attach('files', await makeImage('#e1e1e1', 400, 300, name), name);
     await req;
     await t.pipeline.whenIdle();
     await new Promise((r) => setImmediate(r));
-    const scan = runLeakScan(t.handle.db, {
+    const scan = await runLeakScan(t.handle.db, {
       logFile: t.logFile,
       templates: new TemplateStore(t.templatesPath),
       statusLinkSecret: 'test-secret',

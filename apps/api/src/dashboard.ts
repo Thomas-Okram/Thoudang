@@ -14,19 +14,17 @@ const WATCH: Record<WatchCategory, { label: string; test: (r: string) => boolean
 };
 
 /** Department dashboard aggregates. Includes synthetic historical cases (flagged in the response). */
-export function dashboard(db: Db, now = new Date(), opts: { includeHistorical?: boolean } = {}) {
+export async function dashboard(
+  db: Db,
+  now = new Date(),
+  opts: { includeHistorical?: boolean } = {},
+) {
   const include = opts.includeHistorical ?? true;
-  const rows = db
-    .select()
-    .from(cases)
-    .all()
-    .filter((c) => include || !c.historical);
+  const rows = (await db.select().from(cases)).filter((c) => include || !c.historical);
   const ids = new Set(rows.map((r) => r.id));
-  const flagRows = db
-    .select()
-    .from(flags)
-    .all()
-    .filter((f) => ids.has(f.caseId) && f.resolution !== 'OVERRIDDEN');
+  const flagRows = (await db.select().from(flags)).filter(
+    (f) => ids.has(f.caseId) && f.resolution !== 'OVERRIDDEN',
+  );
   const today = istDate(now);
   const pending = rows.filter((r) => r.status !== 'APPROVED_BY_OFFICER');
   const screened = rows.filter((r) => r.screenedAt);

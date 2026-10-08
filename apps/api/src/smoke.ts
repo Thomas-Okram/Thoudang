@@ -20,7 +20,7 @@ async function main() {
   if (!env.anthropicConfigured) throw new Error('ANTHROPIC_API_KEY is not set (apps/api/.env).');
   const imagePath = fromInvocationDir(file);
 
-  const handle = openDb(':memory:');
+  const handle = await openDb(':memory:');
   const service = new ExtractionService({
     db: handle.db,
     vision: createAnthropicVisionClient({
@@ -69,7 +69,7 @@ async function main() {
   outTok += x.outputTokens;
   const usd = (inTok / 1e6) * env.pricing.inputPerMTok + (outTok / 1e6) * env.pricing.outputPerMTok;
   console.log(`\nTotal: ${inTok} input + ${outTok} output tokens ≈ $${usd.toFixed(4)}`);
-  handle.close();
+  await handle.close();
 }
 
 main().catch((err: unknown) => {
